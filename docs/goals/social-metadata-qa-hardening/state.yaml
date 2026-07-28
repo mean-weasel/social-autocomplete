@@ -1,0 +1,365 @@
+version: 2
+
+goal:
+  title: "Social Metadata QA Hardening"
+  slug: "social-metadata-qa-hardening"
+  kind: existing_plan
+  tranche: "Implement and prove the corrected local-QA findings."
+  status: active
+  oracle:
+    signal: "Clean release verification plus fresh isolated Codex QA proves explicit run selections, sanitized browser inspection, and truthful LinkedIn/Pinterest behavior."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "Focused receipts, passing release verification, clean-install proof, and a corrected fresh QA receipt mapped to every finding."
+  intake:
+    original_request: "Make a detailed plan using GoalBuddy Prep to implement the corrected QA findings."
+    interpreted_outcome: "Turn the corrected QA findings into verified plugin and QA hardening without implementing during prep."
+    input_shape: existing_plan
+    audience: "Codex users and local QA maintainers"
+    authority: approved
+    proof_type: test
+    completion_proof: "The goal oracle passes and final audit records full_outcome_complete: true."
+    likely_misfire: "Passing tests after wording-only changes while live UX, browser privacy, or channel entry behavior remains broken."
+    blind_spots_considered:
+      - "Codex top-level skill catalog limits"
+      - "Authenticated LinkedIn responsive variants"
+      - "Pinterest business-account redirects"
+      - "Transient browser-read privacy"
+      - "Separation of QA and source repositories"
+    existing_plan_facts:
+      - "New runs must explicitly ask for and record an ordered channel list; resume reuses only the same run."
+      - "LinkedIn authenticated search landmarks did not match the current feed UI."
+      - "Pinterest business accounts may redirect through Business Hub without the expected search landmark."
+      - "X, TikTok, and YouTube are packaged but not independently top-level discoverable; orchestrated use still works."
+      - "Future authenticated QA must prohibit broad tab listings and full DOM snapshots."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/social-metadata-qa-hardening/"
+    command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-qa-hardening"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Validate the corrected QA handoff, the oracle, packaging direction, task scopes, and verification boundaries before any source edit."
+    inputs:
+      - "docs/goals/social-metadata-qa-hardening/goal.md"
+      - "Corrected QA handoff from /Users/neonwatty/Desktop/social-autocomplete-qa"
+      - "Completed v1 board as historical context only"
+    constraints:
+      - "Read-only."
+      - "Do not implement."
+      - "Preserve the corrected pass-with-findings classifications."
+    expected_output:
+      - "validated | needs_board_amendment"
+      - "Packaging decision"
+      - "Largest safe Worker package order"
+      - "Any corrected allowed_files, verify, or stop_if boundaries"
+    receipt: null
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Make ordered channel selection an explicit, required first-run choice while preserving same-run resume and fresh-run isolation."
+    inputs:
+      - "T001 receipt"
+      - "Corrected QA session-selection receipt"
+      - "Existing browser-selection workflow"
+    constraints:
+      - "Ask explicitly which supported channels the user wants on every new run."
+      - "Record the confirmed ordered channel list in the new run plan."
+      - "Resume must reuse the same run's channels without asking again."
+      - "A new run must not inherit or silently default to the prior run's channel list."
+      - "Do not expand the CLI command surface or break contractVersion 1.0."
+    expected_output:
+      - "Updated primary skill and shared workflow"
+      - "Updated host/integration documentation"
+      - "Regression tests for exact prompt sequence and run isolation"
+      - "Receipt listing changed behavior and verification"
+    allowed_files:
+      - "skills/social-metadata-research/SKILL.md"
+      - "skills/_shared/browser-research-contract.md"
+      - "README.md"
+      - "assets/host-contract.json"
+      - "docs/integration/json-contract.md"
+      - "docs/superpowers/specs/2026-07-27-social-metadata-research-design.md"
+      - "tests/core/contracts.test.ts"
+      - "tests/hosts/manifests.test.ts"
+      - "tests/hosts/host-parity.ts"
+    verify:
+      - "npm run typecheck"
+      - "npm run test:core"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+    stop_if:
+      - "The change requires a breaking CLI/JSON contract revision."
+      - "The requested new-run versus resume behavior is ambiguous."
+      - "Verification fails twice for reasons introduced by this task."
+    receipt: null
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Harden the canonical authenticated-browser QA protocol so agents emit only sanitized structural checks and cannot repeat broad tab or DOM reads."
+    inputs:
+      - "T001 receipt"
+      - "Corrected QA privacy finding"
+      - "Existing browser acceptance harness and documentation"
+    constraints:
+      - "Explicitly prohibit returning complete open-tab lists."
+      - "Explicitly prohibit full authenticated DOM snapshots, body text, feed content, and account identifiers."
+      - "Require in-process target filtering and a minimal projection of booleans, status, expected landmark, and observed landmark."
+      - "Do not perform live browser QA in this Worker task."
+    expected_output:
+      - "Canonical sanitized authentication-preflight procedure"
+      - "Plugin/shared instructions that reference the safe procedure"
+      - "Regression assertions covering the prohibited reads and allowed projection"
+    allowed_files:
+      - "docs/browser-acceptance/README.md"
+      - "skills/_shared/browser-research-contract.md"
+      - "skills/social-metadata-research/SKILL.md"
+      - "assets/host-contract.json"
+      - "tests/hosts/manifests.test.ts"
+      - "tests/hosts/host-parity.ts"
+      - "tests/browser-acceptance/harness.test.ts"
+    verify:
+      - "npm run typecheck"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+      - "npm run test:browser-harness"
+    stop_if:
+      - "The implementation would store new authenticated browser data."
+      - "The proposed test requires live credentials or authenticated page content."
+      - "Verification fails twice for reasons introduced by this task."
+    receipt: null
+  - id: T004
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: low
+    objective: "Map current LinkedIn and Pinterest authenticated search-entry variants using existing QA evidence and, only if still necessary, bounded privacy-safe live structural checks."
+    inputs:
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa-run.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/receipts/auth-preflight-2026-07-28.json"
+      - "src/channels/playbooks/linkedin.ts"
+      - "src/channels/playbooks/pinterest.ts"
+      - "skills/linkedin-metadata-research/SKILL.md"
+      - "skills/pinterest-metadata-research/SKILL.md"
+    constraints:
+      - "Read-only."
+      - "Use the user-confirmed existing Chrome binding only if live checks are necessary."
+      - "Never emit open-tab listings or full authenticated DOM snapshots."
+      - "Return only targeted booleans, route class, and sanitized semantic landmarks."
+      - "Do not type a query, perform research, open composers, or inspect account identity."
+    expected_output:
+      - "LinkedIn current entry-state map with primary and fallback landmarks"
+      - "Pinterest personal/business route-state map with primary and fallback landmarks"
+      - "Confirmed ui_change boundaries"
+      - "Recommended fixture and diagnostic cases"
+    receipt: null
+  - id: T005
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Review the privacy-safe channel map and specify one coherent LinkedIn/Pinterest repair package."
+    inputs:
+      - "T004 receipt"
+      - "Current channel playbooks, diagnostics, fixtures, and tests"
+    constraints:
+      - "Read-only."
+      - "Do not weaken visible ui_change failures."
+      - "Do not accept guessed selectors or account-specific identifiers."
+      - "Choose semantic landmarks that can survive responsive and business-account variants."
+    expected_output:
+      - "Decision for each channel"
+      - "Exact Worker objective"
+      - "Confirmed allowed_files"
+      - "Focused verification commands"
+      - "Live acceptance expectations"
+    receipt: null
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement and verify the Judge-approved LinkedIn and Pinterest search-entry and diagnostic repairs as one channel-hardening package."
+    inputs:
+      - "T004 receipt"
+      - "T005 receipt"
+    constraints:
+      - "Preserve explicit authentication, challenge, locale, and ui_change classifications."
+      - "Do not treat a missing landmark as native empty."
+      - "Do not introduce selectors unsupported by current evidence."
+      - "Pinterest hashtag remains not_applicable."
+    expected_output:
+      - "Updated LinkedIn and Pinterest playbooks/skills"
+      - "Updated diagnostic fixtures and deterministic tests"
+      - "Focused and offline verification receipts"
+    allowed_files:
+      - "src/channels/playbooks/linkedin.ts"
+      - "src/channels/playbooks/pinterest.ts"
+      - "src/channels/diagnostics.ts"
+      - "src/channels/types.ts"
+      - "skills/linkedin-metadata-research/SKILL.md"
+      - "skills/pinterest-metadata-research/SKILL.md"
+      - "fixtures/channels/scenarios.json"
+      - "fixtures/diagnostics/acceptance-matrix.json"
+      - "fixtures/diagnostics/surface-cases.json"
+      - "tests/channels/playbooks.test.ts"
+      - "tests/channels/fixture-replay.test.ts"
+      - "tests/browser-acceptance/diagnostics.test.ts"
+      - "docs/browser-acceptance/README.md"
+    verify:
+      - "npm run typecheck"
+      - "npm run lint:playbooks"
+      - "npm run test:channels"
+      - "npm run test:diagnostics"
+      - "npm run verify:offline"
+    stop_if:
+      - "Current live evidence contradicts the proposed landmark."
+      - "A fix would require account identity, private DOM extraction, or a guessed selector."
+      - "Verification fails twice for reasons introduced by this task."
+    receipt: null
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Align Codex packaging and smoke tests with the Judge-approved one-orchestrator channel-playbook model, without losing any channel procedure."
+    inputs:
+      - "T001 packaging decision"
+      - "Corrected non-blocking skill-catalog finding"
+      - "Existing install smoke and host-parity tests"
+    constraints:
+      - "The main orchestrator remains the default user-facing skill."
+      - "All seven channel playbooks must remain packaged, linked, and usable by the orchestrator."
+      - "Do not claim eight top-level entries if Codex catalog limits do not provide them."
+      - "Preserve Claude package files without adding Claude QA or CI work."
+    expected_output:
+      - "Unambiguous packaged orchestrator/resource structure"
+      - "Fresh-process smoke test for the intended catalog shape"
+      - "Tests proving all channel playbooks remain reachable"
+      - "Updated installation and invocation documentation"
+    allowed_files:
+      - ".codex-plugin/plugin.json"
+      - ".claude-plugin/plugin.json"
+      - "package.json"
+      - "scripts/install-smoke/run.mjs"
+      - "skills/social-metadata-research/SKILL.md"
+      - "skills/_shared/browser-research-contract.md"
+      - "skills/facebook-metadata-research/SKILL.md"
+      - "skills/instagram-metadata-research/SKILL.md"
+      - "skills/linkedin-metadata-research/SKILL.md"
+      - "skills/x-metadata-research/SKILL.md"
+      - "skills/tiktok-metadata-research/SKILL.md"
+      - "skills/youtube-metadata-research/SKILL.md"
+      - "skills/pinterest-metadata-research/SKILL.md"
+      - "assets/host-contract.json"
+      - "README.md"
+      - "tests/hosts/manifests.test.ts"
+      - "tests/hosts/host-parity.ts"
+      - "tests/hosts/host-parity.test.ts"
+    verify:
+      - "npm run typecheck"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+      - "npm run test:install"
+    stop_if:
+      - "The Judge has not resolved orchestrator-only versus direct-channel invocation."
+      - "The package would omit or duplicate a channel procedure."
+      - "Clean installation no longer loads the main orchestrator."
+      - "Verification fails twice for reasons introduced by this task."
+    receipt: null
+  - id: T008
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: high
+    objective: "Run isolated clean-install Codex QA from the QA project and collect sanitized oracle evidence for every corrected finding."
+    inputs:
+      - "All completed Worker receipts"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/README.md"
+      - "Current source commit under test"
+    constraints:
+      - "Do not edit product source from the QA project."
+      - "Use Chrome only after explicit user confirmation."
+      - "Ask explicitly for ordered channels on each new run."
+      - "Run two synthetic or supervised new runs to prove channel-list isolation."
+      - "Use only in-process target filtering and sanitized structural booleans for authenticated checks."
+      - "Do not emit broad tab lists, full DOM snapshots, account data, feed content, credentials, cookies, or tokens."
+      - "Do not publish, open composers, or perform unapproved metadata research."
+    expected_output:
+      - "Clean plugin installation and main-skill load receipt"
+      - "New-run browser/channel prompt receipt"
+      - "Two-run channel-isolation receipt"
+      - "Fresh LinkedIn and Pinterest sanitized acceptance outcomes"
+      - "QA notes with corrected pass/fail disposition"
+      - "Source and QA repository status"
+    receipt: null
+  - id: T009
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit every corrected QA finding against Worker receipts, release verification, and fresh isolated QA; reject completion on weak or stale proof."
+    inputs:
+      - "All done task receipts"
+      - "T008 isolated QA evidence"
+      - "Current source diff and commit"
+      - "Latest verification output"
+    constraints:
+      - "Read-only."
+      - "Reject completion if any required Worker task remains queued, active, or blocked without an owner-approved deferral."
+      - "Reject completion if privacy proof relies only on documentation wording."
+      - "Reject completion if LinkedIn or Pinterest failure is hidden rather than truthfully classified."
+      - "Reject completion if a new run can inherit the prior run's channels."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Finding-by-finding evidence map"
+      - "Missing proof"
+      - "Next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "clean@322ddfb2d446e186713e773603e98b93696d77bb"
+  last_verification:
+    result: "baseline release verifier passed before this prep; must be rerun during execution"
+    task: null
+    commands:
+      - "npm run verify:release -- --allow-missing-live-receipts"
