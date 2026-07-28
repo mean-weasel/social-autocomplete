@@ -31,6 +31,48 @@ browser, or persisted automation profile is not a supported acceptance
 surface. The browser may be automated through the host's browser-control
 facility, but it must remain the host-managed, user-visible session.
 
+## Sanitized authentication preflight
+
+Run authenticated preflight as one bounded browser-control operation. Inside
+that operation, filter open targets to the expected channel origin and discard
+all non-matches before constructing a result. Never return a complete open-tab
+list, tab titles, tab URLs, or an unfiltered target collection to the agent or
+CLI.
+
+Inspect only the matched target's semantic structure. Never return or retain a
+full authenticated DOM snapshot, raw HTML, `body` text, feed content, account
+identifiers, or any other page content. The operation may return only this
+minimal sanitized projection:
+
+- structural booleans for target match, authentication required, challenge
+  present, locale match, search landmark present, and results landmark present;
+- a sanitized status code;
+- the expected semantic landmark; and
+- the observed semantic landmark.
+
+Expected and observed landmarks must be short structural labels, not copied
+page text. If no target matches, return false booleans and a sanitized
+`target_unavailable` status without exposing the targets that were inspected.
+If a required landmark is missing, return `ui_change`; never broaden the read
+or substitute body text, feed content, or a DOM snapshot.
+
+LinkedIn and Pinterest entry diagnostics use only these enumerated structural
+values:
+
+- LinkedIn routes: `linkedin_search`, `linkedin_authenticated_feed`; expected
+  landmark: `linkedin_native_search_entry`; observed landmarks:
+  `linkedin_native_search_entry` or `linkedin_authenticated_feed_navigation`.
+- Pinterest routes: `pinterest_public_search`, `pinterest_personal_search`,
+  `pinterest_business_hub`, `pinterest_root_after_search_redirect`; expected
+  landmark: `pinterest_search_control`; observed landmarks:
+  `pinterest_search_control`, `pinterest_business_hub`, or `pinterest_root`.
+
+LinkedIn passes entry acceptance only when the native search entry is present.
+Authenticated Feed/navigation without it is `ui_change`. Pinterest personal or
+public search may pass when Search is present. Business Hub or a root route
+after a search redirect without Search is `ui_change`, never challenge or
+native empty. These labels describe semantic structure and are not selectors.
+
 If the session is signed out, acceptance stops with
 `authentication_required`. The user signs in manually in that same browser and
 then tells the host to resume. The plugin never accepts or enters passwords,

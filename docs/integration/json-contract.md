@@ -59,3 +59,22 @@ Record it with `social-metadata plan --run run_example --json @amendment.json`.
 The CLI rejects unsupported channel/browser combinations, unconfirmed choices,
 mid-channel switches, authenticated in-app observations, and observations from
 a browser other than the effective selection.
+
+## Ordered channel selection
+
+Before creating every new run, the host explicitly asks which supported
+channels the user wants researched and in what order. It writes that confirmed
+ordered list to the plan's required `channels` field. Agent inference may be
+presented as a proposal, but it cannot silently become the selection.
+
+```json
+{
+  "runId": "run_example",
+  "channels": ["instagram", "youtube"]
+}
+```
+
+The CLI persists channels as immutable run-plan data. `social-metadata plan
+--run run_example` resumes that exact run and its recorded order without a
+second prompt. A fresh research request uses a new `runId`, requires a fresh
+explicit channel choice, and never copies the previous run's channels.

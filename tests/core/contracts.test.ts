@@ -342,6 +342,55 @@ test("browser selection is required, user-confirmed, and compatible with the fir
   );
 });
 
+test("new runs keep independent ordered channels while resume reuses the same run plan", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-channel-isolation-"));
+  const template = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;
+
+  const firstRequest = structuredClone(template);
+  firstRequest.runId = "run_channel_isolation_a";
+  firstRequest.channels = ["facebook", "x"];
+  firstRequest.browserSelection = { browser: "chrome", confirmedByUser: true };
+  const first = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(firstRequest)]),
+    cwd,
+  );
+
+  const secondRequest = structuredClone(template);
+  secondRequest.runId = "run_channel_isolation_b";
+  secondRequest.channels = ["youtube"];
+  secondRequest.browserSelection = { browser: "chrome", confirmedByUser: true };
+  const second = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(secondRequest)]),
+    cwd,
+  );
+
+  assert.deepEqual(
+    (first.envelope.data as Record<string, any>).plan.channels,
+    ["facebook", "x"],
+  );
+  assert.deepEqual(
+    (second.envelope.data as Record<string, any>).plan.channels,
+    ["youtube"],
+  );
+
+  const resumedFirst = await executeCommand(
+    parseArguments(["plan", "--run", "run_channel_isolation_a"]),
+    cwd,
+  );
+  const resumedSecond = await executeCommand(
+    parseArguments(["plan", "--run", "run_channel_isolation_b"]),
+    cwd,
+  );
+  assert.deepEqual(
+    (resumedFirst.envelope.data as Record<string, any>).plan.channels,
+    ["facebook", "x"],
+  );
+  assert.deepEqual(
+    (resumedSecond.envelope.data as Record<string, any>).plan.channels,
+    ["youtube"],
+  );
+});
+
 test("next actions preserve the browser choice and request an amendment for an incompatible later channel", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "social-metadata-browser-next-"));
   const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;

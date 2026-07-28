@@ -27,10 +27,10 @@
     "host": "codex",
     "browser": "chrome",
     "accessMode": "authenticated",
-    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "searchEntryPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "diagnostic": { "routeClass": "linkedin_search", "expectedLandmark": "linkedin_native_search_entry", "observedLandmark": "linkedin_native_search_entry" }, "expected": "ready" },
     "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
     "interruption": { "accessState": "authentication_required", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
-    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": true, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "failed" }
+    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "searchEntryPresent": false, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": true, "diagnostic": { "routeClass": "linkedin_authenticated_feed", "expectedLandmark": "linkedin_native_search_entry", "observedLandmark": "linkedin_authenticated_feed_navigation" }, "expected": "failed" }
   },
   {
     "channel": "x",
@@ -71,10 +71,10 @@
     "host": "claude",
     "browser": "chrome",
     "accessMode": "public",
-    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "searchEntryPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "diagnostic": { "routeClass": "pinterest_public_search", "expectedLandmark": "pinterest_search_control", "observedLandmark": "pinterest_search_control" }, "expected": "ready" },
     "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
     "interruption": { "accessState": "challenge", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
-    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": true, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "failed" },
+    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "searchEntryPresent": false, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": true, "diagnostic": { "routeClass": "pinterest_business_hub", "expectedLandmark": "pinterest_search_control", "observedLandmark": "pinterest_business_hub" }, "expected": "failed" },
     "notApplicableModule": "hashtag"
   }
 ]

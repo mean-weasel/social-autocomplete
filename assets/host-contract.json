@@ -29,6 +29,43 @@
       "signIn": "user_manual_same_session_pause_and_resume",
       "credentialHandling": "never_request_read_type_transmit_or_store"
     },
+    "channelSelection": {
+      "selectionRequiredBeforePlan": true,
+      "explicitPrompt": "Which channels should I research, and in what order?",
+      "supported": ["facebook", "instagram", "linkedin", "x", "tiktok", "youtube", "pinterest"],
+      "ordered": true,
+      "recordedInPlan": true,
+      "newRunInheritance": "prohibited",
+      "resume": "reuse_same_run_without_reprompt"
+    },
+    "authenticatedInspection": {
+      "targetFiltering": "in_process_expected_origin_before_projection",
+      "completeOpenTabLists": "prohibited",
+      "fullDomSnapshots": "prohibited",
+      "bodyText": "prohibited",
+      "feedContent": "prohibited",
+      "accountIdentifiers": "prohibited",
+      "broadenReadAfterFailure": "prohibited",
+      "projection": {
+        "structuralBooleans": [
+          "targetMatched",
+          "authenticationRequired",
+          "challengePresent",
+          "localeMatches",
+          "searchLandmarkPresent",
+          "resultsLandmarkPresent"
+        ],
+        "sanitizedStatus": true,
+        "expectedLandmark": true,
+        "observedLandmark": true
+      }
+    },
+    "codexCatalog": {
+      "model": "single_orchestrator_with_linked_channel_resources",
+      "topLevelSkills": ["social-metadata-research"],
+      "channelResources": ["facebook", "instagram", "linkedin", "x", "tiktok", "youtube", "pinterest"],
+      "directChannelInvocation": "not_required"
+    },
     "prohibited": ["publishing", "composer_interaction", "scraping", "authentication_bypass"]
   },
   "hosts": {

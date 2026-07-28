@@ -68,8 +68,75 @@ test("surface diagnostics keep native empty distinct from authentication and UI 
   assert.equal(classifySurface({ ...base, localeMatches: false }).exitCode, 6);
 });
 
+test("LinkedIn and Pinterest require an evidenced semantic search entry", () => {
+  const base = {
+    accessState: "ready" as const,
+    localeMatches: true,
+    expectedLandmarksPresent: true,
+    searchEntryPresent: true,
+    interactionAttempted: false,
+    interactionSucceeded: false,
+    explicitNativeEmpty: false,
+  };
+  assert.equal(classifySurface({
+    ...base,
+    diagnostic: {
+      routeClass: "linkedin_search",
+      expectedLandmark: "linkedin_native_search_entry",
+      observedLandmark: "linkedin_native_search_entry",
+    },
+  }).state, "ready");
+  for (const routeClass of ["pinterest_public_search", "pinterest_personal_search"] as const) {
+    assert.equal(classifySurface({
+      ...base,
+      diagnostic: {
+        routeClass,
+        expectedLandmark: "pinterest_search_control",
+        observedLandmark: "pinterest_search_control",
+      },
+    }).state, "ready");
+  }
+  assert.deepEqual(classifySurface({
+    ...base,
+    searchEntryPresent: false,
+    explicitNativeEmpty: true,
+    diagnostic: {
+      routeClass: "linkedin_authenticated_feed",
+      expectedLandmark: "linkedin_native_search_entry",
+      observedLandmark: "linkedin_authenticated_feed_navigation",
+    },
+  }), {
+    state: "failed",
+    reasonCode: "ui_change",
+    exitCode: 5,
+    diagnostic: {
+      routeClass: "linkedin_authenticated_feed",
+      expectedLandmark: "linkedin_native_search_entry",
+      observedLandmark: "linkedin_authenticated_feed_navigation",
+    },
+  });
+  for (const routeClass of ["pinterest_business_hub", "pinterest_root_after_search_redirect"] as const) {
+    assert.equal(classifySurface({
+      ...base,
+      searchEntryPresent: false,
+      explicitNativeEmpty: true,
+      diagnostic: {
+        routeClass,
+        expectedLandmark: "pinterest_search_control",
+        observedLandmark: routeClass === "pinterest_business_hub" ? "pinterest_business_hub" : "pinterest_root",
+      },
+    }).reasonCode, "ui_change");
+  }
+});
+
 test("channel caveats preserve observed limitations", () => {
   assert.match(getPlaybook("linkedin").modules.hashtag.zeroPolicy, /refinement/i);
+  assert.equal(getPlaybook("linkedin").modules["search-term"].autocompleteEvidence, "acceptance_gap");
+  assert.equal(
+    getPlaybook("linkedin").semanticCheckpoints.find(({ id }) => id === "linkedin-search")?.evidenceStatus,
+    "acceptance_gap",
+  );
+  assert.match(getPlaybook("pinterest").entryInstruction, /Business Hub.*ui_change/i);
   assert.ok(getPlaybook("x").modules["search-term"].excludedCandidateKinds.includes("search_action"));
   assert.equal(getPlaybook("tiktok").modules.hashtag.autocompleteEvidence, "acceptance_gap");
   assert.equal(getPlaybook("youtube").modules.hashtag.autocompleteEvidence, "confirmed_live");

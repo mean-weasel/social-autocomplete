@@ -14,7 +14,7 @@ test("Codex and Claude manifests expose one shared plugin identity", async () =>
   assert.equal(codex.name, "social-metadata-research");
   assert.equal(claude.name, codex.name);
   assert.equal(claude.version, codex.version);
-  assert.equal(codex.skills, "./skills/");
+  assert.equal(codex.skills, "./skills/social-metadata-research/");
 });
 
 test("plugin package is self-contained", async () => {
@@ -36,6 +36,22 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   for (const channel of ["Facebook", "Instagram", "LinkedIn", "X", "TikTok", "YouTube", "Pinterest"]) {
     assert.match(skill, new RegExp(channel));
   }
+  assert.match(skill, /packaged resources used by this orchestrator/i);
+  assert.match(skill, /not\s+separate required top-level Codex catalog entries/i);
+  const linkedPlaybooks = [...skill.matchAll(/\]\(\.\.\/([a-z-]+-metadata-research)\/SKILL\.md\)/g)]
+    .map((match) => match[1]);
+  assert.deepEqual(linkedPlaybooks, [
+    "facebook-metadata-research",
+    "instagram-metadata-research",
+    "linkedin-metadata-research",
+    "x-metadata-research",
+    "tiktok-metadata-research",
+    "youtube-metadata-research",
+    "pinterest-metadata-research",
+  ]);
+  for (const playbook of linkedPlaybooks) {
+    await readFile(`skills/${playbook}/SKILL.md`, "utf8");
+  }
   assert.doesNotMatch(skill, /--input\b/);
   assert.match(skill, /social-metadata plan --json @plan-input\.json/);
   assert.match(skill, /social-metadata record-observation --run <run-id> --json @observation\.json/);
@@ -47,8 +63,20 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   assert.match(skill, /never request, receive, type, read, transmit, or store passwords/i);
   assert.match(skill, /Before creating a plan or opening any channel/i);
   assert.match(skill, /choose and confirm the browser/i);
+  assert.match(skill, /Which channels should I research, and in what order\?/i);
+  assert.match(skill, /On every new run, ask again and create a new `runId`/i);
+  assert.match(skill, /never inherit channels from a previous run/i);
+  assert.match(skill, /resuming an existing `runId`, reuse its recorded channels without asking again/i);
   assert.match(skill, /browserSelection/i);
   assert.match(skill, /Codex built-in Browser/i);
   assert.match(skill, /append-only plan amendment/i);
   assert.match(skill, /Never switch browsers/i);
+  assert.match(skill, /sanitized authentication preflight/i);
+  assert.match(skill, /filter to the expected channel target inside the browser-control process/i);
+  assert.match(skill, /Never return a complete open-tab list/i);
+  assert.match(skill, /full authenticated DOM snapshots/i);
+  assert.match(skill, /`body` text, feed\s+content/i);
+  assert.match(skill, /account identifiers/i);
+  assert.match(skill, /only structural booleans, sanitized status, and short expected\/observed semantic landmarks/i);
+  assert.match(skill, /must not trigger a broader tab or DOM\s+read/i);
 });

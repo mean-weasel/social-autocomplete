@@ -65,13 +65,13 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-qa-hardening/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-qa-hardening"
 
-active_task: T001
+active_task: T008
 
 tasks:
   - id: T001
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Validate the corrected QA handoff, the oracle, packaging direction, task scopes, and verification boundaries before any source edit."
     inputs:
@@ -87,11 +87,50 @@ tasks:
       - "Packaging decision"
       - "Largest safe Worker package order"
       - "Any corrected allowed_files, verify, or stop_if boundaries"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The corrected pass-with-findings handoff, oracle, and sequence are coherent. Package Codex around one user-facing orchestrator while retaining all seven channel playbooks as linked resources; direct top-level channel discovery is not a release criterion. T002 is the largest safe first write slice, followed by the privacy protocol before any live Scout work. LinkedIn and Pinterest changes remain gated on sanitized evidence and a Judge decision, and final completion remains gated on clean-install QA plus release verification."
+      worker_package:
+        objective: "Make ordered channel selection an explicit required choice on every new run while preserving same-run resume and new-run isolation."
+        allowed_files:
+          - skills/social-metadata-research/SKILL.md
+          - skills/_shared/browser-research-contract.md
+          - README.md
+          - assets/host-contract.json
+          - docs/integration/json-contract.md
+          - docs/superpowers/specs/2026-07-27-social-metadata-research-design.md
+          - tests/core/contracts.test.ts
+          - tests/hosts/manifests.test.ts
+          - tests/hosts/host-parity.ts
+        verify:
+          - "npm run typecheck"
+          - "npm run test:core"
+          - "npm run test:hosts"
+          - "npm run test:host-parity"
+        stop_if:
+          - "The change requires a breaking CLI/JSON contract revision."
+          - "The requested new-run versus resume behavior is ambiguous."
+          - "Verification fails twice for reasons introduced by this task."
+      evidence:
+        - docs/goals/social-metadata-qa-hardening/goal.md
+        - docs/goals/social-metadata-qa-hardening/state.yaml
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa-run.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/auth-preflight-2026-07-28.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/session-selection-2026-07-28.json
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "Fresh sanitized LinkedIn and Pinterest structural evidence after protocol hardening"
+        - "Clean-install proof of the final orchestrator catalog shape"
+        - "Final release verification and isolated QA receipts"
+      required_board_updates: []
   - id: T002
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Make ordered channel selection an explicit, required first-run choice while preserving same-run resume and fresh-run isolation."
     inputs:
@@ -128,11 +167,37 @@ tasks:
       - "The change requires a breaking CLI/JSON contract revision."
       - "The requested new-run versus resume behavior is ambiguous."
       - "Verification fails twice for reasons introduced by this task."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - skills/social-metadata-research/SKILL.md
+        - skills/_shared/browser-research-contract.md
+        - README.md
+        - assets/host-contract.json
+        - docs/integration/json-contract.md
+        - docs/superpowers/specs/2026-07-27-social-metadata-research-design.md
+        - tests/core/contracts.test.ts
+        - tests/hosts/manifests.test.ts
+        - tests/hosts/host-parity.ts
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run test:core"
+          status: pass
+        - cmd: "npm run test:hosts"
+          status: pass
+        - cmd: "npm run test:host-parity"
+          status: pass
+      summary: "New runs now require a literal ordered-channel question after browser selection, persist the confirmed list in the plan, never inherit prior channels, and distinguish explicit same-run resume from fresh research. The shared host contract and documentation carry the same semantics. A core regression creates two independent runs and proves each resume retains only its own ordered list; manifest and host-parity assertions pin the prompt and lifecycle language. All focused verification passed without changing the CLI command surface or contractVersion 1.0."
+      deviations:
+        - "Goal Worker timed out before making changes; the PM completed the approved bounded package under the same allowed_files and verification contract."
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Harden the canonical authenticated-browser QA protocol so agents emit only sanitized structural checks and cannot repeat broad tab or DOM reads."
     inputs:
@@ -165,11 +230,36 @@ tasks:
       - "The implementation would store new authenticated browser data."
       - "The proposed test requires live credentials or authenticated page content."
       - "Verification fails twice for reasons introduced by this task."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - docs/browser-acceptance/README.md
+        - skills/_shared/browser-research-contract.md
+        - skills/social-metadata-research/SKILL.md
+        - assets/host-contract.json
+        - tests/hosts/manifests.test.ts
+        - tests/hosts/host-parity.ts
+        - tests/browser-acceptance/harness.test.ts
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run test:hosts"
+          status: pass
+        - cmd: "npm run test:host-parity"
+          status: pass
+        - cmd: "npm run test:browser-harness"
+          status: pass
+      summary: "Authenticated preflight is now a single bounded operation that filters the expected origin in-process and emits only structural booleans, sanitized status, and short expected/observed landmarks. Complete tab lists, tab metadata, full authenticated DOM/HTML/body reads, feed content, account identifiers, and broader retry reads are explicitly prohibited in the canonical docs, primary/shared skills, and host contract. Static regressions pin both the prohibited inputs and allowed projection; all focused gates pass without live credentials or browser content."
+      deviations:
+        - "The delegated Worker was interrupted at the one-wait cutoff; its late scoped edits were reviewed and completed by the PM."
+        - "Two initial verification passes exposed whitespace-sensitive test regexes; the assertions were corrected within scope and the full focused command set passed."
+      remaining_blockers: []
+      verification_attempts: 3
+      stopped_because: null
   - id: T004
     type: scout
     assignee: Scout
-    status: queued
+    status: done
     reasoning_hint: low
     objective: "Map current LinkedIn and Pinterest authenticated search-entry variants using existing QA evidence and, only if still necessary, bounded privacy-safe live structural checks."
     inputs:
@@ -190,11 +280,36 @@ tasks:
       - "Pinterest personal/business route-state map with primary and fallback landmarks"
       - "Confirmed ui_change boundaries"
       - "Recommended fixture and diagnostic cases"
-    receipt: null
+    receipt:
+      result: done
+      summary: "Existing sanitized QA evidence is sufficient; no live browser read is needed. LinkedIn's authenticated feed variant proves channel/access readiness but lacks any evidenced search entry, so it must remain ui_change rather than auth or empty. Pinterest's authenticated business variant routes through Business Hub and returns from /search/pins/ to root without a search control, likewise requiring ui_change. Personal/public Pinterest may use the documented search combobox path, but its autocomplete dropdown remains an acceptance gap. Fixtures should model route class, checkpoint booleans, and short expected/observed landmarks only."
+      evidence:
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa-run.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/auth-preflight-2026-07-28.json
+        - src/channels/playbooks/linkedin.ts
+        - src/channels/playbooks/pinterest.ts
+        - skills/linkedin-metadata-research/SKILL.md
+        - skills/pinterest-metadata-research/SKILL.md
+        - src/channels/diagnostics.ts
+        - fixtures/diagnostics/surface-cases.json
+      facts:
+        - "LinkedIn feed route: targetMatched=true, authenticated navigation present=true, searchLandmarkPresent=false; expected native search-entry control, observed authenticated Feed and primary navigation landmarks. Boundary: ui_change before query entry; never authentication_required or native_empty."
+        - "LinkedIn has no evidence-supported fallback search control in the current QA receipt. A generic textbox/combobox-or-search-action fallback would be guessed and must not be treated as ready."
+        - "Pinterest personal/public route: the evidence contract expects Pinterest identity, a native Search combobox, and Pins/result controls; public autocomplete remains an acceptance gap."
+        - "Pinterest business route: targetMatched=true, authenticated profile control=true, routeClass=business_hub_then_root, searchLandmarkPresent=false, challengePresent=false; /search/pins/ returned to root. Boundary: ui_change with expected Search control and observed Business Hub/root landmarks."
+        - "Recommended diagnostic fixtures: linkedin-authenticated-feed-missing-search, pinterest-business-hub-missing-search, pinterest-public-search-ready, and pinterest-business-not-challenge. Each stores only routeClass, structural booleans, status, and sanitized expected/observed landmarks."
+      contradictions:
+        - "LinkedIn playbook marks the specifically labelled top search textbox as confirmed_live, but the fresh authenticated feed variant did not expose a textbox, combobox, or search-labelled control."
+        - "Pinterest playbook's generic entry instruction does not distinguish the business-account redirect state that the fresh QA receipt observed."
+      ambiguity_requiring_judge:
+        - "No current evidence supports a passing LinkedIn fallback selector or a Pinterest Business Hub recovery control. Judge should choose truthful variant-aware ui_change diagnostics now rather than inventing a ready path; a later live receipt can promote an evidenced fallback."
+      commands:
+        - "Read-only inspection of named source playbooks, skills, sanitized QA notes/receipt, diagnostic types, and fixtures; no browser access."
+      note_needed: false
   - id: T005
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Review the privacy-safe channel map and specify one coherent LinkedIn/Pinterest repair package."
     inputs:
@@ -211,11 +326,56 @@ tasks:
       - "Confirmed allowed_files"
       - "Focused verification commands"
       - "Live acceptance expectations"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Implement evidence-conservative, variant-aware diagnostics rather than inventing selectors. LinkedIn may pass only when a semantic native search-entry control is structurally present; its authenticated Feed-with-navigation/no-search variant is explicit ui_change, and the stale fixed-label confirmed_live claim must be removed. Pinterest personal/public search may pass when its search control is present, while Business Hub or root-after-search-redirect without one is ui_change, never challenge or empty. Sanitized route classes and enumerated expected/observed landmarks should make both outcomes diagnosable without exposing page content."
+      worker_package:
+        objective: "Implement sanitized route-aware LinkedIn and Pinterest search-entry diagnostics, update playbook evidence claims, and add deterministic variant fixtures without guessing selectors."
+        allowed_files:
+          - src/channels/playbooks/linkedin.ts
+          - src/channels/playbooks/pinterest.ts
+          - src/channels/diagnostics.ts
+          - src/channels/types.ts
+          - skills/linkedin-metadata-research/SKILL.md
+          - skills/pinterest-metadata-research/SKILL.md
+          - fixtures/channels/scenarios.json
+          - fixtures/diagnostics/acceptance-matrix.json
+          - fixtures/diagnostics/surface-cases.json
+          - tests/channels/playbooks.test.ts
+          - tests/channels/fixture-replay.test.ts
+          - tests/browser-acceptance/diagnostics.test.ts
+          - docs/browser-acceptance/README.md
+        verify:
+          - "npm run typecheck"
+          - "npm run lint:playbooks"
+          - "npm run test:channels"
+          - "npm run test:diagnostics"
+          - "npm run verify:offline"
+        stop_if:
+          - "A passing fallback would require a selector or landmark not present in current sanitized evidence."
+          - "A change would expose free-form authenticated page content or account identity."
+          - "Current live evidence contradicts the route-state classification."
+          - "Verification fails twice for reasons introduced by this task."
+      evidence:
+        - "T004 receipt in docs/goals/social-metadata-qa-hardening/state.yaml"
+        - src/channels/playbooks/linkedin.ts
+        - src/channels/playbooks/pinterest.ts
+        - src/channels/diagnostics.ts
+        - src/channels/types.ts
+        - fixtures/diagnostics/surface-cases.json
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "No evidence-supported passing fallback exists for the current LinkedIn Feed or Pinterest Business Hub variants; fresh acceptance should truthfully remain ui_change unless a semantic search entry is present."
+      required_board_updates:
+        - "T006 live acceptance expectation: pass only with the required semantic search entry; otherwise emit ui_change with an enumerated route class plus expected and observed landmark."
   - id: T006
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Implement and verify the Judge-approved LinkedIn and Pinterest search-entry and diagnostic repairs as one channel-hardening package."
     inputs:
@@ -254,11 +414,42 @@ tasks:
       - "Current live evidence contradicts the proposed landmark."
       - "A fix would require account identity, private DOM extraction, or a guessed selector."
       - "Verification fails twice for reasons introduced by this task."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - src/channels/playbooks/linkedin.ts
+        - src/channels/playbooks/pinterest.ts
+        - src/channels/diagnostics.ts
+        - src/channels/types.ts
+        - skills/linkedin-metadata-research/SKILL.md
+        - skills/pinterest-metadata-research/SKILL.md
+        - fixtures/channels/scenarios.json
+        - fixtures/diagnostics/acceptance-matrix.json
+        - fixtures/diagnostics/surface-cases.json
+        - tests/channels/playbooks.test.ts
+        - tests/channels/fixture-replay.test.ts
+        - tests/browser-acceptance/diagnostics.test.ts
+        - docs/browser-acceptance/README.md
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run lint:playbooks"
+          status: pass
+        - cmd: "npm run test:channels"
+          status: pass
+        - cmd: "npm run test:diagnostics"
+          status: pass
+        - cmd: "npm run verify:offline"
+          status: pass
+      summary: "Implemented bounded, enumerated LinkedIn and Pinterest route/landmark diagnostics. LinkedIn now requires an evidenced semantic native search entry; authenticated Feed/navigation without one yields ui_change, and stale confirmed-live claims were downgraded. Pinterest personal/public routes pass with Search, while Business Hub and root-after-search-redirect without Search yield ui_change rather than challenge or native empty. Fixtures and tests cover sanitized variants, preserve explicit interruption classes, and keep Pinterest hashtag not_applicable. All focused and offline verification passed."
+      deviations: []
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
   - id: T007
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Align Codex packaging and smoke tests with the Judge-approved one-orchestrator channel-playbook model, without losing any channel procedure."
     inputs:
@@ -304,11 +495,36 @@ tasks:
       - "The package would omit or duplicate a channel procedure."
       - "Clean installation no longer loads the main orchestrator."
       - "Verification fails twice for reasons introduced by this task."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - .codex-plugin/plugin.json
+        - scripts/install-smoke/run.mjs
+        - skills/social-metadata-research/SKILL.md
+        - assets/host-contract.json
+        - README.md
+        - tests/hosts/manifests.test.ts
+        - tests/hosts/host-parity.ts
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run test:hosts"
+          status: pass
+        - cmd: "npm run test:host-parity"
+          status: pass
+        - cmd: "npm run test:install"
+          status: pass
+      summary: "Codex now exposes only the social-metadata-research orchestrator as its declared skill root. All seven channel playbooks remain packaged and are linked resources loaded by that orchestrator; independent top-level channel invocation is explicitly outside v1. Host contracts and documentation encode the same model. The install smoke packs the artifact, verifies one orchestrator root plus seven unique linked resources, installs through a temporary marketplace, and confirms the enabled plugin in a fresh Codex process. Claude package validation remains intact. All focused gates pass."
+      deviations:
+        - "The delegated Worker timed out before making changes; the PM completed the approved package."
+        - "The first host-test attempt exposed one whitespace-sensitive assertion; it was corrected within scope and the full focused suite passed on the second attempt."
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
   - id: T008
     type: pm
     assignee: PM
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Run isolated clean-install Codex QA from the QA project and collect sanitized oracle evidence for every corrected finding."
     inputs:

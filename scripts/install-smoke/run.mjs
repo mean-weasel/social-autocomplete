@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -36,6 +36,25 @@ try {
     await readFile(join(pluginRoot, required), "utf8");
   }
 
+  const codexManifest = JSON.parse(await readFile(join(pluginRoot, ".codex-plugin/plugin.json"), "utf8"));
+  if (codexManifest.skills !== "./skills/social-metadata-research/") {
+    throw new Error(`Unexpected Codex skills root: ${codexManifest.skills}`);
+  }
+  const topLevelSkillFiles = (await readdir(join(pluginRoot, "skills", "social-metadata-research")))
+    .filter((name) => name === "SKILL.md");
+  if (topLevelSkillFiles.length !== 1) {
+    throw new Error(`Expected one orchestrator SKILL.md, found ${topLevelSkillFiles.length}`);
+  }
+  const orchestrator = await readFile(join(pluginRoot, "skills/social-metadata-research/SKILL.md"), "utf8");
+  const linkedPlaybooks = [...orchestrator.matchAll(/\]\(\.\.\/([a-z-]+-metadata-research)\/SKILL\.md\)/g)]
+    .map((match) => match[1]);
+  if (linkedPlaybooks.length !== 7 || new Set(linkedPlaybooks).size !== 7) {
+    throw new Error(`Expected seven unique linked channel playbooks, found ${linkedPlaybooks.length}`);
+  }
+  for (const playbook of linkedPlaybooks) {
+    await readFile(join(pluginRoot, "skills", playbook, "SKILL.md"), "utf8");
+  }
+
   await mkdir(join(marketplace, ".agents", "plugins"), { recursive: true });
   await writeFile(
     join(marketplace, ".agents", "plugins", "marketplace.json"),
@@ -54,6 +73,13 @@ try {
   marketplaceAdded = true;
   JSON.parse(run("codex", ["plugin", "add", `social-metadata-research@${marketplaceName}`, "--json"]));
   pluginAdded = true;
+  const freshCatalog = JSON.parse(run("codex", ["plugin", "list", "--marketplace", marketplaceName, "--json"]));
+  const installed = freshCatalog.installed?.filter(
+    (entry) => entry.pluginId === `social-metadata-research@${marketplaceName}` && entry.enabled,
+  );
+  if (installed?.length !== 1) {
+    throw new Error("Fresh Codex process did not report the installed orchestrator plugin");
+  }
 
   run("claude", ["plugin", "validate", "--strict", pluginRoot]);
   run("claude", ["--plugin-dir", pluginRoot, "--version"]);
@@ -62,6 +88,10 @@ try {
     ok: true,
     package: filename,
     codexMarketplaceInstall: "pass",
+    codexCatalog: {
+      topLevelSkills: ["social-metadata-research"],
+      linkedChannelResources: linkedPlaybooks.length,
+    },
     claudePluginDirLoad: "pass",
   })}\n`);
 } finally {

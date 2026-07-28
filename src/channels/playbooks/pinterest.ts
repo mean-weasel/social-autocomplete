@@ -7,10 +7,10 @@ export const pinterestPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated_preferred",
   publicCompletion: true,
   supportedBrowsers: { codex: ["chrome", "in_app"], claude: ["chrome"] },
-  entryInstruction: "Open Pinterest native search; prefer signed-in Chrome and permit public search-term completion.",
+  entryInstruction: "Open Pinterest native search; proceed on personal/public routes only when the semantic Search control is present, and classify Business Hub or root-after-search-redirect without it as ui_change.",
   semanticCheckpoints: [
     { id: "pinterest-channel", purpose: "channel", description: "Pinterest search/result identity is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
-    { id: "pinterest-search", purpose: "search", description: "Search combobox is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
+    { id: "pinterest-search", purpose: "search", description: "A semantic Search control is visible on a personal or public search route.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "pinterest-results", purpose: "results", description: "Pins and result-type/refinement controls are visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "pinterest-empty", purpose: "empty", description: "A native empty state is explicitly visible.", evidenceStatus: "acceptance_gap", required: false, failureCode: "native_empty" },
   ],
@@ -20,7 +20,7 @@ export const pinterestPlaybook: ChannelPlaybook = {
       acceptedCandidateKinds: ["native_phrase"],
       excludedCandidateKinds: ["account", "typed_entity", "search_action", "query_refinement", "native_hashtag"],
       autocompleteEvidence: "official_only",
-      caveat: "Official Help documents search-bar suggestions; current public desktop showed result refinements but no autocomplete dropdown.",
+      caveat: "Official Help documents search-bar suggestions; current public desktop showed result refinements but no autocomplete dropdown. Business Hub or root-after-search-redirect without Search is ui_change, not challenge or native empty.",
       zeroPolicy: "Refinement chips are retained as auxiliary evidence, not silently substituted for autocomplete suggestions.",
     }),
     hashtag: moduleProcedure("pinterest", "hashtag", {
@@ -38,6 +38,6 @@ export const pinterestPlaybook: ChannelPlaybook = {
     skipSponsored: true,
     engagementIsDescriptiveOnly: true,
   },
-  acceptanceGaps: ["Authenticated personalization and a live autocomplete dropdown."],
+  acceptanceGaps: ["Authenticated personalization, Business Hub search entry, and a live autocomplete dropdown."],
   evidenceSources: ["https://help.pinterest.com/en/article/discover-ideas-on-pinterest"],
 };

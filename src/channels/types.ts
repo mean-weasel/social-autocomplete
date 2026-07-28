@@ -10,6 +10,26 @@ export type BrowserHost = "codex" | "claude";
 export type BrowserSurface = "chrome" | "in_app";
 export type AccessMode = "authenticated" | "public";
 export type PlaybookEvidenceStatus = "confirmed_live" | "official_only" | "acceptance_gap";
+export type SurfaceRouteClass =
+  | "generic"
+  | "linkedin_search"
+  | "linkedin_authenticated_feed"
+  | "pinterest_public_search"
+  | "pinterest_personal_search"
+  | "pinterest_business_hub"
+  | "pinterest_root_after_search_redirect";
+export type SurfaceExpectedLandmark =
+  | "required_landmarks"
+  | "linkedin_native_search_entry"
+  | "pinterest_search_control";
+export type SurfaceObservedLandmark =
+  | "required_landmarks"
+  | "linkedin_native_search_entry"
+  | "linkedin_authenticated_feed_navigation"
+  | "pinterest_search_control"
+  | "pinterest_business_hub"
+  | "pinterest_root"
+  | "landmark_missing";
 export type CandidateKind =
   | "native_phrase"
   | "native_hashtag"
@@ -103,14 +123,21 @@ export interface SurfaceSnapshot {
   accessState: "ready" | "authentication_required" | "challenge";
   localeMatches: boolean;
   expectedLandmarksPresent: boolean;
+  searchEntryPresent?: boolean;
   interactionAttempted: boolean;
   interactionSucceeded: boolean;
   explicitNativeEmpty: boolean;
   assistedResumeDiagnostic?: boolean;
+  diagnostic?: {
+    routeClass: SurfaceRouteClass;
+    expectedLandmark: SurfaceExpectedLandmark;
+    observedLandmark: SurfaceObservedLandmark;
+  };
 }
 
 export interface SurfaceClassification {
   state: "ready" | "native_empty" | "interrupted" | "failed";
   reasonCode?: "authentication_required" | "challenge" | "locale_mismatch" | "ui_change";
   exitCode: 0 | 4 | 5 | 6;
+  diagnostic?: SurfaceSnapshot["diagnostic"];
 }

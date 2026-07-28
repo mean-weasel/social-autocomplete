@@ -7,11 +7,11 @@ export const linkedinPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated",
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
-  entryInstruction: "Open LinkedIn native search in the signed-in Chrome session and locate the top search textbox.",
+  entryInstruction: "Open LinkedIn in the signed-in Chrome session and continue only when a semantic native search-entry control is present.",
   semanticCheckpoints: [
     { id: "linkedin-channel", purpose: "channel", description: "LinkedIn navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "linkedin-auth", purpose: "access", description: "Authenticated LinkedIn navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },
-    { id: "linkedin-search", purpose: "search", description: "Top search textbox, currently labelled “I'm looking for…”, is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
+    { id: "linkedin-search", purpose: "search", description: "A semantic native search-entry control is visible; authenticated Feed/navigation alone does not satisfy this checkpoint.", evidenceStatus: "acceptance_gap", required: true, failureCode: "ui_change" },
     { id: "linkedin-results", purpose: "results", description: "Native category/results region is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
   ],
   modules: {
@@ -19,8 +19,8 @@ export const linkedinPlaybook: ChannelPlaybook = {
       prefixSyntax: "keyword phrase or natural-language query",
       acceptedCandidateKinds: ["native_phrase"],
       excludedCandidateKinds: ["account", "typed_entity", "search_action", "query_refinement", "native_hashtag"],
-      autocompleteEvidence: "confirmed_live",
-      caveat: "Preserve visible Product, Company, member, or other entity labels and exclude typed entities from phrase recommendations.",
+      autocompleteEvidence: "acceptance_gap",
+      caveat: "The current authenticated Feed variant did not expose a semantic search entry. Preserve visible Product, Company, member, or other entity labels and exclude typed entities from phrase recommendations only after the entry checkpoint passes.",
       zeroPolicy: "Only explicit native empty evidence after bounded phrase attempts may support zero.",
     }),
     hashtag: moduleProcedure("linkedin", "hashtag", {
@@ -38,6 +38,6 @@ export const linkedinPlaybook: ChannelPlaybook = {
     skipSponsored: true,
     engagementIsDescriptiveOnly: true,
   },
-  acceptanceGaps: [],
+  acceptanceGaps: ["A current authenticated Feed variant exposes navigation without an evidenced native search-entry control."],
   evidenceSources: ["https://www.linkedin.com/help/linkedin/answer/a523136/searching-on-linkedin"],
 };

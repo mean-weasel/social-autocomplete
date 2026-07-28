@@ -82,7 +82,14 @@ Codex or Claude inspects the supplied caption, image, app, files, or messaging f
 
 Project-local run state stores the normalized brief and safe references to original inputs. It does not copy source assets into the run.
 
-The user may supply a channel list or ask the host to propose one. Before research begins, the host presents and requires confirmation of:
+After browser selection, every new run explicitly asks the user which supported
+channels to research and in what order. The host may propose a list, but the
+proposal is not a default and does not replace the user's explicit choice. The
+confirmed ordered list is stored in the new run plan. A new run never inherits
+channels from a prior run; an explicit resume of the same `runId` reuses its
+recorded channels without asking again.
+
+Before research begins, the host presents and requires confirmation of:
 
 - The normalized creative brief.
 - The final ordered channel list.

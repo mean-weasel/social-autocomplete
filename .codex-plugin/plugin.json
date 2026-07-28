@@ -13,7 +13,7 @@
     "research",
     "browser"
   ],
-  "skills": "./skills/",
+  "skills": "./skills/social-metadata-research/",
   "interface": {
     "displayName": "Social Metadata Research",
     "shortDescription": "Research social hashtags and search terms",

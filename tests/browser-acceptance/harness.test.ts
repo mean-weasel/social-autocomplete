@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { test } from "node:test";
 
@@ -41,6 +42,22 @@ test("harness emits a bounded sanitized receipt", async () => {
   assert.equal(output.receipt.checkpoints.length, 3);
   assert.equal(JSON.stringify(output).includes("rawDom"), false);
   assert.match(output.receipt.receiptId, /^acceptance_[a-f0-9]{24}$/);
+});
+
+test("authenticated preflight contract prohibits broad reads and limits its projection", async () => {
+  const [readme, sharedContract] = await Promise.all([
+    readFile("docs/browser-acceptance/README.md", "utf8"),
+    readFile("skills/_shared/browser-research-contract.md", "utf8"),
+  ]);
+
+  assert.match(readme, /filter open targets to the expected channel origin/i);
+  assert.match(readme, /Never return a complete open-tab\s+list/i);
+  assert.match(readme, /full authenticated DOM snapshot/i);
+  assert.match(readme, /`body` text, feed content, account\s+identifiers/i);
+  assert.match(readme, /structural booleans[\s\S]*sanitized status code[\s\S]*expected semantic landmark[\s\S]*observed semantic landmark/i);
+  assert.match(readme, /without exposing the targets that were inspected/i);
+  assert.match(sharedContract, /discard non-matches before returning/i);
+  assert.match(sharedContract, /Never repeat a preflight with a broader tab or DOM read/i);
 });
 
 test("private input fields are visibly rejected", async () => {

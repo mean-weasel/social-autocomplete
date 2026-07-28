@@ -33,7 +33,7 @@ is not evidence of popularity, performance, or future reach.
 
 ## Browser sessions and authentication
 
-Browser selection is the first required step of every run. The user explicitly
+Browser selection is the first required step of every new run. The user explicitly
 chooses either `chrome` (their existing visible Chrome session) or `in_app`
 (the Codex built-in Browser). The confirmed choice is stored in the plan:
 
@@ -45,6 +45,16 @@ chooses either `chrome` (their existing visible Chrome session) or `in_app`
   }
 }
 ```
+
+The next required step is an explicit channel-choice question: “Which channels
+should I research, and in what order?” The user chooses from Facebook,
+Instagram, LinkedIn, X, TikTok, YouTube, and Pinterest. The confirmed ordered
+list is stored as `channels` in that new run's plan. An agent may propose a
+list, but it cannot silently use the proposal or a prior run's list.
+
+An explicit resume of the same `runId` reuses its recorded browser and channels
+without asking again. Starting a new run creates a new `runId`, asks for both
+choices again, and never inherits channels from another run.
 
 Every CLI next action repeats the effective selection. A user-confirmed change
 is recorded through an append-only plan amendment and applies before the next
@@ -71,7 +81,15 @@ standalone Chromium fallback.
 
 The repository root is one self-contained Codex and Claude plugin. Invoke
 `social-metadata-research` naturally or directly in either host, then choose
-guided or automatic orchestration after confirming the inferred research plan.
+guided or automatic orchestration after explicitly choosing a browser and
+ordered channels and confirming the remaining inferred research plan.
+
+Codex exposes one user-facing skill, `social-metadata-research`. The seven
+channel playbooks remain packaged beside it as linked resources that the
+orchestrator loads for Facebook, Instagram, LinkedIn, X, TikTok, YouTube, and
+Pinterest. Independent top-level channel invocation is not part of the v1
+contract. This avoids depending on catalog size or ordering while preserving
+every channel procedure. Claude package files remain included.
 
 ```sh
 npm run verify:offline

@@ -21,5 +21,17 @@
     },
     "claudeRequirement": "direct_anthropic_login_and_user_controlled_chrome"
   },
+  "diagnosticEnums": {
+    "linkedin": {
+      "routes": ["linkedin_search", "linkedin_authenticated_feed"],
+      "expectedLandmark": "linkedin_native_search_entry",
+      "observedLandmarks": ["linkedin_native_search_entry", "linkedin_authenticated_feed_navigation"]
+    },
+    "pinterest": {
+      "routes": ["pinterest_public_search", "pinterest_personal_search", "pinterest_business_hub", "pinterest_root_after_search_redirect"],
+      "expectedLandmark": "pinterest_search_control",
+      "observedLandmarks": ["pinterest_search_control", "pinterest_business_hub", "pinterest_root"]
+    }
+  },
   "notApplicable": [{"channel":"pinterest","module":"hashtag"}]
 }
