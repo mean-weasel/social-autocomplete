@@ -1,0 +1,80 @@
+[
+  {
+    "channel": "facebook",
+    "module": "search-term",
+    "host": "codex",
+    "browser": "chrome",
+    "accessMode": "authenticated",
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
+    "interruption": { "accessState": "authentication_required", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
+    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": true, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "failed" }
+  },
+  {
+    "channel": "instagram",
+    "module": "hashtag",
+    "host": "claude",
+    "browser": "chrome",
+    "accessMode": "authenticated",
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
+    "interruption": { "accessState": "challenge", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
+    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": true, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "failed" }
+  },
+  {
+    "channel": "linkedin",
+    "module": "hashtag",
+    "host": "codex",
+    "browser": "chrome",
+    "accessMode": "authenticated",
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
+    "interruption": { "accessState": "authentication_required", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
+    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": true, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "failed" }
+  },
+  {
+    "channel": "x",
+    "module": "search-term",
+    "host": "codex",
+    "browser": "chrome",
+    "accessMode": "authenticated",
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
+    "interruption": { "accessState": "challenge", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
+    "failure": { "accessState": "ready", "localeMatches": false, "expectedLandmarksPresent": true, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" }
+  },
+  {
+    "channel": "tiktok",
+    "module": "hashtag",
+    "host": "codex",
+    "browser": "in_app",
+    "accessMode": "public",
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
+    "interruption": { "accessState": "challenge", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
+    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "failed" }
+  },
+  {
+    "channel": "youtube",
+    "module": "search-term",
+    "host": "codex",
+    "browser": "in_app",
+    "accessMode": "public",
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
+    "interruption": { "accessState": "authentication_required", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
+    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": true, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "failed" }
+  },
+  {
+    "channel": "pinterest",
+    "module": "search-term",
+    "host": "claude",
+    "browser": "chrome",
+    "accessMode": "public",
+    "success": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": false, "expected": "ready" },
+    "zero": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": true, "interactionSucceeded": true, "explicitNativeEmpty": true, "expected": "native_empty" },
+    "interruption": { "accessState": "challenge", "localeMatches": true, "expectedLandmarksPresent": true, "interactionAttempted": false, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "interrupted" },
+    "failure": { "accessState": "ready", "localeMatches": true, "expectedLandmarksPresent": false, "interactionAttempted": true, "interactionSucceeded": false, "explicitNativeEmpty": false, "expected": "failed" },
+    "notApplicableModule": "hashtag"
+  }
+]

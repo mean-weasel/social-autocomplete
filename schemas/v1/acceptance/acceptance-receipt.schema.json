@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/acceptance/acceptance-receipt.schema.json",
+  "title": "Sanitized browser acceptance receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion","receiptVersion","receiptId","capturedAt","host","browser","channel","module","accessClass","locale","status","checkpoints","interaction","screenshot"],
+  "properties": {
+    "contractVersion": {"const":"1.0"},
+    "receiptVersion": {"const":"1.0"},
+    "receiptId": {"type":"string","pattern":"^acceptance_[a-f0-9]{24}$"},
+    "capturedAt": {"type":"string","format":"date-time"},
+    "host": {"enum":["codex","claude"]},
+    "browser": {"enum":["chrome","in_app"]},
+    "channel": {"enum":["facebook","instagram","linkedin","x","tiktok","youtube","pinterest"]},
+    "module": {"enum":["search-term","hashtag"]},
+    "accessClass": {"enum":["public","authenticated"]},
+    "locale": {
+      "type":"object",
+      "additionalProperties":false,
+      "required":["uiLocale","region","timezone"],
+      "properties":{"uiLocale":{"type":"string"},"region":{"type":"string"},"timezone":{"type":"string"}}
+    },
+    "status": {"enum":["pass","interrupted","failed","not_applicable"]},
+    "reasonCode": {"enum":["native_empty","authentication_required","challenge","locale_mismatch","ui_change","capability_unavailable","pinterest_hashtag_not_applicable"]},
+    "checkpoints": {
+      "type":"array",
+      "maxItems":8,
+      "items":{
+        "type":"object",
+        "additionalProperties":false,
+        "required":["id","status"],
+        "properties":{"id":{"type":"string"},"status":{"enum":["present","missing","not_checked"]}}
+      }
+    },
+    "interaction": {
+      "type":"object",
+      "additionalProperties":false,
+      "required":["attempted","succeeded","explicitNativeEmpty"],
+      "properties":{"attempted":{"type":"boolean"},"succeeded":{"type":"boolean"},"explicitNativeEmpty":{"type":"boolean"}}
+    },
+    "screenshot": {
+      "type":"object",
+      "additionalProperties":false,
+      "required":["captured","policyReason"],
+      "properties":{"captured":{"type":"boolean"},"policyReason":{"enum":["authentication_or_challenge","ui_change","not_needed"]}}
+    }
+  }
+}

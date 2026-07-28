@@ -1,0 +1,1129 @@
+version: 2
+
+goal:
+  title: "Implement Browser-First Social Metadata Research v1"
+  slug: "social-metadata-research-v1"
+  kind: existing_plan
+  tranche: "Continuously implement and verify the complete approved v1 through release proof."
+  status: active
+  oracle:
+    signal: "Clean-checkout release verification, cross-host install and fixture parity, subprocess JSON consumption, and current browser-acceptance receipts prove the approved v1 works."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "npm run verify:release passes; Codex and Claude clean-install and parity checks pass; subprocess JSON demo passes; required browser-acceptance receipts exist and pass."
+  intake:
+    original_request: "Make a detailed implementation plan using GoalBuddy Prep based on the approved spec."
+    interpreted_outcome: "Deliver the complete approved browser-first social metadata research v1 with an executable CLI, equal Codex and Claude plugins, live channel playbooks, and receipt-backed release proof."
+    input_shape: existing_plan
+    audience: "Codex and Claude users plus subprocess integrations such as Lineage"
+    authority: approved
+    proof_type: demo
+    completion_proof: "A clean checkout passes release verification and host, subprocess, fixture, and browser acceptance demonstrate the full approved outcome."
+    likely_misfire: "Passing contract and fixture tests while real host/browser workflows remain unproven or evidence semantics are weakened."
+    blind_spots_considered:
+      - "Current Codex and Claude plugin packaging and browser capability differences."
+      - "Authenticated acceptance availability and platform UI drift."
+      - "Private evidence sanitization and project-local Git exclusion."
+      - "The repository has no existing implementation tooling."
+    existing_plan_facts:
+      - "Approved design: docs/superpowers/specs/2026-07-27-social-metadata-research-design.md"
+      - "One TypeScript package with internal boundaries and first-class Codex and Claude packaging."
+      - "Public CLI commands: plan, record-observation, validate."
+      - "V1 modules: search-term and hashtag; Pinterest hashtag is not_applicable."
+      - "Guided and automatic orchestration; autocomplete_only and results_sample evidence tiers."
+      - "Seven channel playbooks with visible resumable authentication and UI-change interruptions."
+      - "No publishing, composer interaction, scraping, Buffer/GrowthOps dependency, or required provider API."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/social-metadata-research-v1/"
+    command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-research-v1"
+
+active_task: T016
+
+tasks:
+  - id: T001
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Validate the committed design as an executable implementation plan before any product-file writes."
+    inputs:
+      - "docs/superpowers/specs/2026-07-27-social-metadata-research-design.md"
+      - "docs/goals/social-metadata-research-v1/goal.md"
+      - "docs/goals/social-metadata-research-v1/state.yaml"
+    constraints:
+      - "Read-only."
+      - "Preserve approved product decisions; flag only contradictions, missing proof, unsafe sequencing, or materially outdated host assumptions."
+      - "Reject implementation activation until every first-phase Worker package has bounded allowed_files, verification, and stop conditions."
+    expected_output:
+      - "approved | amend_board"
+      - "Oracle adequacy assessment"
+      - "Risk and sequencing findings"
+      - "Required task-card amendments"
+      - "Decision on first safe Worker package"
+    receipt:
+      result: done
+      harness: codex
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The approved design, charter, oracle, and task sequence are coherent and preserve the owner outcome. T003 and T004 are bounded, reversible, and verified, but implementation must remain gated on T002 confirming current host packaging and toolchain facts. The final oracle also needs an explicit task owner: T010 must wire verify:release and T011 must run it after acceptance receipts exist. Current evidence is sufficient to advance to the read-only host-packaging Scout, not yet to a Worker."
+      evidence:
+        - docs/superpowers/specs/2026-07-27-social-metadata-research-design.md
+        - docs/goals/social-metadata-research-v1/goal.md
+        - docs/goals/social-metadata-research-v1/state.yaml
+        - "GoalBuddy state checker: 13 tasks, one active task, no errors or warnings"
+      missing_evidence:
+        - "Current official Codex and Claude plugin packaging and browser capability facts"
+        - "Current native channel surface evidence"
+        - "Implementation, fixture, host, subprocess, and browser acceptance proof"
+      required_board_updates:
+        - "Before T008 activation, copy T002-confirmed host packaging paths and install commands into its allowed_files and verification."
+        - "T010 must create the npm run verify:release aggregator without requiring live credentials for harness self-tests."
+        - "T011 must run npm run verify:release after writing sanitized current acceptance receipts and report any blocked authenticated cells."
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: low
+    objective: "Confirm current Codex and Claude plugin packaging, browser-control capabilities, Node toolchain assumptions, and clean-install verification requirements."
+    inputs:
+      - "docs/superpowers/specs/2026-07-27-social-metadata-research-design.md"
+      - "Official current Codex plugin and browser documentation"
+      - "Official current Claude plugin, skill, and browser integration documentation"
+      - "Current repository root and available local runtimes"
+    constraints:
+      - "Read-only."
+      - "Use primary official sources for time-sensitive host requirements."
+      - "Do not install packages, create scaffolding, or edit product files."
+      - "Distinguish confirmed host requirements from recommendations."
+    expected_output:
+      - "Codex package layout and clean-install command"
+      - "Claude package layout and clean-install command"
+      - "Browser capability matrix and host-specific gaps"
+      - "Recommended supported Node and package-manager baseline"
+      - "Required board amendments before T003"
+    receipt:
+      result: done
+      harness: codex
+      summary: "Official and current local evidence supports one self-contained dual-host plugin root with .codex-plugin and .claude-plugin manifests, shared root skills, and a bundled CLI. Codex supports Chrome plus an in-app Browser; Claude’s supported browser path is Chrome and requires direct Anthropic authentication for logged-in sessions. npm with Node >=22 is the safe baseline, with Node 22/24 release coverage. The board was amended before T003 and T008."
+      note: notes/T002-host-packaging.md
+      evidence:
+        - "https://developers.openai.com/plugins/build/plugins"
+        - "https://code.claude.com/docs/en/plugins"
+        - "https://code.claude.com/docs/en/plugins-reference"
+        - "https://code.claude.com/docs/en/plugin-marketplaces"
+        - "https://code.claude.com/docs/en/chrome"
+        - "https://nodejs.org/en/about/previous-releases"
+        - "Installed GoalBuddy dual manifests and Browser plugin manifest"
+        - "Current codex plugin and claude plugin CLI help"
+      facts:
+        - "Codex requires .codex-plugin/plugin.json and supports repo marketplaces at .agents/plugins/marketplace.json."
+        - "Claude supports .claude-plugin/plugin.json, root-level skills and bin, strict validation, and --plugin-dir loading."
+        - "Claude marketplace installs are cached and cannot reference outside the plugin root."
+        - "Codex offers Chrome and an in-app Browser; Claude browser automation is Chrome-based."
+        - "Current local runtime is Node 22.22.3/npm 10.9.8; Node 24 is latest LTS and Node 20 is EOL."
+      contradictions:
+        - "The design tree suggested separate plugin/codex and plugin/claude folders, but current host packaging is safer as dual manifests around one self-contained shared plugin root."
+        - "Claude has no equivalent of the Codex in-app Browser in the confirmed Claude Code workflow; public and authenticated Claude research both use its Chrome integration."
+      ambiguity_requiring_judge: []
+      commands:
+        - "codex --version"
+        - "codex plugin --help"
+        - "codex plugin marketplace add --help"
+        - "codex plugin add --help"
+        - "claude --version"
+        - "claude plugin validate --help"
+        - "node --version"
+        - "npm --version"
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Deliver the first executable vertical slice: a buildable TypeScript package whose three CLI commands complete a durable plan-to-receipt round trip through versioned JSON."
+    inputs:
+      - "T001 receipt"
+      - "T002 receipt"
+      - "Approved design sections: CLI protocol, project-local state, observation contract, and receipt model"
+    constraints:
+      - "Do not implement channel playbooks or host plugin packages in this slice."
+      - "Emit exactly one versioned JSON object on stdout for every success and failure."
+      - "Keep logs on stderr and the CLI non-interactive."
+      - "Implement project-local resumability, append-only amendments/observations, idempotent observation replay, and local Git exclusion."
+      - "Do not add network, browser automation, provider, Buffer, GrowthOps, or Lineage dependencies."
+      - "Use npm with a committed lockfile and declare Node.js >=22 support; keep the implementation compatible with Node.js 22 and 24."
+    expected_output:
+      - "Buildable package and executable social-metadata entry point"
+      - "Common v1 plan, observation, receipt, and error contracts"
+      - "Working plan, record-observation, and validate commands"
+      - "Golden plan-to-receipt round-trip fixture"
+      - "Core tests for stdout envelopes, exit meanings, state resume, and duplicate observations"
+      - "Package metadata declaring Node.js >=22 and npm-based clean-checkout commands"
+    allowed_files:
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "tsconfig.*.json"
+      - "src/cli/**"
+      - "src/contracts/**"
+      - "src/state/**"
+      - "schemas/v1/common/**"
+      - "bin/**"
+      - "tests/core/**"
+      - "fixtures/core/**"
+      - "README.md"
+    verify:
+      - "npm ci"
+      - "npm run typecheck"
+      - "npm run build"
+      - "npm run test:core"
+    stop_if:
+      - "T001 requires a board amendment that changes the public CLI boundary."
+      - "T002 finds a current host requirement incompatible with the proposed package baseline."
+      - "A required behavior is ambiguous under the approved design."
+      - "The slice needs files outside allowed_files."
+      - "Any verification command fails twice without a clearly isolated in-scope fix."
+    receipt:
+      result: done
+      changed_files:
+        - README.md
+        - bin/social-metadata.js
+        - fixtures/core/observation.template.json
+        - fixtures/core/plan-request.json
+        - package-lock.json
+        - package.json
+        - schemas/v1/common/observation.schema.json
+        - schemas/v1/common/output-envelope.schema.json
+        - schemas/v1/common/plan-request.schema.json
+        - schemas/v1/common/receipt.schema.json
+        - src/cli/arguments.ts
+        - src/cli/commands.ts
+        - src/cli/main.ts
+        - src/contracts/common.ts
+        - src/contracts/index.ts
+        - src/contracts/observation.ts
+        - src/contracts/plan.ts
+        - src/contracts/receipt.ts
+        - src/state/store.ts
+        - tests/core/cli.test.ts
+        - tests/core/contracts.test.ts
+        - tsconfig.json
+      commands:
+        - cmd: "npm ci"
+          status: pass
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run build"
+          status: pass
+        - cmd: "npm run test:core"
+          status: pass
+      summary: "Implemented the Node 22+ TypeScript CLI vertical slice with versioned module-neutral contracts, exactly-one-envelope stdout behavior, durable private run state, append-only amendments and observations, idempotent replay, resumable planning, receipt reduction, JSON Schemas, fixtures, and subprocess/core tests. All required clean-install verification passes."
+      deviations:
+        - "The dedicated GoalBuddy Worker timed out without edits; the primary manager completed the same bounded task as the documented fallback."
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Implement the complete search-term and hashtag module engine, including isolated schemas, reducers, evidence tiers, candidate decisions, zero outcomes, and the channel support matrix."
+    inputs:
+      - "T003 receipt"
+      - "Approved design sections: module contracts, planning bounds, candidate decisions, and receipt outcomes"
+    constraints:
+      - "Keep generic envelopes free of hashtag- and search-term-specific fields."
+      - "Require exact suggestion evidence for researched recommendations."
+      - "Validate result-sample sufficiency for every intended recommendation."
+      - "Keep model suggestions outside researched recommendations."
+      - "Treat autocomplete_only and results_sample as successful consumable tiers."
+      - "Return Pinterest hashtag as not_applicable without browser evidence."
+      - "Preserve approved recommendation ranges, one refinement round, and 24-hour freshness."
+    expected_output:
+      - "Isolated search-term and hashtag planners, schemas, reducers, and validators"
+      - "Module registry and channel support policies"
+      - "Selected/rejected decision validation"
+      - "Recommended, zero, not_applicable, interrupted, and failed outcome reduction"
+      - "Complete module fixture and negative-test matrix"
+    allowed_files:
+      - "src/modules/**"
+      - "src/channels/policies/**"
+      - "src/contracts/**"
+      - "src/cli/**"
+      - "schemas/v1/modules/**"
+      - "fixtures/modules/**"
+      - "tests/modules/**"
+      - "package.json"
+      - "package-lock.json"
+    verify:
+      - "npm run typecheck"
+      - "npm run build"
+      - "npm run test:core"
+      - "npm run test:modules"
+      - "npm run test:fixture-replay -- --scope modules"
+    stop_if:
+      - "Module isolation requires a breaking change to the approved generic envelope."
+      - "The host-versus-CLI selection boundary becomes ambiguous."
+      - "The slice needs channel UI instructions or host plugin files."
+      - "The slice needs files outside allowed_files."
+      - "Any verification command fails twice without a clearly isolated in-scope fix."
+    receipt:
+      result: done
+      changed_files:
+        - fixtures/modules/replay-cases.json
+        - package.json
+        - schemas/v1/modules/hashtag.schema.json
+        - schemas/v1/modules/module-result.schema.json
+        - schemas/v1/modules/search-term.schema.json
+        - src/channels/policies/index.ts
+        - src/cli/commands.ts
+        - src/modules/payloads.ts
+        - src/modules/planner.ts
+        - src/modules/reducer.ts
+        - src/modules/registry.ts
+        - src/modules/types.ts
+        - tests/modules/fixture-replay-runner.ts
+        - tests/modules/fixture-replay.test.ts
+        - tests/modules/fixture-replay.ts
+        - tests/modules/helpers.ts
+        - tests/modules/reducer.test.ts
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run build"
+          status: pass
+        - cmd: "npm run test:core"
+          status: pass
+        - cmd: "npm run test:modules"
+          status: pass
+        - cmd: "npm run test:fixture-replay -- --scope modules"
+          status: pass
+      summary: "Implemented isolated search-term and hashtag payload contracts, module planners, channel policies, deterministic reducers, 24-hour freshness, exact native evidence linkage, result-sample thresholds, bounded zero outcomes, model-suggestion exclusion, and Pinterest hashtag not-applicable behavior. Eight cross-channel fixtures and twelve module tests cover successful and negative outcomes."
+      deviations:
+        - "The dedicated GoalBuddy Worker timed out without edits; the primary manager completed the same bounded task as the documented fallback."
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
+  - id: T005
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the executable CLI and module-engine milestone before channel and host work begins."
+    inputs:
+      - "T003 receipt"
+      - "T004 receipt"
+      - "Current diff"
+      - "Core and module verification output"
+      - "Approved design"
+    constraints:
+      - "Read-only."
+      - "Reject milestone approval if the JSON contract is unstable, evidence tiers are conflated, or fixture-only shortcuts weaken the approved semantics."
+      - "Review the milestone as one coherent protocol, not as isolated helper files."
+    expected_output:
+      - "approved | fixes_required"
+      - "Contract-to-spec evidence map"
+      - "Missing or weak verification"
+      - "Exact bounded fix task if required"
+      - "Decision to proceed to channel-surface research"
+    receipt:
+      result: done
+      decision: rejected
+      full_outcome_complete: false
+      rationale: "The contracts and module reducers are directionally sound, but the protocol milestone is not safe for seven playbooks yet. The CLI still validates partial module evidence through a temporary core path, treats any observation as channel progress, and never supersedes an old authentication interruption. Native provenance, freshness, access-mode consistency, and interaction bounds also need end-to-end enforcement."
+      worker_package:
+        objective: "Close the core milestone integrity gaps so partial evidence cannot validate, resolved interruptions resume correctly, and channel progression is receipt-driven."
+        allowed_files:
+          - "src/cli/**"
+          - "src/state/**"
+          - "src/modules/**"
+          - "src/channels/policies/**"
+          - "src/contracts/**"
+          - "fixtures/core/**"
+          - "fixtures/modules/**"
+          - "tests/core/**"
+          - "tests/modules/**"
+          - package.json
+          - package-lock.json
+        verify:
+          - "npm run typecheck"
+          - "npm run build"
+          - "npm run test:core"
+          - "npm run test:modules"
+          - "npm run test:fixture-replay -- --scope modules"
+        stop_if:
+          - "The repair requires browser playbooks or host plugin files."
+          - "A fix would change the approved public CLI command boundary."
+          - "The slice needs files outside allowed_files."
+          - "Any verification command fails twice without a clearly isolated in-scope fix."
+      evidence:
+        - "src/cli/commands.ts: nextAction and validateRun"
+        - "src/modules/reducer.ts: evidence qualification and interruption reduction"
+        - "src/modules/planner.ts: refinement-prefix and bound handling"
+        - "npm run test:core"
+        - "npm run test:modules"
+        - "npm run test:fixture-replay -- --scope modules"
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks:
+        - T006
+      missing_evidence:
+        - "CLI-level strict complete-module round trip"
+        - "Authentication interruption followed by successful same-run resume"
+        - "Receipt-driven multi-channel progression"
+        - "Provider enrichment that cannot replace browser-native evidence"
+        - "Result freshness and mixed-access rejection"
+      required_board_updates:
+        - "Complete T013 before activating T006."
+        - "Re-audit the repaired milestone as part of T012 and T999."
+  - id: T013
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Close the core milestone integrity gaps so partial evidence cannot validate, resolved interruptions resume correctly, and channel progression is receipt-driven."
+    inputs:
+      - "T005 receipt"
+      - "T003 and T004 implementation"
+      - "Approved design CLI, state, interruption, module, and receipt semantics"
+    constraints:
+      - "Remove the temporary core-receipt success path for enabled v1 modules."
+      - "A channel is complete only after every enabled module has a successful recommended, zero, or not_applicable outcome."
+      - "A later valid session-state observation may resolve an authentication or challenge interruption, but UI-change failures require an explicit assisted-resume diagnostic before research continues."
+      - "Advance and resume channels from durable receipts, never from the presence of any observation."
+      - "Provider API evidence may enrich but never satisfy required native browser evidence."
+      - "Enforce plan interaction bounds, result-evidence freshness/native provenance, and access-mode consistency."
+      - "Preserve exactly-one JSON stdout envelopes and current exit meanings."
+    expected_output:
+      - "Strict v1 CLI validation without partial-evidence success"
+      - "Receipt-driven channel progression and completed-step skipping"
+      - "Authentication pause/resume and UI-change assisted-resume tests"
+      - "Bound, provenance, freshness, and access-mode negative tests"
+      - "A real CLI-level complete module round trip"
+    allowed_files:
+      - "src/cli/**"
+      - "src/state/**"
+      - "src/modules/**"
+      - "src/channels/policies/**"
+      - "src/contracts/**"
+      - "fixtures/core/**"
+      - "fixtures/modules/**"
+      - "tests/core/**"
+      - "tests/modules/**"
+      - "package.json"
+      - "package-lock.json"
+    verify:
+      - "npm run typecheck"
+      - "npm run build"
+      - "npm run test:core"
+      - "npm run test:modules"
+      - "npm run test:fixture-replay -- --scope modules"
+    stop_if:
+      - "The repair requires browser playbooks or host plugin files."
+      - "A fix would change the approved public CLI command boundary."
+      - "The slice needs files outside allowed_files."
+      - "Any verification command fails twice without a clearly isolated in-scope fix."
+    receipt:
+      result: done
+      changed_files:
+        - fixtures/core/plan-request.json
+        - src/cli/commands.ts
+        - src/contracts/receipt.ts
+        - src/modules/planner.ts
+        - src/modules/reducer.ts
+        - src/modules/registry.ts
+        - src/modules/types.ts
+        - src/state/store.ts
+        - tests/core/contracts.test.ts
+        - tests/modules/reducer.test.ts
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run build"
+          status: pass
+        - cmd: "npm run test:core"
+          status: pass
+        - cmd: "npm run test:modules"
+          status: pass
+        - cmd: "npm run test:fixture-replay -- --scope modules"
+          status: pass
+      summary: "Removed partial-evidence success, made channel advancement receipt-driven, and added strict same-run auth/UI recovery. Native evidence, result freshness, access-mode consistency, planned prefixes, and interaction bounds are enforced while provider evidence remains optional enrichment. Linked-worktree Git exclusion and CLI-level multi-channel/resume flows are covered by 26 passing tests."
+      deviations:
+        - "The dedicated GoalBuddy Worker timed out without edits; the primary manager completed the same bounded task as the documented fallback."
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
+  - id: T006
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: low
+    objective: "Map the current native search surfaces, semantic checkpoints, access policies, and visible evidence fields for all seven v1 channels."
+    inputs:
+      - "Approved design browser policy and channel sequence"
+      - "Facebook, Instagram, LinkedIn, X, TikTok, YouTube, and Pinterest official help"
+      - "Current permitted public browser surfaces"
+      - "Authenticated surfaces when a user-controlled session is available"
+    constraints:
+      - "Read-only."
+      - "Do not publish, enter composers, scrape, crawl, enumerate hidden DOM, or use private endpoints."
+      - "Use bounded visible inspection and primary official documentation."
+      - "Do not store credentials, cookies, account IDs, raw DOM dumps, or private screenshots."
+      - "Record unavailable authenticated checks as explicit evidence gaps rather than assumptions."
+    expected_output:
+      - "Per-channel support and access matrix"
+      - "Per-channel semantic search checkpoints"
+      - "Search-term and hashtag autocomplete behavior"
+      - "Result-sample and opportunistic engagement fields"
+      - "Authentication, challenge, empty, and UI-change states"
+      - "Exact playbook risks and acceptance prerequisites"
+    receipt:
+      result: done
+      summary: "Mapped all seven native search surfaces using bounded visible browser inspection and current official sources. LinkedIn, X, TikTok, and YouTube authenticated search were available; Facebook and Instagram were signed-out gaps. YouTube phrase/hashtag autocomplete was confirmed. LinkedIn officially and visibly does not suggest hashtags. Pinterest public search/refinements work and hashtags remain not applicable."
+      evidence:
+        - docs/goals/social-metadata-research-v1/notes/T006-channel-surfaces.md
+        - "https://www.facebook.com/help/587836257914341"
+        - "https://www.facebook.com/help/instagram/search/?query=hashtags"
+        - "https://www.linkedin.com/help/linkedin/answer/a523136/searching-on-linkedin"
+        - "https://help.x.com/en/using-x/x-search"
+        - "https://support.tiktok.com/en/using-tiktok/exploring-videos/discover-and-search"
+        - "https://support.google.com/youtube/answer/16090438"
+        - "https://support.google.com/youtube/answer/10806146"
+        - "https://help.pinterest.com/en/article/discover-ideas-on-pinterest"
+      facts:
+        - "Facebook and Instagram normal completion requires a signed-in user browser; current Chrome exposed login surfaces only."
+        - "LinkedIn autocomplete mixes phrases and typed entities with auxiliary labels, while official Help says it does not suggest hashtags."
+        - "X autocomplete exposed an exact search action and account suggestions; results exposed Top, Latest, People, Media, and Lists plus visible engagement."
+        - "TikTok authenticated results exposed Top, Users, Videos, LIVE, and Photo plus captions, hashtags, creators, dates, and an unlabeled count."
+        - "YouTube public autocomplete exposed ordinary phrase and hashtag options; result cards exposed title, channel, views, and age."
+        - "Pinterest public search exposed query refinements and Pins/Boards/Profiles/Products-style result choices; no hashtag module applies."
+      contradictions:
+        - "LinkedIn's current native autocomplete cannot normally supply exact hashtag suggestions, so the hashtag module must return a justified zero rather than fabricate recommendations."
+        - "Pinterest Help documents suggested topics, but no autocomplete dropdown was observed on the current signed-out desktop surface; selector absence cannot be treated as native empty."
+      ambiguity_requiring_judge:
+        - "Whether X's exact “Search for <typed query>” navigation action qualifies as suggestion evidence; the conservative playbook should classify it as an action, not a recommendation candidate."
+      commands:
+        - "Bounded authenticated Chrome inspection: LinkedIn, X, TikTok, YouTube"
+        - "Bounded public in-app Browser inspection: TikTok, YouTube"
+        - "Bounded signed-out Chrome inspection: Facebook, Instagram, Pinterest"
+        - "Primary official documentation lookup for all seven channels"
+      note_needed: true
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Implement the thin channel router, canonical shared playbook contract, and all seven channel research playbooks with executable fixture coverage."
+    inputs:
+      - "T005 receipt"
+      - "T006 receipt"
+      - "Approved design browser policy, channel sequence, interruption handling, and interaction bounds"
+    constraints:
+      - "One canonical playbook per channel with separate search-term and hashtag procedures."
+      - "The router may select playbooks but may not navigate, rank, select candidates, or publish."
+      - "Use semantic checkpoints and explicit diagnostics; do not encode scraping fallbacks."
+      - "Keep Facebook, Instagram, LinkedIn, and X authenticated by default; preserve approved public support for TikTok, YouTube, and Pinterest."
+      - "Do not claim a live UI fact not supported by T006 evidence."
+      - "Consolidate repeated same-shape channel work into this one package."
+    expected_output:
+      - "Typed playbook contract and channel router"
+      - "Facebook, Instagram, LinkedIn, X, TikTok, YouTube, and Pinterest playbooks"
+      - "Support, access, recommendation-range, and bound declarations"
+      - "Authentication and UI-change diagnostic procedures"
+      - "Per-channel fixtures for success, zero, interruption, failure, and Pinterest not_applicable"
+    allowed_files:
+      - "src/channels/**"
+      - "skills/**"
+      - "schemas/v1/playbooks/**"
+      - "fixtures/channels/**"
+      - "tests/channels/**"
+      - "package.json"
+      - "package-lock.json"
+    verify:
+      - "npm run typecheck"
+      - "npm run build"
+      - "npm run lint:playbooks"
+      - "npm run test:channels"
+      - "npm run test:fixture-replay -- --scope channels"
+    stop_if:
+      - "T006 lacks enough current evidence to state a required channel procedure."
+      - "A channel requires composer interaction, scraping, or a private endpoint."
+      - "A shared abstraction would erase channel-specific evidence semantics."
+      - "The slice needs files outside allowed_files."
+      - "Any verification command fails twice without a clearly isolated in-scope fix."
+    receipt:
+      result: done
+      changed_files:
+        - "src/channels/**"
+        - "skills/**"
+        - schemas/v1/playbooks/channel-playbook.schema.json
+        - fixtures/channels/scenarios.json
+        - "tests/channels/**"
+        - package.json
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run build"
+          status: pass
+        - cmd: "npm run lint:playbooks"
+          status: pass
+        - cmd: "npm run test:channels"
+          status: pass
+        - cmd: "npm run test:fixture-replay -- --scope channels"
+          status: pass
+      summary: "Added a declarative thin router, shared semantic playbook contract, seven channel-specific browser playbooks and skills, access and interruption diagnostics, schemas, and 29 replay scenarios. The router only selects policy. Channel-specific caveats preserve current evidence gaps, LinkedIn bounded hashtag zero behavior, X search-action exclusion, and Pinterest hashtag not_applicable."
+      deviations:
+        - "The dedicated GoalBuddy Worker timed out without visible allowed-file changes; the PM completed the bounded fallback package."
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Package one self-contained dual-host plugin root for Codex and Claude around the canonical skills and prove guided, automatic, interruption, resume, and incremental-result parity."
+    inputs:
+      - "T002 receipt"
+      - "T007 receipt"
+      - "Approved product experience and host responsibility boundaries"
+    constraints:
+      - "Share research policy and playbooks; duplicate only host-specific packaging and tool syntax."
+      - "Use root .codex-plugin/plugin.json and .claude-plugin/plugin.json manifests around the same root-level skills and bundled CLI."
+      - "Keep the installed plugin self-contained; Claude cache installs cannot reference files outside the plugin root."
+      - "Support natural-language discovery and direct invocation."
+      - "Guided mode must preserve two query-approval stages per channel."
+      - "Automatic mode must require only initial confirmation unless interrupted."
+      - "The plugins control browsers; the CLI remains browser-agnostic."
+      - "No plugin path may publish, enter composers, bypass authentication, or suppress UI-change failures."
+    expected_output:
+      - "Valid Codex manifest and temporary-marketplace install"
+      - "Valid Claude manifest and direct --plugin-dir load"
+      - "One self-contained dual-host plugin package"
+      - "Host-specific browser orchestration wrappers"
+      - "Equivalent guided and automatic behavior"
+      - "Authentication/UI pause and resume behavior"
+      - "Clean-install and host-parity tests"
+    allowed_files:
+      - ".codex-plugin/**"
+      - ".claude-plugin/**"
+      - ".agents/plugins/**"
+      - "skills/**"
+      - "bin/**"
+      - "assets/**"
+      - "tests/hosts/**"
+      - "scripts/install-smoke/**"
+      - "package.json"
+      - "package-lock.json"
+    verify:
+      - "npm run typecheck"
+      - "npm run build"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+      - "npm run test:install"
+      - "claude plugin validate --strict ."
+    stop_if:
+      - "Current official host packaging contradicts T002 assumptions."
+      - "Host behavior cannot preserve the shared evidence contract."
+      - "The slice needs product behavior outside the approved research-only boundary."
+      - "The slice needs files outside allowed_files."
+      - "Any verification command fails twice without a clearly isolated in-scope fix."
+    receipt:
+      result: done
+      changed_files:
+        - ".codex-plugin/**"
+        - ".claude-plugin/**"
+        - ".agents/plugins/**"
+        - "skills/**"
+        - "assets/**"
+        - "tests/hosts/**"
+        - "scripts/install-smoke/**"
+        - package.json
+        - package-lock.json
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run build"
+          status: pass
+        - cmd: "npm run test:hosts"
+          status: pass
+        - cmd: "npm run test:host-parity"
+          status: pass
+        - cmd: "npm run test:install"
+          status: pass
+        - cmd: "claude plugin validate --strict ."
+          status: pass
+      summary: "Packaged one self-contained Codex/Claude plugin with shared skills and CLI, canonical guided and automatic orchestration, explicit browser responsibilities, incremental results, and interruption behavior. Tests prove manifest parity, package contents, a real temporary Codex marketplace install, strict Claude validation, and direct --plugin-dir loading."
+      deviations:
+        - "The dedicated GoalBuddy Worker timed out without visible allowed-file changes; the PM completed the bounded fallback package."
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Complete the offline end-to-end integration milestone with all-channel fixture replay, cross-host parity, resumable scenarios, and a standalone subprocess consumer."
+    inputs:
+      - "T004 receipt"
+      - "T007 receipt"
+      - "T008 receipt"
+      - "Approved verification, dogfooding, and integration requirements"
+    constraints:
+      - "Use sanitized deterministic fixtures; do not add live credentials or private browser artifacts."
+      - "The example consumer may read stdout JSON only and may not parse plugin prose."
+      - "Cover both modules, both evidence tiers, both orchestration modes, all module outcomes, and critical interruption paths."
+      - "Do not add Lineage-specific runtime code."
+      - "Fix only integration defects revealed within allowed_files."
+    expected_output:
+      - "All-channel golden fixture suite"
+      - "Cross-host equivalent receipt proof"
+      - "Guided and automatic resume scenarios"
+      - "Authentication, UI-change, locale, stale, zero, and not_applicable replay"
+      - "Standalone subprocess example completing plan -> record-observation -> validate"
+      - "Single offline verification command"
+    allowed_files:
+      - "fixtures/**"
+      - "tests/fixture-replay/**"
+      - "tests/integration/**"
+      - "examples/subprocess-consumer/**"
+      - "src/**"
+      - ".codex-plugin/**"
+      - ".claude-plugin/**"
+      - ".agents/plugins/**"
+      - "skills/**"
+      - "bin/**"
+      - "assets/**"
+      - "schemas/**"
+      - "README.md"
+      - "docs/integration/**"
+      - "package.json"
+      - "package-lock.json"
+    verify:
+      - "npm run typecheck"
+      - "npm run build"
+      - "npm run verify:offline"
+      - "npm run example:subprocess"
+    stop_if:
+      - "A passing test would require weakening an approved evidence or interruption rule."
+      - "The example requires an external repository, credential, network, or paid service."
+      - "A defect cannot be fixed inside allowed_files without changing approved scope."
+      - "Any verification command fails twice without a clearly isolated in-scope fix."
+    receipt:
+      result: done
+      changed_files:
+        - "fixtures/integration/**"
+        - "tests/integration/**"
+        - "examples/subprocess-consumer/**"
+        - "docs/integration/**"
+        - README.md
+        - package.json
+        - package-lock.json
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run build"
+          status: pass
+        - cmd: "npm run verify:offline"
+          status: pass
+        - cmd: "npm run example:subprocess"
+          status: pass
+      summary: "Added a 14-case all-channel golden suite covering both modules, evidence tiers, modes, outcomes, stale/locale/UI/auth paths, guided and automatic resumes, and host-equivalent module receipt proof. Added a standalone subprocess consumer that completes plan, observation recording, and validation using only one-line JSON stdout, plus one offline verification command."
+      deviations:
+        - "The dedicated GoalBuddy Worker timed out without visible allowed-file changes; the PM completed the bounded fallback package."
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Build the selector-change diagnostic fixtures and live browser-acceptance harness that produces sanitized, reviewable channel acceptance receipts."
+    inputs:
+      - "T006 receipt"
+      - "T007 receipt"
+      - "T009 receipt"
+      - "Approved selector diagnostics and live browser acceptance criteria"
+    constraints:
+      - "Harness only bounded visible browser interactions defined by a playbook."
+      - "Never store credentials, cookies, account identifiers, private creative assets, raw DOM dumps, or unsanitized screenshots."
+      - "Screenshots are default only for authentication and UI-change interruptions."
+      - "Separate public-surface acceptance from user-controlled authenticated acceptance."
+      - "Model Codex Chrome plus in-app Browser and Claude Chrome-only capability; Claude browser unavailability must be explicit."
+      - "Claude authenticated browser acceptance requires a direct Anthropic login and user-controlled Chrome session."
+      - "A loading failure must not pass as a native empty state."
+    expected_output:
+      - "Diagnostic fixtures for missing/moved search UI, login/consent, challenge, empty, and load failure"
+      - "Browser-acceptance runner or checklist adapter for each host"
+      - "Sanitized acceptance-receipt schema and storage convention"
+      - "Public and authenticated acceptance matrices"
+      - "Harness self-tests that require no social credentials"
+      - "Release oracle aggregator exposed as npm run verify:release"
+    allowed_files:
+      - "tests/browser-acceptance/**"
+      - "scripts/browser-acceptance/**"
+      - "fixtures/diagnostics/**"
+      - "docs/browser-acceptance/**"
+      - "schemas/v1/acceptance/**"
+      - "package.json"
+      - "package-lock.json"
+    verify:
+      - "npm run test:diagnostics"
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+    stop_if:
+      - "The harness would need hidden DOM enumeration, scraping, private endpoints, or credential persistence."
+      - "A current host cannot drive the required visible browser acceptance surface."
+      - "The slice needs files outside allowed_files."
+      - "Any verification command fails twice without a clearly isolated in-scope fix."
+    receipt:
+      result: done
+      changed_files:
+        - "tests/browser-acceptance/**"
+        - "scripts/browser-acceptance/**"
+        - "fixtures/diagnostics/**"
+        - "docs/browser-acceptance/**"
+        - "schemas/v1/acceptance/**"
+        - package.json
+        - package-lock.json
+      commands:
+        - cmd: "npm run test:diagnostics"
+          status: pass
+        - cmd: "npm run test:browser-harness"
+          status: pass
+        - cmd: "npm run verify:offline"
+          status: pass
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+      summary: "Added sanitized acceptance receipts, public/authenticated matrices, eight semantic diagnostic fixtures, a credential-free checklist harness, explicit Codex/Claude capability handling, and a release oracle aggregator. Loading and interaction failures are UI changes rather than empty states; screenshots default only for auth/challenge/UI-change diagnostics."
+      deviations:
+        - "The dedicated GoalBuddy Worker timed out without visible allowed-file changes; the PM completed the bounded fallback package."
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
+  - id: T011
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: high
+    objective: "Dogfood the packaged system and execute the release acceptance matrix through clean installs, subprocess use, public browser surfaces, and available user-controlled authenticated sessions."
+    inputs:
+      - "T008 receipt"
+      - "T009 receipt"
+      - "T010 receipt"
+      - "Current Codex and Claude clean test projects"
+      - "User-controlled browser sessions when available"
+    constraints:
+      - "Do not edit product files during acceptance; record defects as follow-up tasks."
+      - "Do not publish, enter composers, scrape, bypass authentication, or solve challenges without user action."
+      - "Do not persist credentials, cookies, account identifiers, private assets, raw DOM, or unsanitized screenshots."
+      - "If authenticated coverage is unavailable, record the exact blocked cells and continue all public and offline acceptance."
+      - "Require fresh research rather than substituting cached receipts."
+    expected_output:
+      - "Clean Codex installation and invocation receipt"
+      - "Clean Claude installation and invocation receipt"
+      - "Subprocess consumer receipt"
+      - "Public browser acceptance receipts"
+      - "Available authenticated channel acceptance receipts"
+      - "Explicit blocked matrix cells and defect list"
+      - "Final npm run verify:release result after current acceptance receipts are written"
+    receipt:
+      result: done
+      summary: "Dogfooding passed clean Codex marketplace install, strict Claude package load, stdout-only subprocess consumption, public YouTube/Pinterest research, and authenticated LinkedIn/X research. Facebook/Instagram require sign-in, Claude live browser is unavailable here, and TikTok correctly surfaced ui_change rather than zero. Eight sanitized receipts were written; final release verification passes with four fresh live passes."
+      evidence:
+        - docs/browser-acceptance/dogfood-2026-07-27.md
+        - "docs/browser-acceptance/receipts/*.json"
+        - "npm run verify:release"
+      facts:
+        - "YouTube and Pinterest public autocomplete plus bounded result surfaces passed in Codex in-app Browser."
+        - "LinkedIn and X authenticated autocomplete plus bounded result surfaces passed in Chrome."
+        - "Codex temporary-marketplace installation, Claude strict validation/direct plugin-dir load, and the subprocess example passed."
+        - "Facebook and Instagram are blocked on user sign-in; Claude live browser capability was unavailable in this environment."
+      contradictions:
+        - "TikTok public Search was visible but the bounded input interaction failed; the playbook acceptance gap is confirmed as ui_change."
+      ambiguity_requiring_judge:
+        - "Determine whether the explicit TikTok UI-change receipt is acceptable for v1 release or requires a bounded semantic-checkpoint hardening task."
+      commands:
+        - cmd: "jq empty docs/browser-acceptance/receipts/*.json"
+          status: pass
+        - cmd: "npm run test:install"
+          status: pass
+        - cmd: "npm run example:subprocess"
+          status: pass
+        - cmd: "npm run verify:release"
+          status: pass
+      note_needed: true
+  - id: T012
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Review dogfood and browser acceptance evidence, reject false confidence, and specify any final bounded hardening work before the full outcome audit."
+    inputs:
+      - "T011 receipt"
+      - "All acceptance receipts"
+      - "Latest verify:offline output"
+      - "Current diff"
+      - "Approved release acceptance criteria"
+    constraints:
+      - "Read-only."
+      - "Do not accept fixture replay as a substitute for required live acceptance."
+      - "Distinguish product defects from unavailable user-controlled authentication."
+      - "If fixes are required, specify one largest safe useful Worker package with exact allowed_files, verify, and stop_if."
+    expected_output:
+      - "ready_for_final_audit | fixes_required | acceptance_blocked"
+      - "Acceptance-to-spec evidence map"
+      - "Defects and blocked coverage"
+      - "Exact next Worker task when fixes are required"
+      - "Decision whether T999 may activate"
+    receipt:
+      result: done
+      decision: rejected
+      full_outcome_complete: false
+      rationale: "Live evidence is real and correctly exposes TikTok/UI and authentication gaps, but final audit is premature. The installed primary skill tells both hosts to use unsupported --input flags, so direct orchestration would fail despite install smoke. The release oracle also passes with no live hashtag receipt and only category-level coverage, masking the primary module. Repair the invocation contract and require all channels plus both modules to be represented by fresh pass/interruption/failure/not-applicable evidence."
+      worker_package:
+        objective: "Repair documented host-to-CLI invocation and strengthen the release oracle so clean installs execute valid commands and live coverage cannot omit channels or the hashtag module."
+        allowed_files:
+          - skills/social-metadata-research/SKILL.md
+          - "tests/hosts/**"
+          - "scripts/browser-acceptance/**"
+          - "tests/browser-acceptance/**"
+          - "fixtures/diagnostics/**"
+          - "docs/browser-acceptance/**"
+          - package.json
+          - package-lock.json
+        verify:
+          - "npm run typecheck"
+          - "npm run test:hosts"
+          - "npm run test:browser-harness"
+          - "npm run verify:offline"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+        stop_if:
+          - "A fix changes the public plan/record-observation/validate command boundary."
+          - "A test would substitute fixture evidence for live acceptance."
+          - "The slice needs files outside allowed_files."
+          - "Any verification command fails twice without a clearly isolated in-scope fix."
+      evidence:
+        - "skills/social-metadata-research/SKILL.md:20"
+        - src/cli/arguments.ts
+        - scripts/browser-acceptance/verify-release.mjs
+        - docs/browser-acceptance/dogfood-2026-07-27.md
+        - "docs/browser-acceptance/receipts/*.json"
+        - "npm run verify:release"
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks:
+        - T999
+      missing_evidence:
+        - "A live, fresh hashtag acceptance receipt."
+        - "Executable proof that the primary skill's documented CLI examples match the parser."
+        - "Release-oracle proof that every v1 channel is explicitly represented."
+      required_board_updates:
+        - "Insert and complete recovery Worker T014 before final audit."
+        - "After T014, add a PM acceptance refresh for at least one live hashtag cell before activating T999."
+  - id: T014
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Repair documented host-to-CLI invocation and strengthen the release oracle so clean installs execute valid commands and live coverage cannot omit channels or the hashtag module."
+    inputs:
+      - "T012 receipt"
+      - "Current primary orchestration skill"
+      - "Current browser acceptance receipts and release verifier"
+    constraints:
+      - "Preserve the public plan, record-observation, and validate command boundary."
+      - "Do not substitute fixture evidence for live acceptance."
+      - "A blocked or failed live cell remains visible and may not be silently counted as a passing cell."
+      - "The release oracle must require every v1 channel to be represented and both modules to have fresh live evidence before final release."
+    expected_output:
+      - "Executable CLI examples in the primary skill"
+      - "Host tests that reject unsupported documented flags"
+      - "Fresh-receipt coverage validation for all seven channels and both modules"
+      - "Accurate blocked/failed cell reporting"
+    allowed_files:
+      - "skills/social-metadata-research/SKILL.md"
+      - "tests/hosts/**"
+      - "scripts/browser-acceptance/**"
+      - "tests/browser-acceptance/**"
+      - "fixtures/diagnostics/**"
+      - "docs/browser-acceptance/**"
+      - package.json
+      - package-lock.json
+    verify:
+      - "npm run typecheck"
+      - "npm run test:hosts"
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+    stop_if:
+      - "A fix changes the public plan/record-observation/validate command boundary."
+      - "A test would substitute fixture evidence for live acceptance."
+      - "The slice needs files outside allowed_files."
+      - "Any verification command fails twice without a clearly isolated in-scope fix."
+    receipt:
+      result: done
+      changed_files:
+        - skills/social-metadata-research/SKILL.md
+        - tests/hosts/manifests.test.ts
+        - scripts/browser-acceptance/coverage.mjs
+        - scripts/browser-acceptance/verify-release.mjs
+        - tests/browser-acceptance/coverage.test.mjs
+        - package.json
+        - package-lock.json
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run test:hosts"
+          status: pass
+        - cmd: "npm run test:browser-harness"
+          status: pass
+        - cmd: "npm run verify:offline"
+          status: pass
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+      summary: "Corrected host skill examples to the real --json/--run contract and added regression assertions. The release oracle now requires all seven channels to be freshly represented, fresh passing evidence for both modules, and public/authenticated passes. Failed and interrupted cells remain visible and never count as passes; current output truthfully identifies the missing live hashtag pass."
+      deviations:
+        - "The dedicated GoalBuddy Worker timed out without visible allowed-file changes; the PM completed the bounded fallback package."
+      remaining_blockers:
+        - "T015 must add a fresh live passing hashtag receipt before strict release verification can pass."
+      verification_attempts: 1
+      stopped_because: null
+  - id: T015
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: high
+    objective: "Refresh live browser acceptance after T014, including at least one current hashtag cell, then run the strict release oracle."
+    inputs:
+      - "T014 receipt"
+      - "Current user-controlled browser sessions"
+      - "T011 dogfood evidence"
+    constraints:
+      - "Do not edit product files."
+      - "Use fresh channel-native browser evidence; do not promote fixture replay."
+      - "Inspect bounded results for every recommended hashtag."
+      - "Preserve explicit authentication and UI-change failures."
+      - "Do not publish, enter composers, scrape, bypass challenges, or persist private browser data."
+    expected_output:
+      - "At least one fresh live hashtag acceptance receipt"
+      - "All seven channels represented by fresh pass, interruption, failure, or not_applicable receipts"
+      - "Strict npm run verify:release pass"
+    receipt:
+      result: done
+      summary: "Added fresh public YouTube hashtag acceptance for exact #remotework. Native hashtag suggestions were captured, the selected exact tag was searched, and three distinct non-sponsored results were relevant. The strict release oracle now passes with all seven channels represented, fresh passing search-term and hashtag evidence, public/authenticated passes, and explicit TikTok/UI plus Facebook/Instagram/Claude interruptions."
+      evidence:
+        - docs/browser-acceptance/receipts/youtube-public-hashtag.json
+        - docs/browser-acceptance/dogfood-2026-07-27.md
+        - "npm run verify:release"
+      facts:
+        - "YouTube native autocomplete returned exact #remotework and #remotejob hashtag options."
+        - "The selected #remotework result surface contained at least three distinct, non-sponsored, directly relevant results."
+        - "Strict release coverage reports nine fresh receipts, five passes, all seven channels, both modules, public and authenticated passing cells."
+      contradictions: []
+      ambiguity_requiring_judge: []
+      commands:
+        - cmd: "jq empty docs/browser-acceptance/receipts/*.json"
+          status: pass
+        - cmd: "npm run verify:release"
+          status: pass
+      note_needed: true
+  - id: T016
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: high
+    objective: "Commit the coherent v1 release and prove the strict release oracle from a temporary clean worktree."
+    inputs:
+      - "T999 clean-checkout rejection"
+      - "Current implementation and acceptance receipts"
+      - "Approved design commit 96aa62f"
+    constraints:
+      - "Do not amend or rewrite the approved design commit."
+      - "Preserve all current implementation, acceptance, and GoalBuddy evidence."
+      - "Use a temporary Git worktree for clean-checkout verification."
+      - "Do not claim cleanliness from the current working tree."
+    expected_output:
+      - "A release implementation commit"
+      - "Clean worktree npm ci and strict npm run verify:release pass"
+      - "Commit SHA and verification receipt"
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the full implementation and proof against the approved owner outcome."
+    inputs:
+      - "All completed task receipts"
+      - "Latest release verification"
+      - "Current browser-acceptance receipts"
+      - "Current dirty diff"
+    constraints:
+      - "Read-only."
+      - "Reject completion if any required Worker task remains queued, active, or blocked without an approved alternative."
+      - "Reject completion if fixture-only evidence substitutes for required host or browser acceptance."
+      - "Reject completion if the CLI or plugins publish, scrape, require provider credentials, or weaken exact-evidence rules."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Oracle evidence map"
+      - "Missing evidence"
+      - "Next task if not complete"
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      rationale: "Implementation, live evidence, and strict release verification satisfy the functional oracle, but every implementation file is still untracked. A clean checkout of the current commit contains only the design, so the oracle's clean-checkout proof is absent. Commit the coherent release without rewriting the approved design commit, verify npm ci/build/release from a temporary clean worktree, then rerun this final audit."
+      worker_package: null
+      evidence:
+        - "git status --short"
+        - "git log --oneline"
+        - "npm run verify:release"
+        - "docs/browser-acceptance/receipts/*.json"
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "A commit containing the implementation and acceptance proof."
+        - "Release verification from a clean worktree at that commit."
+      required_board_updates:
+        - "Complete PM repository-integrity task T016, then reactivate T999."
+checks:
+  dirty_fingerprint: "goal-prep-in-progress"
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

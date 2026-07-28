@@ -1,0 +1,13 @@
+{
+  "name": "social-metadata-local",
+  "interface": {
+    "displayName": "Social Metadata Research (local)"
+  },
+  "plugins": [
+    {
+      "name": "social-metadata-research",
+      "source": "./",
+      "description": "Browser-first social hashtag and search-term research."
+    }
+  ]
+}

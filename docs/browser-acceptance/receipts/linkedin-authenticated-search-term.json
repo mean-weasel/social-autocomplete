@@ -1,0 +1,20 @@
+{
+  "contractVersion": "1.0",
+  "receiptVersion": "1.0",
+  "capturedAt": "2026-07-28T00:24:23Z",
+  "host": "codex",
+  "browser": "chrome",
+  "channel": "linkedin",
+  "module": "search-term",
+  "accessClass": "authenticated",
+  "locale": {"uiLocale":"en-US","region":"US","timezone":"America/Phoenix"},
+  "status": "pass",
+  "checkpoints": [
+    {"id":"channel","status":"present"},
+    {"id":"search","status":"present"},
+    {"id":"results","status":"present"}
+  ],
+  "interaction": {"attempted":true,"succeeded":true,"explicitNativeEmpty":false},
+  "screenshot": {"captured":false,"policyReason":"not_needed"},
+  "receiptId": "acceptance_5389cc0fbb974ca5074553bd"
+}

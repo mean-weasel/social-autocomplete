@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/playbooks/channel-playbook.schema.json",
+  "title": "Browser research channel playbook",
+  "type": "object",
+  "required": [
+    "contractVersion",
+    "playbookVersion",
+    "channel",
+    "evidenceDate",
+    "defaultAccess",
+    "publicCompletion",
+    "supportedBrowsers",
+    "entryInstruction",
+    "prohibitedActions",
+    "semanticCheckpoints",
+    "steps",
+    "modules",
+    "resultSample",
+    "interruptions",
+    "acceptanceGaps",
+    "evidenceSources"
+  ],
+  "properties": {
+    "contractVersion": { "const": "1.0" },
+    "playbookVersion": { "const": "1.0" },
+    "channel": { "enum": ["facebook", "instagram", "linkedin", "x", "tiktok", "youtube", "pinterest"] },
+    "evidenceDate": { "type": "string", "format": "date" },
+    "defaultAccess": { "enum": ["authenticated", "authenticated_preferred"] },
+    "publicCompletion": { "type": "boolean" },
+    "supportedBrowsers": {
+      "type": "object",
+      "required": ["codex", "claude"],
+      "properties": {
+        "codex": { "type": "array", "items": { "enum": ["chrome", "in_app"] }, "uniqueItems": true },
+        "claude": { "type": "array", "items": { "enum": ["chrome", "in_app"] }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    },
+    "entryInstruction": { "type": "string", "minLength": 1 },
+    "prohibitedActions": { "type": "array", "items": { "type": "string" } },
+    "semanticCheckpoints": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "purpose", "description", "evidenceStatus", "required", "failureCode"],
+        "properties": {
+          "id": { "type": "string" },
+          "purpose": { "enum": ["channel", "search", "access", "results", "empty"] },
+          "description": { "type": "string" },
+          "evidenceStatus": { "enum": ["confirmed_live", "official_only", "acceptance_gap"] },
+          "required": { "type": "boolean" },
+          "failureCode": { "enum": ["authentication_required", "ui_change", "native_empty"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["id", "instruction", "emits", "bound"],
+        "properties": {
+          "id": { "type": "string" },
+          "instruction": { "type": "string" },
+          "emits": {
+            "anyOf": [
+              { "type": "null" },
+              { "enum": ["session_state", "suggestion_set", "result_sample", "recommendation_decision", "interruption", "diagnostic"] }
+            ]
+          },
+          "bound": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "modules": {
+      "type": "object",
+      "required": ["search-term", "hashtag"],
+      "properties": {
+        "search-term": { "$ref": "#/$defs/moduleProcedure" },
+        "hashtag": { "$ref": "#/$defs/moduleProcedure" }
+      },
+      "additionalProperties": false
+    },
+    "resultSample": {
+      "type": "object",
+      "required": ["maxResultsPerCandidate", "visibleFields", "skipSponsored", "engagementIsDescriptiveOnly"],
+      "properties": {
+        "maxResultsPerCandidate": { "const": 3 },
+        "visibleFields": { "type": "array", "items": { "type": "string" } },
+        "skipSponsored": { "const": true },
+        "engagementIsDescriptiveOnly": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "interruptions": { "type": "object" },
+    "acceptanceGaps": { "type": "array", "items": { "type": "string" } },
+    "evidenceSources": { "type": "array", "minItems": 1, "items": { "type": "string", "format": "uri" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "moduleProcedure": {
+      "type": "object",
+      "required": [
+        "module",
+        "support",
+        "recommendationRange",
+        "prefixSyntax",
+        "acceptedCandidateKinds",
+        "excludedCandidateKinds",
+        "autocompleteEvidence",
+        "zeroPolicy"
+      ],
+      "properties": {
+        "module": { "enum": ["search-term", "hashtag"] },
+        "support": { "enum": ["supported", "not_applicable"] },
+        "recommendationRange": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["min", "max"],
+              "properties": {
+                "min": { "type": "integer", "minimum": 0 },
+                "max": { "type": "integer", "minimum": 0 }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "prefixSyntax": { "type": "string" },
+        "acceptedCandidateKinds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "excludedCandidateKinds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "autocompleteEvidence": { "enum": ["confirmed_live", "official_only", "acceptance_gap", "not_applicable"] },
+        "caveat": { "type": "string" },
+        "zeroPolicy": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "contractVersion": "1.0",
+  "shared": {
+    "discovery": ["natural_language", "direct_skill_invocation"],
+    "modes": {
+      "guided": {
+        "initialConfirmation": true,
+        "queryApprovalStagesPerChannel": 2
+      },
+      "automatic": {
+        "initialConfirmation": true,
+        "queryApprovalStagesPerChannel": 0
+      }
+    },
+    "interruptions": ["authentication_required", "challenge", "ui_change", "locale_mismatch"],
+    "incrementalResult": "after_each_channel",
+    "browserOwner": "plugin",
+    "cliOwner": "contracts_state_validation",
+    "prohibited": ["publishing", "composer_interaction", "scraping", "authentication_bypass"]
+  },
+  "hosts": {
+    "codex": {
+      "authenticatedBrowser": "chrome",
+      "publicBrowser": "in_app",
+      "directInvocation": "$social-metadata-research:social-metadata-research"
+    },
+    "claude": {
+      "authenticatedBrowser": "chrome",
+      "publicBrowser": null,
+      "directInvocation": "/social-metadata-research:social-metadata-research"
+    }
+  }
+}

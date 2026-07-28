@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/common/plan-request.schema.json",
+  "title": "Social metadata plan request",
+  "type": "object",
+  "required": [
+    "contractVersion",
+    "creativeBrief",
+    "inputReferences",
+    "channels",
+    "locale",
+    "orchestrationMode",
+    "enabledModules",
+    "defaultEvidenceTier",
+    "interactionBounds"
+  ],
+  "properties": {
+    "contractVersion": { "const": "1.0" },
+    "runId": { "type": "string", "pattern": "^run_[A-Za-z0-9_-]+$" },
+    "creativeBrief": {
+      "type": "object",
+      "required": ["summary"],
+      "properties": { "summary": { "type": "string", "minLength": 1 } }
+    },
+    "inputReferences": { "type": "array", "items": { "type": "string" } },
+    "channels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["facebook", "instagram", "linkedin", "x", "tiktok", "youtube", "pinterest"] }
+    },
+    "locale": {
+      "type": "object",
+      "required": ["uiLocale", "region", "timezone"],
+      "properties": {
+        "uiLocale": { "type": "string", "minLength": 1 },
+        "region": { "type": "string", "minLength": 1 },
+        "timezone": { "type": "string", "minLength": 1 }
+      }
+    },
+    "orchestrationMode": { "enum": ["guided", "automatic"] },
+    "enabledModules": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["search-term", "hashtag"] }
+    },
+    "defaultEvidenceTier": { "enum": ["autocomplete_only", "results_sample"] },
+    "interactionBounds": {
+      "type": "object",
+      "required": ["maxPrefixesPerModule", "maxSuggestionsPerPrefix", "maxResultsPerCandidate", "maxRefinementRounds"],
+      "properties": {
+        "maxPrefixesPerModule": { "type": "integer", "minimum": 1 },
+        "maxSuggestionsPerPrefix": { "type": "integer", "minimum": 1 },
+        "maxResultsPerCandidate": { "type": "integer", "minimum": 1 },
+        "maxRefinementRounds": { "const": 1 }
+      }
+    }
+  }
+}

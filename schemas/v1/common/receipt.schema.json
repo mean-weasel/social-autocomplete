@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/common/receipt.schema.json",
+  "title": "Module-neutral channel receipt",
+  "type": "object",
+  "required": [
+    "contractVersion",
+    "receiptVersion",
+    "receiptId",
+    "runId",
+    "channelRunId",
+    "planDigest",
+    "amendmentReferences",
+    "channel",
+    "enabledModules",
+    "createdAt",
+    "capturedAt",
+    "validatedAt",
+    "requestedLocale",
+    "observedLocale",
+    "browser",
+    "accessMode",
+    "personalizedSession",
+    "evidenceTier",
+    "observationReferences",
+    "status",
+    "warnings",
+    "failures",
+    "moduleResults"
+  ],
+  "properties": {
+    "contractVersion": { "const": "1.0" },
+    "receiptVersion": { "const": "1.0" },
+    "receiptId": { "type": "string" },
+    "runId": { "type": "string" },
+    "channelRunId": { "type": "string" },
+    "planDigest": { "type": "string" },
+    "amendmentReferences": { "type": "array", "items": { "type": "string" } },
+    "channel": { "type": "string" },
+    "enabledModules": { "type": "array", "items": { "type": "string" } },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "capturedAt": {
+      "type": "object",
+      "required": ["first", "last"],
+      "properties": {
+        "first": { "type": "string", "format": "date-time" },
+        "last": { "type": "string", "format": "date-time" }
+      }
+    },
+    "validatedAt": { "type": "string", "format": "date-time" },
+    "requestedLocale": { "type": "object" },
+    "observedLocale": { "type": "object" },
+    "browser": { "type": "string" },
+    "accessMode": { "enum": ["authenticated", "public"] },
+    "personalizedSession": { "type": "boolean" },
+    "evidenceTier": { "enum": ["autocomplete_only", "results_sample"] },
+    "observationReferences": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string" },
+    "warnings": { "type": "array" },
+    "failures": { "type": "array" },
+    "moduleResults": {
+      "type": "object",
+      "description": "Module-specific results are keyed by module name and defined in isolated module schemas."
+    }
+  },
+  "additionalProperties": false
+}

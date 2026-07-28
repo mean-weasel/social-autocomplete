@@ -1,0 +1,25 @@
+{
+  "contractVersion": "1.0",
+  "public": {
+    "hosts": {"codex": ["in_app"], "claude": []},
+    "channels": {
+      "tiktok": ["search-term", "hashtag"],
+      "youtube": ["search-term", "hashtag"],
+      "pinterest": ["search-term"]
+    }
+  },
+  "authenticated": {
+    "hosts": {"codex": ["chrome"], "claude": ["chrome"]},
+    "channels": {
+      "facebook": ["search-term", "hashtag"],
+      "instagram": ["search-term", "hashtag"],
+      "linkedin": ["search-term", "hashtag"],
+      "x": ["search-term", "hashtag"],
+      "tiktok": ["search-term", "hashtag"],
+      "youtube": ["search-term", "hashtag"],
+      "pinterest": ["search-term"]
+    },
+    "claudeRequirement": "direct_anthropic_login_and_user_controlled_chrome"
+  },
+  "notApplicable": [{"channel":"pinterest","module":"hashtag"}]
+}

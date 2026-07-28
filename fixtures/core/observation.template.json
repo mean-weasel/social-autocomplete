@@ -1,0 +1,37 @@
+{
+  "contractVersion": "1.0",
+  "observationId": "obs_core_fixture",
+  "runId": "run_core_fixture",
+  "channelRunId": "$CHANNEL_RUN_ID",
+  "capturedAt": "2026-07-27T14:30:00-07:00",
+  "source": {
+    "kind": "browser_ui",
+    "channel": "youtube",
+    "browser": "chrome",
+    "accessMode": "authenticated",
+    "uiLocale": "en-US",
+    "region": "US",
+    "timezone": "America/Phoenix",
+    "personalizedSession": true,
+    "surface": "autocomplete"
+  },
+  "module": {
+    "name": "search-term",
+    "schemaVersion": "1.0"
+  },
+  "kind": "suggestion_set",
+  "query": {
+    "topic": "remote work",
+    "intent": "tips for small software teams",
+    "typedText": "remote work"
+  },
+  "payload": {
+    "suggestions": [
+      {
+        "displayedValue": "remote work tips",
+        "displayPosition": 1
+      }
+    ],
+    "stoppingReason": "visible_list_exhausted"
+  }
+}

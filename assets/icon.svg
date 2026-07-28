@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Social metadata research</title>
+  <rect width="64" height="64" rx="14" fill="#315CFF"/>
+  <path d="M16 21h32M16 32h23M16 43h15" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="47" cy="43" r="7" fill="none" stroke="#fff" stroke-width="4"/>
+  <path d="m52 48 5 5" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+</svg>

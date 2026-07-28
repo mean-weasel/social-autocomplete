@@ -1,0 +1,88 @@
+[
+  {
+    "id": "facebook-search-term-autocomplete",
+    "channel": "facebook",
+    "module": "search-term",
+    "tier": "autocomplete_only",
+    "mode": "guided",
+    "prefix": "remote work",
+    "candidate": "remote work tips",
+    "expectedOutcome": "recommended"
+  },
+  {
+    "id": "instagram-hashtag-result-sample-engagement",
+    "channel": "instagram",
+    "module": "hashtag",
+    "tier": "results_sample",
+    "mode": "guided",
+    "prefix": "#remote",
+    "candidate": "#RemoteWorkTips",
+    "resultCount": 3,
+    "relevantCount": 2,
+    "visibleEngagement": true,
+    "expectedOutcome": "recommended"
+  },
+  {
+    "id": "linkedin-hashtag-native-empty-zero",
+    "channel": "linkedin",
+    "module": "hashtag",
+    "tier": "autocomplete_only",
+    "mode": "guided",
+    "prefix": "#specificempty",
+    "zeroReason": "no_native_candidates",
+    "expectedOutcome": "zero"
+  },
+  {
+    "id": "x-hashtag-two-exhausted-results",
+    "channel": "x",
+    "module": "hashtag",
+    "tier": "results_sample",
+    "mode": "guided",
+    "prefix": "#smallteams",
+    "candidate": "#SmallTeams",
+    "resultCount": 2,
+    "relevantCount": 2,
+    "surfaceExhausted": true,
+    "expectedOutcome": "recommended"
+  },
+  {
+    "id": "tiktok-search-term-automatic-refinement",
+    "channel": "tiktok",
+    "module": "search-term",
+    "tier": "autocomplete_only",
+    "mode": "automatic",
+    "prefix": "remote team habits",
+    "refinementPrefix": "distributed team habits",
+    "candidate": "distributed team habits that work",
+    "expectedOutcome": "recommended"
+  },
+  {
+    "id": "youtube-hashtag-autocomplete",
+    "channel": "youtube",
+    "module": "hashtag",
+    "tier": "autocomplete_only",
+    "mode": "guided",
+    "prefix": "#remotework",
+    "candidate": "#RemoteWork",
+    "expectedOutcome": "recommended"
+  },
+  {
+    "id": "pinterest-search-term-autocomplete",
+    "channel": "pinterest",
+    "module": "search-term",
+    "tier": "autocomplete_only",
+    "mode": "guided",
+    "prefix": "remote office",
+    "candidate": "remote office ideas",
+    "expectedOutcome": "recommended"
+  },
+  {
+    "id": "pinterest-hashtag-not-applicable",
+    "channel": "pinterest",
+    "module": "hashtag",
+    "tier": "autocomplete_only",
+    "mode": "guided",
+    "prefix": "#remoteoffice",
+    "expectedOutcome": "not_applicable"
+  }
+]

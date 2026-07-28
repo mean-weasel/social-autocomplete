@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/common/observation.schema.json",
+  "title": "Module-neutral social metadata observation",
+  "type": "object",
+  "required": ["contractVersion", "observationId", "runId", "channelRunId", "capturedAt", "source", "module", "kind", "payload"],
+  "properties": {
+    "contractVersion": { "const": "1.0" },
+    "observationId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "pattern": "^run_[A-Za-z0-9_-]+$" },
+    "channelRunId": { "type": "string", "minLength": 1 },
+    "capturedAt": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "required": ["kind", "channel", "browser", "accessMode", "uiLocale", "region", "timezone", "personalizedSession", "surface"],
+      "properties": {
+        "kind": { "enum": ["browser_ui", "provider_api"] },
+        "channel": { "enum": ["facebook", "instagram", "linkedin", "x", "tiktok", "youtube", "pinterest"] },
+        "browser": { "type": "string" },
+        "accessMode": { "enum": ["authenticated", "public"] },
+        "uiLocale": { "type": "string" },
+        "region": { "type": "string" },
+        "timezone": { "type": "string" },
+        "personalizedSession": { "type": "boolean" },
+        "surface": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "module": {
+      "type": "object",
+      "required": ["name", "schemaVersion"],
+      "properties": {
+        "name": { "type": "string" },
+        "schemaVersion": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "kind": { "enum": ["session_state", "suggestion_set", "result_sample", "recommendation_decision", "interruption", "diagnostic"] },
+    "query": { "type": "object" },
+    "payload": {}
+  },
+  "additionalProperties": false
+}

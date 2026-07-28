@@ -1,0 +1,36 @@
+{
+  "name": "social-metadata-research",
+  "version": "0.1.0",
+  "description": "Browser-first, evidence-backed hashtag and search-term research for social channels.",
+  "author": {
+    "name": "Social Metadata Research contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "social-media",
+    "hashtags",
+    "search",
+    "research",
+    "browser"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Social Metadata Research",
+    "shortDescription": "Research social hashtags and search terms",
+    "longDescription": "Use a signed-in browser and native channel search to collect current, locale-specific evidence for hashtags and search terms, with replayable CLI receipts.",
+    "developerName": "Social Metadata Research contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Research hashtags and search terms for this social post idea.",
+      "Run automatic social metadata research for these channels.",
+      "Validate this social metadata research run."
+    ],
+    "brandColor": "#315CFF",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg"
+  }
+}

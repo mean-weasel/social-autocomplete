@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/modules/search-term.schema.json",
+  "title": "Search-term module observation payloads",
+  "description": "Search-term fields are isolated from hashtag and generic observation contracts.",
+  "oneOf": [
+    { "$ref": "#/$defs/suggestionSet" },
+    { "$ref": "#/$defs/resultSample" },
+    { "$ref": "#/$defs/candidateDecision" },
+    { "$ref": "#/$defs/zeroDecision" }
+  ],
+  "$defs": {
+    "suggestionSet": {
+      "type": "object",
+      "required": ["suggestions", "stoppingReason"],
+      "properties": {
+        "suggestions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["displayedValue", "displayPosition"],
+            "properties": {
+              "displayedValue": { "type": "string", "minLength": 1 },
+              "displayPosition": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Visible ordering only; never popularity or performance proof."
+              },
+              "nativeTypeLabel": { "type": "string" },
+              "auxiliaryText": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "stoppingReason": { "enum": ["visible_list_exhausted", "bound_reached", "native_empty"] },
+        "round": { "enum": [0, 1], "default": 0 }
+      },
+      "additionalProperties": false
+    },
+    "resultSample": {
+      "type": "object",
+      "required": ["candidate", "results", "surfaceExhausted", "noResults", "stoppingReason"],
+      "properties": {
+        "candidate": { "type": "string", "minLength": 1 },
+        "results": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["position", "relevance", "relevanceRationale"],
+            "properties": {
+              "position": { "type": "integer", "minimum": 1 },
+              "excerpt": { "type": "string" },
+              "summary": { "type": "string" },
+              "relevance": { "enum": ["relevant", "mixed", "irrelevant"] },
+              "relevanceRationale": { "type": "string", "minLength": 1 },
+              "visibleEngagement": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["label", "value"],
+                  "properties": {
+                    "label": { "type": "string" },
+                    "value": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "surfaceExhausted": { "type": "boolean" },
+        "noResults": { "type": "boolean" },
+        "stoppingReason": { "enum": ["result_bound_reached", "surface_exhausted", "native_no_results"] }
+      },
+      "additionalProperties": false
+    },
+    "candidateDecision": {
+      "type": "object",
+      "required": ["decision", "candidate", "rationale", "suggestionEvidenceIds", "resultEvidenceIds"],
+      "properties": {
+        "decision": { "enum": ["selected", "rejected"] },
+        "candidate": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "suggestionEvidenceIds": { "type": "array", "items": { "type": "string" } },
+        "resultEvidenceIds": { "type": "array", "items": { "type": "string" } },
+        "reasonCode": {
+          "enum": [
+            "not_relevant_to_brief",
+            "too_broad",
+            "too_narrow",
+            "ambiguous_intent",
+            "insufficient_result_relevance",
+            "duplicate_candidate",
+            "outside_recommendation_range"
+          ]
+        },
+        "seedProvenance": {},
+        "origin": { "enum": ["native", "model"] }
+      },
+      "additionalProperties": false
+    },
+    "zeroDecision": {
+      "type": "object",
+      "required": ["decision", "zeroReason", "rationale", "suggestionEvidenceIds"],
+      "properties": {
+        "decision": { "const": "zero" },
+        "zeroReason": { "enum": ["no_native_candidates", "candidates_not_relevant", "insufficient_result_relevance"] },
+        "rationale": { "type": "string", "minLength": 1 },
+        "suggestionEvidenceIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

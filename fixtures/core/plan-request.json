@@ -1,0 +1,30 @@
+{
+  "contractVersion": "1.0",
+  "runId": "run_core_fixture",
+  "creativeBrief": {
+    "summary": "Practical remote-work habits for small software teams.",
+    "audience": "engineering managers",
+    "objective": "help a useful social post reach the right readers"
+  },
+  "inputReferences": ["README.md"],
+  "channels": ["youtube"],
+  "locale": {
+    "uiLocale": "en-US",
+    "region": "US",
+    "timezone": "America/Phoenix"
+  },
+  "orchestrationMode": "guided",
+  "enabledModules": ["search-term"],
+  "defaultEvidenceTier": "autocomplete_only",
+  "approvedPrefixes": {
+    "youtube": {
+      "search-term": ["remote work"]
+    }
+  },
+  "interactionBounds": {
+    "maxPrefixesPerModule": 3,
+    "maxSuggestionsPerPrefix": 10,
+    "maxResultsPerCandidate": 3,
+    "maxRefinementRounds": 1
+  }
+}

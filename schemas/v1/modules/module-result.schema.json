@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/modules/module-result.schema.json",
+  "title": "Version 1 module result",
+  "type": "object",
+  "required": [
+    "module",
+    "schemaVersion",
+    "outcome",
+    "evidenceTier",
+    "attemptedPrefixes",
+    "researchedRecommendations",
+    "rejectedCandidates",
+    "modelSuggestions",
+    "evidenceReferences",
+    "warnings",
+    "failures"
+  ],
+  "properties": {
+    "module": { "enum": ["search-term", "hashtag"] },
+    "schemaVersion": { "const": "1.0" },
+    "outcome": { "enum": ["recommended", "zero", "not_applicable", "interrupted", "failed"] },
+    "evidenceTier": { "enum": ["autocomplete_only", "results_sample"] },
+    "recommendationRange": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["min", "max"],
+          "properties": {
+            "min": { "type": "integer", "minimum": 0 },
+            "max": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "attemptedPrefixes": { "type": "array" },
+    "researchedRecommendations": { "type": "array" },
+    "rejectedCandidates": { "type": "array" },
+    "modelSuggestions": { "type": "array" },
+    "zeroReason": { "enum": ["no_native_candidates", "candidates_not_relevant", "insufficient_result_relevance"] },
+    "notApplicableReason": { "type": "string" },
+    "evidenceReferences": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "warnings": { "type": "array" },
+    "failures": { "type": "array" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/common/output-envelope.schema.json",
+  "title": "Social metadata CLI output envelope",
+  "type": "object",
+  "required": ["contractVersion", "command", "ok", "data", "warnings", "errors"],
+  "properties": {
+    "contractVersion": { "const": "1.0" },
+    "command": { "enum": ["plan", "record-observation", "validate", "unknown"] },
+    "ok": { "type": "boolean" },
+    "runId": { "type": "string", "pattern": "^run_[A-Za-z0-9_-]+$" },
+    "data": {},
+    "warnings": { "type": "array", "items": { "$ref": "#/$defs/issue" } },
+    "errors": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "path": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

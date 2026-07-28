@@ -1,0 +1,21 @@
+{
+  "contractVersion": "1.0",
+  "receiptVersion": "1.0",
+  "capturedAt": "2026-07-28T00:24:23Z",
+  "host": "codex",
+  "browser": "in_app",
+  "channel": "tiktok",
+  "module": "search-term",
+  "accessClass": "public",
+  "locale": {"uiLocale":"en-US","region":"US","timezone":"America/Phoenix"},
+  "status": "failed",
+  "reasonCode": "ui_change",
+  "checkpoints": [
+    {"id":"channel","status":"present"},
+    {"id":"search","status":"present"},
+    {"id":"results","status":"missing"}
+  ],
+  "interaction": {"attempted":true,"succeeded":false,"explicitNativeEmpty":false},
+  "screenshot": {"captured":false,"policyReason":"ui_change"},
+  "receiptId": "acceptance_f7b6a08041228f6199983b1c"
+}

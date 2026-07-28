@@ -1,0 +1,21 @@
+{
+  "contractVersion": "1.0",
+  "receiptVersion": "1.0",
+  "capturedAt": "2026-07-28T00:24:23Z",
+  "host": "claude",
+  "browser": "in_app",
+  "channel": "youtube",
+  "module": "search-term",
+  "accessClass": "public",
+  "locale": {"uiLocale":"en-US","region":"US","timezone":"America/Phoenix"},
+  "status": "interrupted",
+  "reasonCode": "capability_unavailable",
+  "checkpoints": [
+    {"id":"channel","status":"present"},
+    {"id":"search","status":"present"},
+    {"id":"results","status":"present"}
+  ],
+  "interaction": {"attempted":false,"succeeded":false,"explicitNativeEmpty":false},
+  "screenshot": {"captured":false,"policyReason":"not_needed"},
+  "receiptId": "acceptance_25ca1861281792ca984a40c9"
+}

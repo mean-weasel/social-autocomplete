@@ -1,0 +1,21 @@
+{
+  "contractVersion": "1.0",
+  "receiptVersion": "1.0",
+  "capturedAt": "2026-07-28T00:24:23Z",
+  "host": "codex",
+  "browser": "chrome",
+  "channel": "facebook",
+  "module": "search-term",
+  "accessClass": "authenticated",
+  "locale": {"uiLocale":"en-US","region":"US","timezone":"America/Phoenix"},
+  "status": "interrupted",
+  "reasonCode": "authentication_required",
+  "checkpoints": [
+    {"id":"channel","status":"present"},
+    {"id":"search","status":"missing"},
+    {"id":"results","status":"missing"}
+  ],
+  "interaction": {"attempted":false,"succeeded":false,"explicitNativeEmpty":false},
+  "screenshot": {"captured":false,"policyReason":"authentication_or_challenge"},
+  "receiptId": "acceptance_d06c96bd8979a158504a00ff"
+}
