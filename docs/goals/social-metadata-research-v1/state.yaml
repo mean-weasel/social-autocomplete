@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-research-v1"
   kind: existing_plan
   tranche: "Continuously implement and verify the complete approved v1 through release proof."
-  status: active
+  status: done
   oracle:
     signal: "Clean-checkout release verification, cross-host install and fixture parity, subprocess JSON consumption, and current browser-acceptance receipts prove the approved v1 works."
     cadence: "after each Worker package and at final audit"
@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-research-v1/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-research-v1"
 
-active_task: T016
+active_task: null
 
 tasks:
   - id: T001
@@ -1063,7 +1063,7 @@ tasks:
   - id: T016
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Commit the coherent v1 release and prove the strict release oracle from a temporary clean worktree."
     inputs:
@@ -1079,7 +1079,30 @@ tasks:
       - "A release implementation commit"
       - "Clean worktree npm ci and strict npm run verify:release pass"
       - "Commit SHA and verification receipt"
-    receipt: null
+    receipt:
+      result: done
+      summary: "Committed the coherent v1 release as 2e18ab6 without rewriting the approved design commit. A detached temporary worktree at that exact commit passed npm ci and strict npm run verify:release, including offline suites, clean Codex/Claude package installation, stdout-only subprocess use, and fresh live receipt coverage. The temporary worktree was removed afterward."
+      evidence:
+        - "commit 2e18ab6"
+        - "detached worktree /tmp/social-metadata-clean.FfT63m at 2e18ab6"
+        - "npm ci --ignore-scripts"
+        - "npm run verify:release"
+      facts:
+        - "Commit 96aa62f remains the separate approved design commit."
+        - "Commit 2e18ab6 contains the implementation, packaging, tests, goal board, and sanitized acceptance receipts."
+        - "Strict release verification passed from a detached clean checkout of 2e18ab6."
+      contradictions: []
+      ambiguity_requiring_judge: []
+      commands:
+        - cmd: "git commit -m \"feat: add browser-first social metadata research\""
+          status: pass
+        - cmd: "npm ci --ignore-scripts"
+          status: pass
+        - cmd: "npm run verify:release"
+          status: pass
+        - cmd: "git worktree remove /tmp/social-metadata-clean.FfT63m --force"
+          status: pass
+      note_needed: false
   - id: T999
     type: judge
     assignee: Judge
@@ -1104,26 +1127,29 @@ tasks:
       - "Next task if not complete"
     receipt:
       result: done
-      decision: not_complete
-      full_outcome_complete: false
-      rationale: "Implementation, live evidence, and strict release verification satisfy the functional oracle, but every implementation file is still untracked. A clean checkout of the current commit contains only the design, so the oracle's clean-checkout proof is absent. Commit the coherent release without rewriting the approved design commit, verify npm ci/build/release from a temporary clean worktree, then rerun this final audit."
+      decision: complete
+      full_outcome_complete: true
+      rationale: "The full approved v1 is implemented and proven. Commit 2e18ab6 passed npm ci and strict release verification from a detached clean worktree. The same oracle proves dual-host packaging, stdout-only subprocess use, both modules and evidence tiers, all-channel replay, resumable failures, and fresh live public/authenticated acceptance. Exact native evidence remains mandatory; APIs are optional enrichment; publishing, composers, scraping, and provider credentials are excluded. All sixteen predecessor tasks are done."
       worker_package: null
       evidence:
-        - "git status --short"
-        - "git log --oneline"
-        - "npm run verify:release"
+        - "commit 2e18ab6 clean-worktree npm run verify:release"
+        - "npm run verify:offline"
+        - "npm run test:install"
+        - "npm run test:host-parity"
+        - "npm run example:subprocess"
+        - "fixtures/integration/all-channel-golden.json"
         - "docs/browser-acceptance/receipts/*.json"
+        - "docs/browser-acceptance/dogfood-2026-07-27.md"
       subgoal_contract: null
       parallel_safety: null
       blocked_tasks: []
-      missing_evidence:
-        - "A commit containing the implementation and acceptance proof."
-        - "Release verification from a clean worktree at that commit."
-      required_board_updates:
-        - "Complete PM repository-integrity task T016, then reactivate T999."
+      missing_evidence: []
+      required_board_updates: []
 checks:
-  dirty_fingerprint: "goal-prep-in-progress"
+  dirty_fingerprint: "goal-complete-2e18ab6"
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: pass
+    task: T999
+    commands:
+      - "npm ci --ignore-scripts"
+      - "npm run verify:release"
