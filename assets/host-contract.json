@@ -17,6 +17,11 @@
     "browserOwner": "plugin",
     "cliOwner": "contracts_state_validation",
     "browserSession": {
+      "selectionRequiredBeforePlan": true,
+      "codexChoices": ["chrome", "in_app"],
+      "recordedInPlan": true,
+      "adjustment": "append_only_user_confirmed_amendment",
+      "silentSwitch": "prohibited",
       "authenticated": "existing_user_controlled_chrome_profile",
       "public": "host_managed_visible_browser_only",
       "standalonePlaywrightChromium": "unsupported",

@@ -62,6 +62,7 @@ try {
       orchestrationMode: "automatic",
       enabledModules: ["search-term"],
       defaultEvidenceTier: "autocomplete_only",
+      browserSelection: { browser: "chrome", confirmedByUser: true },
       approvedPrefixes: { youtube: { "search-term": ["remote work"] } },
       interactionBounds: {
         maxPrefixesPerModule: 3,

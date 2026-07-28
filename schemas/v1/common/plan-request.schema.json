@@ -12,6 +12,7 @@
     "orchestrationMode",
     "enabledModules",
     "defaultEvidenceTier",
+    "browserSelection",
     "interactionBounds"
   ],
   "properties": {
@@ -46,6 +47,15 @@
       "items": { "enum": ["search-term", "hashtag"] }
     },
     "defaultEvidenceTier": { "enum": ["autocomplete_only", "results_sample"] },
+    "browserSelection": {
+      "type": "object",
+      "required": ["browser", "confirmedByUser"],
+      "properties": {
+        "browser": { "enum": ["chrome", "in_app"] },
+        "confirmedByUser": { "const": true }
+      },
+      "additionalProperties": false
+    },
     "interactionBounds": {
       "type": "object",
       "required": ["maxPrefixesPerModule", "maxSuggestionsPerPrefix", "maxResultsPerCandidate", "maxRefinementRounds"],

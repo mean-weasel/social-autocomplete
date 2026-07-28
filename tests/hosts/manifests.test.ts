@@ -45,4 +45,10 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   assert.match(skill, /pause the same run/i);
   assert.match(skill, /sign in manually in that browser/i);
   assert.match(skill, /never request, receive, type, read, transmit, or store passwords/i);
+  assert.match(skill, /Before creating a plan or opening any channel/i);
+  assert.match(skill, /choose and confirm the browser/i);
+  assert.match(skill, /browserSelection/i);
+  assert.match(skill, /Codex built-in Browser/i);
+  assert.match(skill, /append-only plan amendment/i);
+  assert.match(skill, /Never switch browsers/i);
 });

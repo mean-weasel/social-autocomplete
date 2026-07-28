@@ -35,6 +35,14 @@ export interface InteractionBounds {
   maxRefinementRounds: 1;
 }
 
+export const RUN_BROWSERS = ["chrome", "in_app"] as const;
+export type RunBrowser = (typeof RUN_BROWSERS)[number];
+
+export interface BrowserSelection {
+  browser: RunBrowser;
+  confirmedByUser: true;
+}
+
 export interface PlanRequest {
   contractVersion: typeof CONTRACT_VERSION;
   runId?: string;
@@ -45,6 +53,7 @@ export interface PlanRequest {
   orchestrationMode: OrchestrationMode;
   enabledModules: ModuleName[];
   defaultEvidenceTier: EvidenceTier;
+  browserSelection: BrowserSelection;
   channelOverrides?: Partial<Record<Channel, { evidenceTier?: EvidenceTier }>>;
   approvedPrefixes?: Partial<Record<Channel, Partial<Record<ModuleName, string[]>>>>;
   interactionBounds: InteractionBounds;
@@ -70,6 +79,38 @@ export interface PlanAmendment {
   createdAt: string;
   reason: string;
   changes: Record<string, JsonValue>;
+}
+
+export function effectiveBrowserSelection(
+  plan: StoredPlan,
+  amendments: PlanAmendment[],
+): BrowserSelection {
+  let selection = plan.browserSelection;
+  for (const amendment of amendments) {
+    const candidate = amendment.changes.browserSelection;
+    if (isRecord(candidate)) selection = candidate as unknown as BrowserSelection;
+  }
+  return selection;
+}
+
+function validateBrowserSelection(
+  value: unknown,
+  path: string,
+  issues: ContractIssue[],
+): value is BrowserSelection {
+  if (!isRecord(value)) {
+    issues.push({ code: "invalid_object", message: "Expected a browser selection object.", path });
+    return false;
+  }
+  enumValue(value.browser, RUN_BROWSERS, `${path}.browser`, issues);
+  if (value.confirmedByUser !== true) {
+    issues.push({
+      code: "browser_selection_not_confirmed",
+      message: "The user must explicitly confirm Chrome or the Codex in-app Browser before planning.",
+      path: `${path}.confirmedByUser`,
+    });
+  }
+  return issues.every((issue) => !issue.path?.startsWith(path));
 }
 
 function enumValue<T extends string>(
@@ -149,6 +190,7 @@ export function parsePlanRequest(value: unknown): PlanRequest {
     });
   }
   enumValue(value.defaultEvidenceTier, EVIDENCE_TIERS, "$.defaultEvidenceTier", issues);
+  validateBrowserSelection(value.browserSelection, "$.browserSelection", issues);
   if (!isRecord(value.interactionBounds)) {
     issues.push({ code: "invalid_object", message: "Expected an object.", path: "$.interactionBounds" });
   } else {
@@ -200,6 +242,12 @@ export function parsePlanAmendment(value: unknown, runId: string): Omit<PlanAmen
   }
   if (!isRecord(value.changes)) {
     issues.push({ code: "invalid_object", message: "Expected an object.", path: "$.changes" });
+  } else if (value.changes.browserSelection !== undefined) {
+    validateBrowserSelection(
+      value.changes.browserSelection,
+      "$.changes.browserSelection",
+      issues,
+    );
   }
   if (issues.length > 0) {
     throw new ContractError("Invalid plan amendment.", issues, 2, runId);

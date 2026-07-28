@@ -33,6 +33,25 @@ is not evidence of popularity, performance, or future reach.
 
 ## Browser sessions and authentication
 
+Browser selection is the first required step of every run. The user explicitly
+chooses either `chrome` (their existing visible Chrome session) or `in_app`
+(the Codex built-in Browser). The confirmed choice is stored in the plan:
+
+```json
+{
+  "browserSelection": {
+    "browser": "chrome",
+    "confirmedByUser": true
+  }
+}
+```
+
+Every CLI next action repeats the effective selection. A user-confirmed change
+is recorded through an append-only plan amendment and applies before the next
+channel-native evidence is captured. The plugin never silently changes browser
+surfaces. The in-app Browser is limited to playbook-approved public research;
+Chrome is required for Facebook, Instagram, LinkedIn, X, and authentication.
+
 The plugin does not create a temporary Playwright or profile-less Chromium
 session. Authenticated research uses the user's existing, visible Chrome
 profile so the channel can use sign-ins the user has already completed.

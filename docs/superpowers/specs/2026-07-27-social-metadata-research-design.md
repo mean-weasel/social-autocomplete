@@ -71,6 +71,13 @@ Users may invoke the capability in either of two ways:
 - Natural language, such as "research metadata for this post."
 - A direct Codex or Claude plugin call.
 
+Before the host normalizes or submits a plan, the user explicitly chooses the
+browser surface. Codex offers `chrome` (the user's existing visible Chrome
+session) and `in_app` (the Codex built-in Browser). The choice is recorded in
+the plan, repeated in every next action, and remains in force until the user
+confirms an append-only amendment. The host never silently substitutes a
+different browser.
+
 Codex or Claude inspects the supplied caption, image, app, files, or messaging fragments and creates a normalized creative brief. The CLI accepts that brief; it does not implement image, application, or document interpretation.
 
 Project-local run state stores the normalized brief and safe references to original inputs. It does not copy source assets into the run.
@@ -84,6 +91,7 @@ The user may supply a channel list or ask the host to propose one. Before resear
 - Orchestration mode.
 - Default evidence tier.
 - Any requested channel-specific evidence-tier overrides.
+- The user-confirmed browser choice and its channel compatibility.
 
 ### Orchestration modes
 
@@ -362,11 +370,12 @@ The initial request contains:
 - Orchestration mode.
 - Enabled modules.
 - Default evidence tier.
+- A required user-confirmed `browserSelection` of `chrome` or `in_app`.
 - Per-channel overrides.
 - Exact approved prefixes for the next guided step, when applicable.
 - Plan-defined interaction bounds.
 
-The plan is immutable except through versioned, append-only plan amendments. Automatic query derivation, user edits, and the single refinement round are recorded as amendments so the exact prefix history remains auditable.
+The plan is immutable except through versioned, append-only plan amendments. Automatic query derivation, user edits, browser-selection changes, and the single refinement round are recorded as amendments so the exact history remains auditable. A browser change is accepted before the active channel records native evidence, or after a pure interruption; it is rejected mid-channel after native evidence exists.
 
 ### `record-observation`
 
@@ -649,6 +658,13 @@ A complete `zero` outcome requires:
 | Pinterest | Authenticated Chrome preferred | Allowed for `search-term` |
 
 Chrome is used whenever research depends on the user's authenticated session. The Codex in-app browser is preferred for permitted public surfaces. Claude follows the same access policy through its available browser-control integration.
+
+Browser selection is a must-do first step. The CLI rejects plans without a
+user-confirmed choice, unsupported channel/browser combinations, and browser UI
+observations that do not match the effective selection. Every next action
+repeats the effective choice so a resumed host can reconnect to the intended
+surface. Only the logical surface name is stored; browser handles, profiles,
+accounts, cookies, and storage state are not persisted.
 
 All browser surfaces are host-managed and user-visible. Standalone Playwright launches, profile-less Chromium, downloaded test browsers, and persisted automation profiles are unsupported. The browser-control implementation may automate the approved host-managed surface, but it may not substitute another browser or profile.
 

@@ -14,6 +14,11 @@ interface HostContract {
     browserOwner: string;
     cliOwner: string;
     browserSession: {
+      selectionRequiredBeforePlan: boolean;
+      codexChoices: string[];
+      recordedInPlan: boolean;
+      adjustment: string;
+      silentSwitch: string;
       authenticated: string;
       public: string;
       standalonePlaywrightChromium: string;
@@ -39,6 +44,11 @@ export async function checkHostParity(): Promise<{ ok: true; hosts: number; skil
   assert.equal(contract.shared.incrementalResult, "after_each_channel");
   assert.equal(contract.shared.browserOwner, "plugin");
   assert.equal(contract.shared.cliOwner, "contracts_state_validation");
+  assert.equal(contract.shared.browserSession.selectionRequiredBeforePlan, true);
+  assert.deepEqual(contract.shared.browserSession.codexChoices, ["chrome", "in_app"]);
+  assert.equal(contract.shared.browserSession.recordedInPlan, true);
+  assert.equal(contract.shared.browserSession.adjustment, "append_only_user_confirmed_amendment");
+  assert.equal(contract.shared.browserSession.silentSwitch, "prohibited");
   assert.equal(contract.shared.browserSession.authenticated, "existing_user_controlled_chrome_profile");
   assert.equal(contract.shared.browserSession.public, "host_managed_visible_browser_only");
   assert.equal(contract.shared.browserSession.standalonePlaywrightChromium, "unsupported");

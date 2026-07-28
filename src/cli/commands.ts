@@ -3,19 +3,23 @@ import {
   CONTRACT_VERSION,
   ContractError,
   type CoreReceipt,
+  effectiveBrowserSelection,
   type JsonValue,
   type Observation,
   type OutputEnvelope,
   parseObservation,
   parsePlanAmendment,
   parsePlanRequest,
+  type BrowserSelection,
+  type PlanAmendment,
   type StoredPlan,
 } from "../contracts/index.js";
+import { getPlaybook } from "../channels/index.js";
+import { getChannelModulePolicy } from "../channels/policies/index.js";
 import {
   parseModuleObservationPayload,
   reduceChannelModules,
 } from "../modules/registry.js";
-import { getChannelModulePolicy } from "../channels/policies/index.js";
 import { createId, digest, StateStore } from "../state/store.js";
 import type { ParsedArguments } from "./arguments.js";
 import { readJsonInput } from "./arguments.js";
@@ -81,25 +85,39 @@ function latestUnresolvedInterruption(
 
 function nextAction(
   plan: StoredPlan,
+  amendments: PlanAmendment[],
   observations: Observation[],
   receiptChannelRunIds: string[],
 ): JsonValue {
+  const browserSelection = effectiveBrowserSelection(plan, amendments);
   const unfinished = plan.channelRuns.find(
     (channelRun) => !receiptChannelRunIds.includes(channelRun.channelRunId),
   );
-  if (!unfinished) return { kind: "complete", runId: plan.runId };
+  if (!unfinished) return asJsonValue({ kind: "complete", runId: plan.runId, browserSelection });
+  const allowedBrowsers = getPlaybook(unfinished.channel).supportedBrowsers.codex;
+  if (!allowedBrowsers.includes(browserSelection.browser)) {
+    return asJsonValue({
+      kind: "amend_browser_selection",
+      runId: plan.runId,
+      channelRunId: unfinished.channelRunId,
+      channel: unfinished.channel,
+      browserSelection,
+      allowedBrowsers,
+    });
+  }
   const channelObservations = observations.filter(
     (observation) => observation.channelRunId === unfinished.channelRunId,
   );
   const interruption = latestUnresolvedInterruption(channelObservations, plan);
   if (interruption) {
-    return {
+    return asJsonValue({
       kind: "resume_interruption",
       runId: plan.runId,
       channelRunId: unfinished.channelRunId,
       channel: unfinished.channel,
+      browserSelection,
       interruptionObservationId: interruption.observationId,
-    };
+    });
   }
   const decisionsComplete = unfinished.enabledModules.every((moduleName) => {
     if (!getChannelModulePolicy(unfinished.channel, moduleName).supported) return true;
@@ -110,19 +128,62 @@ function nextAction(
     );
   });
   if (decisionsComplete) {
-    return {
+    return asJsonValue({
       kind: "validate",
       runId: plan.runId,
       channelRunId: unfinished.channelRunId,
       channel: unfinished.channel,
-    };
+      browserSelection,
+    });
   }
-  return {
+  return asJsonValue({
     kind: "record_observation",
     runId: plan.runId,
     channelRunId: unfinished.channelRunId,
     channel: unfinished.channel,
-  };
+    browserSelection,
+  });
+}
+
+function assertBrowserCompatibility(
+  channels: StoredPlan["channels"],
+  selection: BrowserSelection,
+  runId?: string,
+): void {
+  const incompatible = channels.filter(
+    (channel) => !getPlaybook(channel).supportedBrowsers.codex.includes(selection.browser),
+  );
+  if (incompatible.length === 0) return;
+  throw new ContractError("Selected browser is not supported for the active channel.", [{
+    code: "browser_not_supported",
+    message:
+      `${selection.browser} cannot be used for: ${incompatible.join(", ")}. ` +
+      "Choose Chrome or remove those channels before beginning research.",
+    path: "$.browserSelection.browser",
+  }], 2, runId);
+}
+
+function assertObservationUsesSelectedBrowser(
+  observation: Observation,
+  selection: BrowserSelection,
+): void {
+  if (observation.source.kind !== "browser_ui") return;
+  if (observation.source.browser !== selection.browser) {
+    throw new ContractError("Observation browser does not match the user-confirmed selection.", [{
+      code: "browser_selection_mismatch",
+      message:
+        `Expected ${selection.browser}; received ${observation.source.browser}. ` +
+        "Record a browser-selection amendment before switching browser surfaces.",
+      path: "$.source.browser",
+    }], 6, observation.runId);
+  }
+  if (selection.browser === "in_app" && observation.source.accessMode !== "public") {
+    throw new ContractError("The Codex in-app Browser is limited to public research.", [{
+      code: "in_app_requires_public_access",
+      message: "Use accessMode public, or amend the run to Chrome for authenticated research.",
+      path: "$.source.accessMode",
+    }], 6, observation.runId);
+  }
 }
 
 export async function executeCommand(
@@ -158,11 +219,13 @@ export async function executeCommand(
             request.channelOverrides?.[channel]?.evidenceTier ?? request.defaultEvidenceTier,
         })),
       };
+      assertBrowserCompatibility([plan.channelRuns[0]!.channel], plan.browserSelection, runId);
       await store.createPlan(plan);
       return success("plan", asJsonValue({
         created: true,
         plan,
-        nextAction: nextAction(plan, [], []),
+        effectiveBrowserSelection: plan.browserSelection,
+        nextAction: nextAction(plan, [], [], []),
       }), runId);
     }
 
@@ -170,17 +233,50 @@ export async function executeCommand(
     if (args.json) {
       const amendmentInput = parsePlanAmendment(await readJsonInput(args.json), args.runId);
       const amendment = { ...amendmentInput, createdAt: new Date().toISOString() };
-      const disposition = await store.appendAmendment(amendment);
-      const [observations, receiptChannelRunIds] = await Promise.all([
+      const [currentAmendments, observations, receiptChannelRunIds] = await Promise.all([
+        store.readAmendments(args.runId),
         store.readObservations(args.runId),
         store.listReceiptChannelRunIds(args.runId),
       ]);
+      const proposedAmendments = [...currentAmendments, amendment];
+      const currentSelection = effectiveBrowserSelection(plan, currentAmendments);
+      const proposedSelection = effectiveBrowserSelection(plan, proposedAmendments);
+      assertBrowserCompatibility(
+        plan.channelRuns
+          .filter((item) => !receiptChannelRunIds.includes(item.channelRunId))
+          .slice(0, 1)
+          .map((item) => item.channel),
+        proposedSelection,
+        args.runId,
+      );
+      if (currentSelection.browser !== proposedSelection.browser) {
+        const active = plan.channelRuns.find(
+          (item) => !receiptChannelRunIds.includes(item.channelRunId),
+        );
+        const substantiveObservation = active && observations.find(
+          (item) =>
+            item.channelRunId === active.channelRunId &&
+            item.kind !== "interruption",
+        );
+        if (substantiveObservation) {
+          throw new ContractError("Browser selection is locked for the active channel.", [{
+            code: "browser_selection_locked",
+            message:
+              "The browser may be changed before a channel starts or after an interruption, " +
+              "but not after channel-native evidence has been recorded.",
+            path: "$.changes.browserSelection.browser",
+          }], 2, args.runId);
+        }
+      }
+      const disposition = await store.appendAmendment(amendment);
+      const amendments = await store.readAmendments(args.runId);
       return success("plan", asJsonValue({
         resumed: true,
         amendment: disposition,
         plan,
-        amendments: await store.readAmendments(args.runId),
-        nextAction: nextAction(plan, observations, receiptChannelRunIds),
+        amendments,
+        effectiveBrowserSelection: effectiveBrowserSelection(plan, amendments),
+        nextAction: nextAction(plan, amendments, observations, receiptChannelRunIds),
       }), args.runId);
     }
     const [amendments, observations, status, receiptChannelRunIds] = await Promise.all([
@@ -194,7 +290,8 @@ export async function executeCommand(
       plan,
       amendments,
       status,
-      nextAction: nextAction(plan, observations, receiptChannelRunIds),
+      effectiveBrowserSelection: effectiveBrowserSelection(plan, amendments),
+      nextAction: nextAction(plan, amendments, observations, receiptChannelRunIds),
     }), args.runId);
   }
 
@@ -212,8 +309,12 @@ export async function executeCommand(
     }
     const observation = parseObservation(await readJsonInput(args.json), args.runId);
     parseModuleObservationPayload(observation);
-    const disposition = await store.appendObservation(observation);
     const plan = await store.readPlan(args.runId);
+    const amendments = await store.readAmendments(args.runId);
+    const selection = effectiveBrowserSelection(plan, amendments);
+    assertBrowserCompatibility([observation.source.channel], selection, args.runId);
+    assertObservationUsesSelectedBrowser(observation, selection);
+    const disposition = await store.appendObservation(observation);
     const [observations, receiptChannelRunIds] = await Promise.all([
       store.readObservations(args.runId),
       store.listReceiptChannelRunIds(args.runId),
@@ -221,7 +322,8 @@ export async function executeCommand(
     return success("record-observation", asJsonValue({
       disposition,
       observationId: observation.observationId,
-      nextAction: nextAction(plan, observations, receiptChannelRunIds),
+      effectiveBrowserSelection: selection,
+      nextAction: nextAction(plan, amendments, observations, receiptChannelRunIds),
     }), args.runId);
   }
 
@@ -249,21 +351,23 @@ async function validateRun(store: StateStore, runId: string): Promise<CommandRes
     (item) => !receiptChannelRunIds.includes(item.channelRunId),
   );
   if (!channelRun) {
-    return success("validate", {
+    return success("validate", asJsonValue({
       status: "complete",
       receiptChannelRunIds,
-      nextAction: nextAction(plan, observations, receiptChannelRunIds),
-    }, runId);
+      effectiveBrowserSelection: effectiveBrowserSelection(plan, amendments),
+      nextAction: nextAction(plan, amendments, observations, receiptChannelRunIds),
+    }), runId);
   }
   const channelObservations = observations.filter(
     (observation) => observation.channelRunId === channelRun.channelRunId,
   );
   if (channelObservations.length === 0) {
-    return success("validate", {
+    return success("validate", asJsonValue({
       status: "incomplete",
       reason: "no_observations",
-      nextAction: nextAction(plan, observations, receiptChannelRunIds),
-    }, runId, [], 3);
+      effectiveBrowserSelection: effectiveBrowserSelection(plan, amendments),
+      nextAction: nextAction(plan, amendments, observations, receiptChannelRunIds),
+    }), runId, [], 3);
   }
   const interruption = latestUnresolvedInterruption(channelObservations, plan);
   if (interruption) {
@@ -361,6 +465,7 @@ async function validateRun(store: StateStore, runId: string): Promise<CommandRes
   return success("validate", asJsonValue({
     status: "complete",
     receipt,
-    nextAction: nextAction(plan, observations, completedReceiptIds),
+    effectiveBrowserSelection: effectiveBrowserSelection(plan, amendments),
+    nextAction: nextAction(plan, amendments, observations, completedReceiptIds),
   }), runId, receipt.warnings);
 }

@@ -9,12 +9,16 @@ Research attention-relevant metadata without publishing or changing the user's c
 
 ## Start the run
 
-1. Understand the supplied caption, image, app, or messaging context.
-2. Infer topic, locale, channels, modules, evidence tier, and orchestration mode. By default select both `hashtag` and `search-term`, use fresh research, and use `autocomplete_only`.
-3. Present those inferred values and ask for confirmation before any channel research. Always offer:
+1. Before creating a plan or opening any channel, ask the user to choose and confirm the browser for this run:
+   - `chrome`: the user's existing, visible Chrome session. Required for Facebook, Instagram, LinkedIn, X, and all authenticated research.
+   - `in_app`: the Codex built-in Browser. Limited to permitted public TikTok or YouTube research and Pinterest `search-term` research.
+2. Record the confirmed choice in `browserSelection` with `confirmedByUser: true`. Establish that host browser binding once and reuse it for every channel while the choice remains effective.
+3. Understand the supplied caption, image, app, or messaging context.
+4. Infer topic, locale, channels, modules, evidence tier, and orchestration mode. By default select both `hashtag` and `search-term`, use fresh research, and use `autocomplete_only`.
+5. Present those inferred values, the browser choice, and any compatibility limits, then ask for confirmation before any channel research. Always offer:
    - `guided`: two approvals per channel, first for initial query prefixes and then for the single refinement round if needed.
    - `automatic`: the agent chooses prefixes and candidates after the initial confirmation; ask again only for an interruption or material plan amendment.
-4. Call the bundled CLI as a subprocess and consume its JSON stdout directly:
+6. Call the bundled CLI as a subprocess and consume its JSON stdout directly:
 
    ```sh
    social-metadata plan --json @plan-input.json
@@ -23,6 +27,8 @@ Research attention-relevant metadata without publishing or changing the user's c
    ```
 
 The CLI stores project-local private working data under `.social-metadata/`. It never controls the browser or chooses candidates.
+
+The user may change the browser later. Record the new confirmed choice as an append-only plan amendment before using it. A browser change is allowed before a channel starts or after an interruption that recorded no native evidence. It is not allowed after native evidence has been recorded for the active channel. Never switch browsers merely because the selected browser is signed out or incompatible.
 
 ## Required browser and sign-in model
 
@@ -40,7 +46,8 @@ The plugin and CLI never request, receive, type, read, transmit, or store passwo
 
 Pause before each channel, select its dedicated skill, and follow the [shared research contract](../_shared/browser-research-contract.md). Use the thin router policy to choose the allowed browser:
 
-- Codex: Chrome for authenticated sessions; in-app Browser only for public TikTok, YouTube, or Pinterest search-term research.
+- Read `nextAction.browserSelection` and reuse that exact host browser binding. If the binding was lost after a task or process restart, reconnect to the same selected surface before continuing.
+- Codex: Chrome for authenticated sessions; in-app Browser only for public TikTok or YouTube research, or Pinterest search-term research.
 - Claude: Claude in Chrome. If unavailable, return a visible capability interruption.
 
 Dedicated skills:
@@ -53,7 +60,7 @@ Dedicated skills:
 - [YouTube](../youtube-metadata-research/SKILL.md)
 - [Pinterest](../pinterest-metadata-research/SKILL.md)
 
-After each channel, validate and return its incremental result. Resume the same run after user-completed authentication or an assisted UI-change recovery. Do not silently switch browser profiles, evidence tiers, or browser access modes.
+After each channel, validate and return its incremental result. Resume the same run after user-completed authentication or an assisted UI-change recovery. Do not silently switch browser surfaces, browser profiles, evidence tiers, or browser access modes.
 
 ## Finish
 

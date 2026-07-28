@@ -317,6 +317,171 @@ test("plan amendments are append-only and idempotent", async () => {
   assert.equal((replay.envelope.data as Record<string, any>).amendment, "duplicate");
 });
 
+test("browser selection is required, user-confirmed, and compatible with the first channel", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-browser-required-"));
+  const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;
+  request.runId = "run_browser_required";
+  delete request.browserSelection;
+  await assert.rejects(
+    executeCommand(parseArguments(["plan", "--json", JSON.stringify(request)]), cwd),
+    (error: any) => error.issues.some((issue: any) => issue.code === "invalid_object"),
+  );
+
+  request.browserSelection = { browser: "chrome", confirmedByUser: false };
+  await assert.rejects(
+    executeCommand(parseArguments(["plan", "--json", JSON.stringify(request)]), cwd),
+    (error: any) =>
+      error.issues.some((issue: any) => issue.code === "browser_selection_not_confirmed"),
+  );
+
+  request.browserSelection = { browser: "in_app", confirmedByUser: true };
+  request.channels = ["facebook"];
+  await assert.rejects(
+    executeCommand(parseArguments(["plan", "--json", JSON.stringify(request)]), cwd),
+    (error: any) => error.issues.some((issue: any) => issue.code === "browser_not_supported"),
+  );
+});
+
+test("next actions preserve the browser choice and request an amendment for an incompatible later channel", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-browser-next-"));
+  const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;
+  request.runId = "run_browser_next";
+  request.channels = ["youtube", "facebook"];
+  request.browserSelection = { browser: "in_app", confirmedByUser: true };
+  const created = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(request)]),
+    cwd,
+  );
+  const data = created.envelope.data as Record<string, any>;
+  assert.deepEqual(data.effectiveBrowserSelection, request.browserSelection);
+  assert.deepEqual(data.nextAction.browserSelection, request.browserSelection);
+  assert.equal(data.nextAction.kind, "record_observation");
+  await new StateStore(cwd).writeReceipt(
+    "run_browser_next",
+    data.plan.channelRuns[0].channelRunId,
+    { fixture: true },
+  );
+  const resumed = await executeCommand(
+    parseArguments(["plan", "--run", "run_browser_next"]),
+    cwd,
+  );
+  const nextAction = (resumed.envelope.data as Record<string, any>).nextAction;
+  assert.equal(nextAction.kind, "amend_browser_selection");
+  assert.equal(nextAction.channel, "facebook");
+  assert.deepEqual(nextAction.allowedBrowsers, ["chrome"]);
+});
+
+test("browser selection can be amended before evidence and is enforced for observations", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-browser-amend-"));
+  const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;
+  request.runId = "run_browser_amend";
+  const created = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(request)]),
+    cwd,
+  );
+  const channelRunId = (created.envelope.data as Record<string, any>).plan.channelRuns[0].channelRunId as string;
+  const amendment = {
+    contractVersion: "1.0",
+    amendmentId: "amend_browser_in_app",
+    runId: "run_browser_amend",
+    reason: "The user chose the Codex built-in Browser.",
+    changes: { browserSelection: { browser: "in_app", confirmedByUser: true } },
+  };
+  const amended = await executeCommand(
+    parseArguments(["plan", "--run", "run_browser_amend", "--json", JSON.stringify(amendment)]),
+    cwd,
+  );
+  assert.deepEqual(
+    (amended.envelope.data as Record<string, any>).effectiveBrowserSelection,
+    amendment.changes.browserSelection,
+  );
+
+  const template = await readFile(join(fixtureRoot, "observation.template.json"), "utf8");
+  const observation = JSON.parse(template.replace("$CHANNEL_RUN_ID", channelRunId)) as Record<string, any>;
+  observation.runId = "run_browser_amend";
+  observation.capturedAt = new Date().toISOString();
+  observation.source.browser = "chrome";
+  await assert.rejects(
+    executeCommand(
+      parseArguments(["record-observation", "--run", "run_browser_amend", "--json", JSON.stringify(observation)]),
+      cwd,
+    ),
+    (error: any) =>
+      error.issues.some((issue: any) => issue.code === "browser_selection_mismatch"),
+  );
+
+  observation.source.browser = "in_app";
+  observation.source.accessMode = "authenticated";
+  await assert.rejects(
+    executeCommand(
+      parseArguments(["record-observation", "--run", "run_browser_amend", "--json", JSON.stringify(observation)]),
+      cwd,
+    ),
+    (error: any) =>
+      error.issues.some((issue: any) => issue.code === "in_app_requires_public_access"),
+  );
+});
+
+test("browser selection is adjustable after an interruption but locked after native evidence", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-browser-lock-"));
+  const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;
+  request.runId = "run_browser_lock";
+  const created = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(request)]),
+    cwd,
+  );
+  const channelRunId = (created.envelope.data as Record<string, any>).plan.channelRuns[0].channelRunId as string;
+  const template = await readFile(join(fixtureRoot, "observation.template.json"), "utf8");
+  const base = JSON.parse(template.replace("$CHANNEL_RUN_ID", channelRunId)) as Record<string, any>;
+  base.runId = "run_browser_lock";
+  base.capturedAt = new Date().toISOString();
+  const interruption = {
+    ...base,
+    observationId: "obs_browser_interruption",
+    kind: "interruption",
+    payload: { reason: "authentication_required" },
+  };
+  await executeCommand(
+    parseArguments(["record-observation", "--run", "run_browser_lock", "--json", JSON.stringify(interruption)]),
+    cwd,
+  );
+  const toInApp = {
+    contractVersion: "1.0",
+    amendmentId: "amend_browser_after_interruption",
+    runId: "run_browser_lock",
+    reason: "The user chose public in-app research after the authentication pause.",
+    changes: { browserSelection: { browser: "in_app", confirmedByUser: true } },
+  };
+  await executeCommand(
+    parseArguments(["plan", "--run", "run_browser_lock", "--json", JSON.stringify(toInApp)]),
+    cwd,
+  );
+  const session = {
+    ...base,
+    observationId: "obs_browser_session",
+    kind: "session_state",
+    source: { ...base.source, browser: "in_app", accessMode: "public", personalizedSession: false },
+    payload: { ready: true, authenticated: false },
+  };
+  await executeCommand(
+    parseArguments(["record-observation", "--run", "run_browser_lock", "--json", JSON.stringify(session)]),
+    cwd,
+  );
+  const backToChrome = {
+    ...toInApp,
+    amendmentId: "amend_browser_after_evidence",
+    reason: "Attempt a mid-channel switch.",
+    changes: { browserSelection: { browser: "chrome", confirmedByUser: true } },
+  };
+  await assert.rejects(
+    executeCommand(
+      parseArguments(["plan", "--run", "run_browser_lock", "--json", JSON.stringify(backToChrome)]),
+      cwd,
+    ),
+    (error: any) => error.issues.some((issue: any) => issue.code === "browser_selection_locked"),
+  );
+});
+
 test("project-local state uses the common Git exclude in a linked worktree", async () => {
   const root = await mkdtemp(join(tmpdir(), "social-metadata-worktree-"));
   const commonGitDir = join(root, "repo.git");

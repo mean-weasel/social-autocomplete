@@ -28,6 +28,7 @@ export function makePlan(
     orchestrationMode: mode,
     enabledModules: [moduleName],
     defaultEvidenceTier: tier,
+    browserSelection: { browser: "chrome", confirmedByUser: true },
     approvedPrefixes: { [channel]: { [moduleName]: [prefix] } },
     interactionBounds: {
       maxPrefixesPerModule: 3,

@@ -10,6 +10,13 @@ node scripts/browser-acceptance/run.mjs \
   --output docs/browser-acceptance/receipts/youtube-public.json
 ```
 
+Before opening the first channel, ask the user to choose Chrome or the Codex
+in-app Browser and record that confirmed choice in the run plan. Reuse the same
+host browser binding while the choice remains effective. Before every channel,
+read the effective selection from the CLI next action; if that surface is not
+allowed for the channel, pause for a user-confirmed browser amendment before
+continuing. Never treat an ambient browser window as the user's selection.
+
 Tracked receipts contain only channel/module, host/browser, locale, semantic
 checkpoint states, bounded interaction status, and the screenshot policy. They
 must never contain credentials, cookies, account identifiers, private creative

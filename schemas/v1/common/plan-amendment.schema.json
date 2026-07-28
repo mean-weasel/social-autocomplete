@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/v1/common/plan-amendment.schema.json",
+  "title": "Social metadata plan amendment",
+  "type": "object",
+  "required": ["contractVersion", "amendmentId", "runId", "reason", "changes"],
+  "properties": {
+    "contractVersion": { "const": "1.0" },
+    "amendmentId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "pattern": "^run_[A-Za-z0-9_-]+$" },
+    "reason": { "type": "string", "minLength": 1 },
+    "changes": {
+      "type": "object",
+      "properties": {
+        "browserSelection": {
+          "type": "object",
+          "required": ["browser", "confirmedByUser"],
+          "properties": {
+            "browser": { "enum": ["chrome", "in_app"] },
+            "confirmedByUser": { "const": true }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
