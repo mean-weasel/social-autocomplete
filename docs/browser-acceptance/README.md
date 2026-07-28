@@ -88,3 +88,21 @@ interruption.
 and release stack before dogfooding. The final command without that flag
 requires fresh passing public and authenticated receipts. A loading or locator
 failure is `ui_change`, never native empty.
+
+## QA agent materials
+
+Use these version-controlled materials for repeatable local Codex QA:
+
+- [QA agent runbook](qa-agent-runbook.md) — phased, step-by-step execution
+  procedure and stop conditions.
+- [Channel matrix](channel-matrix.md) — channel/module checkpoints and allowed
+  outcomes.
+- [QA run-note template](templates/qa-run-note.md) — human-readable run record.
+- [QA receipt template](templates/qa-receipt.v1.json) — sanitized
+  machine-readable handoff.
+
+The development repository owns the canonical protocol. A separate QA
+repository should contain a pinned copy plus the source commit and checksum
+used for the run. Private run notes, receipts, screenshots, and
+`.social-metadata/` state remain outside the product repository and ignored by
+Git.
