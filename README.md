@@ -31,6 +31,23 @@ changing the tracked `.gitignore`.
 Autocomplete order is captured only to reproduce the visible native surface. It
 is not evidence of popularity, performance, or future reach.
 
+## Browser sessions and authentication
+
+The plugin does not create a temporary Playwright or profile-less Chromium
+session. Authenticated research uses the user's existing, visible Chrome
+profile so the channel can use sign-ins the user has already completed.
+
+If a requested channel is signed out, the plugin preserves the current run,
+returns an `authentication_required` interruption, and asks the user to sign in
+manually in that same browser. After the user confirms readiness, the plugin
+re-verifies the channel and resumes the same run.
+
+Neither the plugin nor the CLI asks for, types, reads, transmits, or stores
+passwords, one-time codes, cookies, access tokens, browser storage state, or
+account identifiers. The Codex in-app Browser may be used only for public
+surfaces permitted by the channel playbook; it is host-managed and is not a
+standalone Chromium fallback.
+
 ## Plugin and integration checks
 
 The repository root is one self-contained Codex and Claude plugin. Invoke

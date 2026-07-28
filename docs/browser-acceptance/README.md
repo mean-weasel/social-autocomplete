@@ -18,6 +18,17 @@ is needed for authentication/challenge or UI change, keep it in private
 `.social-metadata/acceptance/screenshots/`; only the boolean policy result is
 recorded.
 
+Authenticated acceptance must attach to the user's existing Chrome profile. A
+temporary Playwright launch, profile-less Chromium instance, downloaded test
+browser, or persisted automation profile is not a supported acceptance
+surface. The browser may be automated through the host's browser-control
+facility, but it must remain the host-managed, user-visible session.
+
+If the session is signed out, acceptance stops with
+`authentication_required`. The user signs in manually in that same browser and
+then tells the host to resume. The plugin never accepts or enters passwords,
+one-time codes, cookies, tokens, or storage state.
+
 Public acceptance is limited to Codex in-app Browser on TikTok, YouTube, and
 Pinterest search terms (Pinterest hashtags are not applicable). Authenticated
 acceptance uses user-controlled Chrome. Claude uses Claude in Chrome only and

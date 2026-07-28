@@ -24,6 +24,18 @@ Research attention-relevant metadata without publishing or changing the user's c
 
 The CLI stores project-local private working data under `.social-metadata/`. It never controls the browser or chooses candidates.
 
+## Required browser and sign-in model
+
+Use only a user-visible browser session owned by the host:
+
+- For authenticated research, attach to the user's existing Chrome profile. The user may already be signed in to the requested channels.
+- If a channel is signed out, record `authentication_required`, pause the same run, and ask the user to sign in manually in that browser. Resume only after the user confirms sign-in and the channel checkpoints are re-verified.
+- For permitted public research, Codex may use its host-managed in-app Browser.
+
+Do not launch or fall back to a temporary, profile-less Playwright/Chromium instance. Even if such a browser could open the public site, it is not an approved plugin browser surface and cannot stand in for the user's authenticated session.
+
+The plugin and CLI never request, receive, type, read, transmit, or store passwords, one-time codes, cookies, access tokens, browser storage state, or account identifiers. Authentication and challenges are always completed by the user in the visible browser.
+
 ## Research channels
 
 Pause before each channel, select its dedicated skill, and follow the [shared research contract](../_shared/browser-research-contract.md). Use the thin router policy to choose the allowed browser:
@@ -41,7 +53,7 @@ Dedicated skills:
 - [YouTube](../youtube-metadata-research/SKILL.md)
 - [Pinterest](../pinterest-metadata-research/SKILL.md)
 
-After each channel, validate and return its incremental result. Resume the same run after authentication or an assisted UI-change recovery. Do not silently switch evidence tiers or browser access modes.
+After each channel, validate and return its incremental result. Resume the same run after user-completed authentication or an assisted UI-change recovery. Do not silently switch browser profiles, evidence tiers, or browser access modes.
 
 ## Finish
 

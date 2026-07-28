@@ -40,4 +40,9 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   assert.match(skill, /social-metadata plan --json @plan-input\.json/);
   assert.match(skill, /social-metadata record-observation --run <run-id> --json @observation\.json/);
   assert.match(skill, /social-metadata validate --run <run-id>/);
+  assert.match(skill, /existing Chrome profile/i);
+  assert.match(skill, /temporary, profile-less Playwright\/Chromium/i);
+  assert.match(skill, /pause the same run/i);
+  assert.match(skill, /sign in manually in that browser/i);
+  assert.match(skill, /never request, receive, type, read, transmit, or store passwords/i);
 });

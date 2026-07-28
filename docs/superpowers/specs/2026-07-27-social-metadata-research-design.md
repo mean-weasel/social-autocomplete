@@ -17,6 +17,8 @@ The system researches Facebook, Instagram, LinkedIn, X, TikTok, YouTube, and Pin
 
 The primary evidence source is channel-native search in a user-controlled browser. Authenticated work uses Chrome. Public surfaces may use the Codex in-app browser where the channel playbook permits it. Claude uses its available browser-control integration while following the same playbook and evidence contract.
 
+The plugin never launches or falls back to a standalone, temporary, or profile-less Playwright/Chromium instance. Authenticated work attaches to the user's existing visible browser profile. If the channel is signed out, the run pauses while the user signs in manually in that same browser and resumes only after confirmation. The plugin never receives or enters credentials.
+
 The system does not publish, enter composers, scrape pages, store credentials, or depend on Buffer, GrowthOps, provider APIs, paid access, or another repository.
 
 ## Goals
@@ -648,6 +650,8 @@ A complete `zero` outcome requires:
 
 Chrome is used whenever research depends on the user's authenticated session. The Codex in-app browser is preferred for permitted public surfaces. Claude follows the same access policy through its available browser-control integration.
 
+All browser surfaces are host-managed and user-visible. Standalone Playwright launches, profile-less Chromium, downloaded test browsers, and persisted automation profiles are unsupported. The browser-control implementation may automate the approved host-managed surface, but it may not substitute another browser or profile.
+
 Every receipt records whether evidence came from an authenticated, public, or personalized session. Public and authenticated observations are not silently combined within one module result.
 
 ## Channel playbook sequence
@@ -679,8 +683,11 @@ When the expected search surface requires authentication or presents a user-reso
 2. Preserve the current channel step.
 3. Capture a diagnostic screenshot.
 4. Ask the user to sign in or resolve the challenge manually.
-5. Re-verify the semantic search checkpoint.
-6. Resume the same run.
+5. Wait for the user to confirm that the same browser session is ready.
+6. Re-verify the semantic search checkpoint.
+7. Resume the same run.
+
+The plugin does not ask the user to provide a password, one-time code, cookie, token, or browser storage export. It does not type credentials or persist the authenticated browser profile.
 
 ### UI change
 

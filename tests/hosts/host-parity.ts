@@ -13,6 +13,14 @@ interface HostContract {
     incrementalResult: string;
     browserOwner: string;
     cliOwner: string;
+    browserSession: {
+      authenticated: string;
+      public: string;
+      standalonePlaywrightChromium: string;
+      profilePersistence: string;
+      signIn: string;
+      credentialHandling: string;
+    };
     prohibited: string[];
   };
   hosts: {
@@ -31,6 +39,12 @@ export async function checkHostParity(): Promise<{ ok: true; hosts: number; skil
   assert.equal(contract.shared.incrementalResult, "after_each_channel");
   assert.equal(contract.shared.browserOwner, "plugin");
   assert.equal(contract.shared.cliOwner, "contracts_state_validation");
+  assert.equal(contract.shared.browserSession.authenticated, "existing_user_controlled_chrome_profile");
+  assert.equal(contract.shared.browserSession.public, "host_managed_visible_browser_only");
+  assert.equal(contract.shared.browserSession.standalonePlaywrightChromium, "unsupported");
+  assert.equal(contract.shared.browserSession.profilePersistence, "prohibited");
+  assert.equal(contract.shared.browserSession.signIn, "user_manual_same_session_pause_and_resume");
+  assert.equal(contract.shared.browserSession.credentialHandling, "never_request_read_type_transmit_or_store");
   assert.deepEqual(contract.hosts.codex.authenticatedBrowser, contract.hosts.claude.authenticatedBrowser);
   assert.equal(contract.hosts.codex.publicBrowser, "in_app");
   assert.equal(contract.hosts.claude.publicBrowser, null);
