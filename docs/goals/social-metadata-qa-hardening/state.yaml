@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-qa-hardening"
   kind: existing_plan
   tranche: "Implement and prove the corrected local-QA findings."
-  status: active
+  status: done
   oracle:
     signal: "Clean release verification plus fresh isolated Codex QA proves explicit run selections, sanitized browser inspection, and truthful LinkedIn/Pinterest behavior."
     cadence: "after each Worker package and at final audit"
@@ -65,7 +65,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-qa-hardening/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-qa-hardening"
 
-active_task: T008
+active_task: null
 
 tasks:
   - id: T001
@@ -524,7 +524,7 @@ tasks:
   - id: T008
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Run isolated clean-install Codex QA from the QA project and collect sanitized oracle evidence for every corrected finding."
     inputs:
@@ -546,11 +546,37 @@ tasks:
       - "Fresh LinkedIn and Pinterest sanitized acceptance outcomes"
       - "QA notes with corrected pass/fail disposition"
       - "Source and QA repository status"
-    receipt: null
+    receipt:
+      result: done
+      summary: "Isolated QA passed against exact source/cache commit 70655ce. Fresh Codex exposed one orchestrator with seven packaged linked playbooks, asked for browser first and the exact ordered-channel question second, and created no plan before both answers. Two synthetic runs proved channel isolation and same-run resume. Privacy-safe Chrome preflight emitted only structural booleans and enumerated labels. LinkedIn and Pinterest truthfully returned ui_change for the current missing-search variants; Pinterest hashtag remained not_applicable. Product source stayed clean; QA notes and receipts remain untracked and uncommitted."
+      evidence:
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/notes/t008-qa.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/t008-oracle-2026-07-28.json
+        - "commit 70655ceeb3b875f745d8ff4338a4d9c90ed40f9b"
+        - "npm run verify:release -- --allow-missing-live-receipts"
+      facts:
+        - "Exactly one top-level Codex skill loaded: social-metadata-research:social-metadata-research; all seven channel playbooks were packaged and linked."
+        - "The browser question preceded the exact question “Which channels should I research, and in what order?” and no plan was allowed before both answers."
+        - "run_t008_alpha retained [linkedin,pinterest]; run_t008_beta retained [youtube,facebook,x]; neither inherited the other's channels."
+        - "Sanitized Chrome QA enumerated no existing tabs and returned no tab metadata, DOM/body/feed content, account identity, credentials, cookies/tokens, screenshots, or private routes."
+        - "LinkedIn returned ui_change: linkedin_authenticated_feed / linkedin_native_search_entry / linkedin_authenticated_feed_navigation."
+        - "Pinterest search-term returned ui_change: pinterest_root_after_search_redirect / pinterest_search_control / pinterest_root; hashtag returned not_applicable."
+      contradictions: []
+      ambiguity_requiring_judge: []
+      commands:
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - cmd: "git rev-parse HEAD"
+          status: pass
+        - cmd: "git status --short"
+          status: pass
+        - cmd: "git -C /Users/neonwatty/Desktop/social-autocomplete-qa status --short"
+          status: pass
+      note_needed: true
   - id: T009
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Audit every corrected QA finding against Worker receipts, release verification, and fresh isolated QA; reject completion on weak or stale proof."
     inputs:
@@ -570,8 +596,27 @@ tasks:
       - "Finding-by-finding evidence map"
       - "Missing proof"
       - "Next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      rationale: "Every corrected finding is implemented and proven against commit 70655ce. Release verification passed from the clean source tree, then isolated QA reinstalled that exact commit. Fresh Codex proved browser-first and explicit ordered-channel prompts, two-run isolation, one orchestrator with seven linked playbooks, and sanitized Chrome inspection beyond documentation alone. Current LinkedIn and Pinterest variants remain visibly and correctly blocked as enumerated ui_change outcomes, with Pinterest challenge/empty misclassification excluded. T001–T008 are done, no required Worker remains, and the QA repository preserves uncommitted private artifacts."
+      worker_package: null
+      evidence:
+        - "Finding P1 channel choice: skills/social-metadata-research/SKILL.md, tests/core/contracts.test.ts, tests/hosts/manifests.test.ts, and T008 prompt/run-isolation receipt."
+        - "Finding P1 browser privacy: docs/browser-acceptance/README.md, assets/host-contract.json, tests/browser-acceptance/harness.test.ts, and T008 sanitizedPreflightProtocol live receipt."
+        - "Finding P2 LinkedIn: route-aware playbook/diagnostics fixtures and T008 live ui_change linkedin_authenticated_feed / linkedin_native_search_entry / linkedin_authenticated_feed_navigation."
+        - "Finding P2 Pinterest: route-aware playbook/diagnostics fixtures and T008 live ui_change pinterest_root_after_search_redirect / pinterest_search_control / pinterest_root; hashtag not_applicable."
+        - "Finding P3 packaging: .codex-plugin/plugin.json, scripts/install-smoke/run.mjs, T007 install receipt, and T008 one-top-level-orchestrator fresh-process proof."
+        - "npm run verify:release -- --allow-missing-live-receipts passed before isolated QA."
+        - "commit 70655ceeb3b875f745d8ff4338a4d9c90ed40f9b"
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/notes/t008-qa.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/t008-oracle-2026-07-28.json
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence: []
+      required_board_updates: []
 checks:
   dirty_fingerprint: "clean@322ddfb2d446e186713e773603e98b93696d77bb"
   last_verification:
