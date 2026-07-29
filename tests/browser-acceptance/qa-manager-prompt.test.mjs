@@ -72,6 +72,9 @@ test("manager starter makes recovery manager-owned, durable, and bounded", async
   assert.match(starter, /Persist its\s+deterministic lease before task creation/);
   assert.match(starter, /Never recover an action at `started`/);
   assert.match(starter, /consumes the run's one-time browser authorization/);
+  assert.match(starter, /authorize_browser_action_start/);
+  assert.match(starter, /QA_CHECKPOINT_ACK/);
+  assert.match(starter, /timeoutMs:60000/);
 });
 
 test("worker dispatch prompt has an exact versioned placeholder contract", async () => {
@@ -107,6 +110,10 @@ test("worker dispatch prompt has an exact versioned placeholder contract", async
   assert.match(dispatch, /Never assume a\s+binding object survives a Codex turn/);
   assert.match(dispatch, /browser_binding_unavailable/);
   assert.match(dispatch, /browser_action_started/);
+  assert.match(dispatch, /actionHash/);
+  assert.match(dispatch, /timeoutMs:60000/);
+  assert.match(dispatch, /QA_CHECKPOINT_ACK/);
+  assert.match(dispatch, /Do not call the browser until/);
   assert.match(dispatch, /Never resend an accepted response/);
 });
 
@@ -143,6 +150,9 @@ test("manager runbook defines cursor and timeout behavior without status polling
   assert.match(runbook, /current `afterCursor`/);
   assert.match(runbook, /approximately 60 seconds/);
   assert.match(runbook, /never send repeated “status\?” messages/);
+  assert.match(runbook, /authorize_browser_action_start/);
+  assert.match(runbook, /QA_CHECKPOINT_ACK/);
+  assert.match(runbook, /never resend the\s+acknowledgement/);
   assert.match(runbook, /do not return a final answer while the worker remains active/);
   assert.match(runbook, /Do not substitute shell\s+polling, a recurring automation, or an operating-system timer/);
 
@@ -164,10 +174,13 @@ test("protocol and runbooks define fail-closed single-owner host recovery", asyn
   assert.match(manager, /continuation_creation_ambiguous/);
   assert.match(manager, /worker_host_unavailable/);
   assert.match(worker, /No worker may create, fork, or authorize another task/);
-  assert.match(worker, /Never repeat an action at `started` or `completed`/);
+  assert.match(worker, /Never repeat an acknowledged action at `started` or `completed`/);
   assert.match(worker, /establish the\s+selected host browser binding while the action is still `authorized`/);
   assert.match(worker, /Never\s+assume a runtime object from an earlier Codex turn still exists/);
-  assert.match(protocol, /`authorized`, `binding_verified`,\s+`started`, and `completed`/);
+  assert.match(
+    protocol,
+    /`authorized`, `binding_verified`,\s+`start_persisted`, `started`, and `completed`/,
+  );
   assert.match(protocol, /prior verification is invalidated by a\s+host continuation/);
   assert.match(protocol, /## Durable checkpoints and host recovery/);
   assert.match(protocol, /retry limit is exactly one recovery continuation/);

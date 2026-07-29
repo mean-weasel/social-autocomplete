@@ -1,6 +1,6 @@
 # Local Codex QA worker runbook
 
-Runbook version: `1.6`
+Runbook version: `1.7`
 
 Use this runbook from a fresh Codex task rooted in the dedicated QA repository.
 It tests an installed Social Metadata Research plugin without modifying product
@@ -181,8 +181,16 @@ window.
 - [ ] If binding setup fails before `verify_browser_binding`, record
   `browser_binding_unavailable` without persisting `browser_action_started`.
   Do not retry or switch browsers inside that channel turn.
-- [ ] Persist `browser_action_started` immediately before the one bounded
-  channel operation and `browser_action_completed` immediately after it.
+- [ ] Build the sanitized action descriptor with the selected channel and
+  browser, action `bounded_autocomplete_research`, and `timeoutMs:60000`.
+  Persist and emit `browser_action_started` with the descriptor's SHA-256
+  `actionHash`. Do not invoke the browser yet.
+- [ ] Wait for one exact matching `QA_CHECKPOINT_ACK` containing the same run,
+  sequence, channel, action hash, and timeout. Manager prose, a malformed ack,
+  or silence is not authority to act.
+- [ ] Only after the exact acknowledgement, perform the one bounded channel
+  operation with the declared 60000 ms timeout and no retry, then persist
+  `browser_action_completed`.
 - [ ] Before `browser_action_completed`, durably store the sanitized outcome
   and include its hash; persist the channel result from that exact outcome
   before emitting `channel_complete`.
@@ -193,11 +201,12 @@ Never switch browsers silently.
 On a recovery continuation, read the manager-supplied durable checkpoint. A
 persisted response or result may be re-emitted exactly; it may not be
 recomputed. Continue an accepted action only when its state is `authorized`,
-not `started`. Re-establish and verify the selected browser binding in the
-recovery task even if the prior task had verified it before terminating.
-Never repeat an action at `started` or `completed`, and never repeat a channel
-already listed as completed. Report a checkpoint contradiction instead of
-guessing.
+`binding_verified`, or `start_persisted`, never `started`. A task boundary
+invalidates any verified binding and unacknowledged start intent, so
+re-establish the selected browser binding and emit a fresh hashed intent in the
+recovery task. Never repeat an acknowledged action at `started` or `completed`,
+and never repeat a channel already listed as completed. Report a checkpoint
+contradiction instead of guessing.
 
 ## Phase 6 — perform sanitized channel preflight
 

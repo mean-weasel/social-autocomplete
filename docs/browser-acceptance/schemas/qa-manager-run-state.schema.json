@@ -261,7 +261,14 @@
         },
         "action": {
           "type": "object",
-          "required": ["state", "hash", "outcomeHash"],
+          "required": [
+            "state",
+            "bindingHash",
+            "label",
+            "hash",
+            "timeoutMs",
+            "outcomeHash"
+          ],
           "properties": {
             "state": {
               "enum": [
@@ -269,6 +276,7 @@
                 "not_authorized",
                 "authorized",
                 "binding_verified",
+                "start_persisted",
                 "started",
                 "completed"
               ]
@@ -279,10 +287,22 @@
                 { "$ref": "#/$defs/sha256" }
               ]
             },
+            "label": {
+              "oneOf": [
+                { "type": "null" },
+                { "const": "bounded_autocomplete_research" }
+              ]
+            },
             "hash": {
               "oneOf": [
                 { "type": "null" },
                 { "$ref": "#/$defs/sha256" }
+              ]
+            },
+            "timeoutMs": {
+              "oneOf": [
+                { "type": "null" },
+                { "const": 60000 }
               ]
             },
             "outcomeHash": {

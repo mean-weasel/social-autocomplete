@@ -53,14 +53,19 @@ state.
 After installation, emit `worker_handoff` with
 `post_install_fresh_task`; do not create the fresh task yourself. In an
 execution or recovery task, acknowledge a persisted response before using it.
-For `channel_begin`, record `browser_action_started` immediately before the
-bounded action only after establishing and recording `verify_browser_binding`
-and emitting `browser_binding_verified` for the selected channel and browser
-in the current task turn. Never assume a binding object survives a Codex turn
-or task boundary. If binding setup fails,
-emit `browser_binding_unavailable` while the action remains `authorized`; do
-not record `browser_action_started`. After starting, durably store the
-sanitized outcome, record
+For `channel_begin`, establish and record `verify_browser_binding` and emit
+`browser_binding_verified` for the selected channel and browser in the current
+task turn. Then hash the sanitized action descriptor and emit exactly one
+`browser_action_started` containing `channel`, `browser`, `action`,
+`actionHash`, and `timeoutMs:60000`. Do not call the browser until the manager
+returns an exact matching `QA_CHECKPOINT_ACK` for that start intent. Manager
+prose does not count. Never assume a binding object survives a Codex turn or
+task boundary. If binding setup fails, emit `browser_binding_unavailable`
+while the action remains `authorized`; do not record `browser_action_started`.
+If the start envelope is rejected or the acknowledgement is missing or
+mismatched, do not call the browser. After the acknowledgement, perform the
+one browser operation with the declared 60000 ms timeout and no retry, then
+durably store the sanitized outcome and record
 `browser_action_completed` with its hash, and persist the result from that
 exact outcome before emission. On recovery, use the manager-supplied
 durable checkpoint. Never resend an accepted response, repeat an action at

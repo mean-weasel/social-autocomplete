@@ -20,6 +20,10 @@ Establish and verify the selected host binding anew for every channel and
 after every task or process boundary. This check happens before the durable
 action-start checkpoint; a missing binding is
 `browser_binding_unavailable`, not an ambiguous started action.
+The worker next emits a hashed start intent with the fixed 60000 ms action
+bound. It may call the browser only after the manager durably accepts that
+intent and returns the matching `QA_CHECKPOINT_ACK`. A malformed or
+unacknowledged start intent performs no browser work.
 
 Tracked receipts contain only channel/module, host/browser, locale, semantic
 checkpoint states, bounded interaction status, and the screenshot policy. They

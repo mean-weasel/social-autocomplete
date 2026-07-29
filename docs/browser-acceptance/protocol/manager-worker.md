@@ -23,6 +23,30 @@ The manager answers:
 QA_RESPONSE {"protocol":"qa-manager-worker/v1","runId":"qa_example","sequence":1,"requestId":"browser_selection","scenarioId":"chrome_all_channels_autocomplete","answer":{"browser":"chrome"}}
 ```
 
+Before a browser action, the worker announces an exact bounded start intent:
+
+```text
+QA_EVENT {"protocol":"qa-manager-worker/v1","type":"result","runId":"qa_example","sequence":4,"resultId":"browser_action_started","payload":{"channel":"instagram","browser":"chrome","action":"bounded_autocomplete_research","actionHash":"<sha256>","timeoutMs":60000}}
+```
+
+After persisting that intent, the manager acknowledges it:
+
+```text
+QA_CHECKPOINT_ACK {"protocol":"qa-manager-worker/v1","runId":"qa_example","sequence":4,"checkpointId":"browser_action_started","channel":"instagram","actionHash":"<sha256>","timeoutMs":60000}
+```
+
+The worker must not call the browser before receiving this exact matching
+acknowledgement. Manager prose is never an acknowledgement.
+`actionHash` is the SHA-256 of the UTF-8 compact JSON descriptor with this
+exact key order:
+
+```json
+{"action":"bounded_autocomplete_research","browser":"chrome","channel":"instagram","timeoutMs":60000}
+```
+
+The manager reducer recomputes this hash from the declared fields before it
+persists or acknowledges the start intent.
+
 Results use the same event prefix:
 
 ```text
@@ -43,9 +67,11 @@ identifiers, DOM, screenshots, credentials, tokens, or storage state.
 ## Transport and liveness
 
 Protocol envelopes travel through the Codex task-messaging transport. Task
-identities, host IDs, cursors, wait durations, and timeout metadata belong only
-to manager coordination state and must not be copied into a protocol envelope,
-worker receipt, or tracked artifact.
+identities, host IDs, cursors, manager wait durations, and transport timeout
+metadata belong only to manager coordination state and must not be copied into
+a protocol envelope, worker receipt, or tracked artifact. The fixed
+`timeoutMs:60000` browser-action bound is part of the sanitized action
+descriptor, not transport metadata.
 
 The manager is the only task creator. A bootstrap worker that installs the
 plugin must emit a `worker_handoff` result with reason
@@ -76,7 +102,7 @@ browser, ordered channels, one-time authorization ID, next sequence, completed
 channels, response and result hashes, active task, and continuation lease.
 Response checkpoints are `persisted`, `sent`, and `accepted`. A
 `channel_begin` action is separately `authorized`, `binding_verified`,
-`started`, and `completed`.
+`start_persisted`, `started`, and `completed`.
 A result is `persisted` before it is `emitted`.
 
 The worker acknowledges each accepted response through a sanitized
@@ -86,13 +112,21 @@ task turn, persists `verify_browser_binding`, and emits
 `browser_binding_verified` with the selected browser, channel, and a sanitized
 binding-check hash. It must repeat this verification for every channel and
 after every task or process boundary; prior verification is invalidated by a
-host continuation. Only then may the worker record
-`browser_action_started` immediately before the bounded channel action,
-then durably stores the sanitized outcome and records
-`browser_action_completed` with its hash. It persists the channel result from
-that stored outcome before emitting it. These checkpoint events contain only run
-IDs, sequence numbers, enumerated channel/action labels, and hashes; they never
-contain browser or page content.
+host continuation. Only then may the worker emit `browser_action_started` with
+the SHA-256 of its sanitized action descriptor and `timeoutMs:60000`. The
+manager applies `start_browser_action`, which records `start_persisted`, then
+applies `authorize_browser_action_start` before sending one exact
+`QA_CHECKPOINT_ACK`. Only after receiving the matching acknowledgement may the
+worker invoke the browser. The manager's conservative `started` state therefore
+precedes the external browser call. If acknowledgement delivery or manager
+state becomes uncertain after that transition, the run stops as
+`ambiguous_browser_action`; the manager never resends the acknowledgement. The
+worker then durably stores the sanitized outcome and records
+`browser_action_completed` with its hash. It
+persists the channel result from that stored outcome before emitting it. These
+checkpoint events contain only run IDs, sequence numbers, enumerated
+channel/action labels, bounded timeout, and hashes; they never contain browser
+or page content.
 
 After a terminal host failure, only the manager may reserve and create a
 recovery continuation. The retry limit is exactly one recovery continuation
@@ -100,9 +134,10 @@ after the post-install execution task. Recovery is allowed only when the old
 task is terminal and the durable checkpoint is unambiguous:
 
 - a persisted response may be sent or accepted without recomputing it;
-- an accepted `channel_begin` whose action has not started may continue without
-  resending or reauthorizing the request, but must establish and verify the
-  selected browser binding again before starting;
+- an accepted `channel_begin` whose action is `authorized`,
+  `binding_verified`, or `start_persisted` may continue without resending or
+  reauthorizing the request, but a task boundary invalidates the binding and
+  any unacknowledged start intent before starting again;
 - a completed action may proceed to result persistence without repeating it;
 - a persisted result may be emitted without repeating the action or channel;
 - a completed channel advances only to the next selected channel.
@@ -158,7 +193,8 @@ The worker emits:
 - `browser_binding_verified` after `verify_browser_binding` is durably
   persisted for the selected channel and task turn, before the action-start
   checkpoint;
-- `browser_action_started` and `browser_action_completed` around one bounded
+- `browser_action_started` with `actionHash` and `timeoutMs:60000` before the
+  manager acknowledgement, and `browser_action_completed` after one bounded
   authorized channel action;
 - `channel_complete` after every completed channel, including a truthful
   `ui_change` or `not_applicable` result;

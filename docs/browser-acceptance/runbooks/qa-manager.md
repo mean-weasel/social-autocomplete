@@ -1,6 +1,6 @@
 # QA manager runbook
 
-Runbook version: `1.5`
+Runbook version: `1.6`
 
 Use this from a Codex manager task rooted in the Social Metadata Research
 development repository. The manager interviews the user, writes or edits a
@@ -248,12 +248,19 @@ Persist the response before sending it and require the worker's
 `response_accepted` acknowledgement. For `channel_begin`, do not resend the
 response after acceptance. Require a persisted `verify_browser_binding` and
 emitted `browser_binding_verified` for the selected browser and channel in the
-current task turn before
-`browser_action_started`,
-`browser_action_completed`, and persisted-result checkpoints. A recovered
-worker re-establishes and verifies the binding before an unstarted accepted
-action; it never repeats an accepted request, started or completed action, or
-completed channel.
+current task turn before `browser_action_started`. Require that start envelope
+to contain the exact channel, browser, bounded action label, SHA-256
+`actionHash`, and `timeoutMs:60000`. Apply `start_browser_action` to persist
+`start_persisted`, then apply `authorize_browser_action_start` before sending
+one matching `QA_CHECKPOINT_ACK`. The manager acknowledgement is the worker's
+only authority to invoke the browser; commentary is never sufficient. After
+the `authorize_browser_action_start` transition, never resend the
+acknowledgement; uncertain delivery is `ambiguous_browser_action`. After
+acknowledgement, require `browser_action_completed` and persisted-result
+checkpoints. A recovered worker re-establishes and verifies the binding before
+an unacknowledged action; task termination invalidates `binding_verified` and
+`start_persisted`. It never repeats an accepted request, acknowledged/started
+or completed action, or completed channel.
 
 If the worker emits commentary without an envelope, wait. If it asks a
 question without a valid envelope, stop as `unexpected_request`.

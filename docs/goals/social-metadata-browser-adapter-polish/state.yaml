@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T010
+active_task: T011
 
 tasks:
   - id: T001
@@ -640,7 +640,7 @@ tasks:
   - id: T010
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Choose the smallest fail-closed protocol and worker-runbook change that guarantees a valid hashed action-start checkpoint is durably accepted before any Chrome operation begins, and that makes bounded browser-operation timeouts explicit."
     inputs:
@@ -660,6 +660,81 @@ tasks:
       - "One coherent Worker package with allowed_files"
       - "Focused and release verification commands"
       - "Exact repin and fresh-run prerequisites"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The existing binding gate is correct, but browser_action_started is still a one-phase declaration: an agent can emit a malformed envelope and begin browser work before the manager reducer accepts it. Make it a fail-closed two-phase start. The worker first emits the exact hashed start intent; the manager persists it as start_persisted, advances it conservatively to started before sending one exact QA_CHECKPOINT_ACK, and the worker may call Chrome only after receiving that matching acknowledgement. Missing or mismatched hashes therefore cannot start browser work. Any failure after the acknowledgement transition remains ambiguous and non-replayable. Predeclare one 60000 ms operation timeout in the hashed descriptor and forbid retry."
+      checkpoint_contract:
+        worker_event: "QA_EVENT browser_action_started must contain channel, browser, action, actionHash, and timeoutMs:60000."
+        manager_persist: "start_browser_action changes action.state from binding_verified to start_persisted."
+        manager_ack: "After persisting start_persisted, the manager applies authorize_browser_action_start with the same channel/actionHash, moving state to started before sending one QA_CHECKPOINT_ACK."
+        worker_gate: "The worker begins the Chrome operation only after an exact matching QA_CHECKPOINT_ACK. Manager prose is never sufficient."
+        recovery: "A host boundary at start_persisted is retry-safe only by invalidating the binding and returning to authorized; a boundary at started remains ambiguous and terminal."
+        timeout: "The hashed action descriptor fixes timeoutMs at 60000; timeout or failure after acknowledgement is terminal and never retried."
+      worker_package:
+        objective: "Implement the two-phase hashed browser-action start acknowledgement and explicit 60000 ms bounded-operation timeout across the durable reducer, schema, manager/worker protocol, prompts, runbooks, and deterministic tests."
+        allowed_files:
+          - "scripts/browser-acceptance/qa-recovery.mjs"
+          - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+          - "docs/browser-acceptance/protocol/manager-worker.md"
+          - "docs/browser-acceptance/prompts/qa-manager-starter.md"
+          - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+          - "docs/browser-acceptance/runbooks/qa-manager.md"
+          - "docs/browser-acceptance/runbooks/qa-worker.md"
+          - "docs/browser-acceptance/README.md"
+          - "tests/browser-acceptance/qa-recovery.test.mjs"
+          - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+        verify:
+          - "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+          - "npm run verify:offline"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/scripts/check-goal-state.mjs docs/goals/social-metadata-browser-adapter-polish"
+          - "git diff --check"
+        stop_if:
+          - "The worker can begin Chrome before a matching manager acknowledgement."
+          - "A missing actionHash or wrong timeout can pass the reducer."
+          - "A start acknowledgement can be resent after uncertain delivery."
+          - "Recovery can replay an action whose acknowledgement may have been delivered."
+          - "The change weakens binding verification, privacy, or stable CLI/JSON behavior."
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: "Implement the two-phase hashed browser-action start acknowledgement and explicit 60000 ms bounded-operation timeout across the durable reducer, schema, manager/worker protocol, prompts, runbooks, and deterministic tests."
+    inputs:
+      - "T009 stopped-run finding"
+      - "T010 approved checkpoint contract"
+    constraints:
+      - "Do not operate a browser."
+      - "Change only the approved allowed_files."
+      - "Preserve the stable social metadata CLI/JSON contract."
+      - "Preserve current-turn binding verification and fail-closed recovery."
+    expected_output:
+      - "Malformed or unacknowledged start intents cannot begin browser work"
+      - "Exact action hashes and 60000 ms timeout are enforced"
+      - "Recovery semantics are deterministic at both start phases"
+      - "Focused, offline, and release verification pass"
+    allowed_files:
+      - "scripts/browser-acceptance/qa-recovery.mjs"
+      - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+      - "docs/browser-acceptance/protocol/manager-worker.md"
+      - "docs/browser-acceptance/prompts/qa-manager-starter.md"
+      - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+      - "docs/browser-acceptance/runbooks/qa-manager.md"
+      - "docs/browser-acceptance/runbooks/qa-worker.md"
+      - "docs/browser-acceptance/README.md"
+      - "tests/browser-acceptance/qa-recovery.test.mjs"
+      - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+    verify:
+      - "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "Any approved stop_if from T010 is reached."
+      - "Verification fails twice for a task-introduced reason."
     receipt: null
   - id: T999
     type: judge

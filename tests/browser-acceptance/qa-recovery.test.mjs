@@ -7,7 +7,10 @@ import Ajv2020 from "ajv/dist/2020.js";
 import {
   applyQaRecoveryEvent,
   assertQaManagerRunState,
+  browserActionDescriptorHash,
   createQaManagerRunState,
+  QA_BROWSER_ACTION,
+  QA_BROWSER_ACTION_TIMEOUT_MS,
   QA_RECOVERY_RETRY_LIMIT,
   recoveryCheckpoint,
   runQaRecoveryCli,
@@ -17,6 +20,10 @@ const HASH_A = "a".repeat(64);
 const HASH_B = "b".repeat(64);
 const HASH_C = "c".repeat(64);
 const HASH_D = "d".repeat(64);
+const ACTION_HASH = browserActionDescriptorHash({
+  channel: "instagram",
+  browser: "chrome",
+});
 
 function spec() {
   return {
@@ -114,11 +121,23 @@ function acceptAndStart(state) {
     browser: state.run.browser,
     bindingHash: HASH_D,
   });
-  return apply(state, {
+  state = apply(state, {
     type: "start_browser_action",
     actor: "worker",
     channel: state.protocol.pending.channel,
-    actionHash: HASH_C,
+    browser: state.run.browser,
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  return apply(state, {
+    type: "authorize_browser_action_start",
+    actor: "manager",
+    channel: state.protocol.pending.channel,
+    browser: state.run.browser,
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
   });
 }
 
@@ -126,7 +145,7 @@ function completeAndPersistResult(state) {
   state = apply(state, {
     type: "complete_browser_action",
     actor: "worker",
-    actionHash: HASH_C,
+    actionHash: ACTION_HASH,
     outcomeHash: HASH_D,
   });
   return apply(state, {
@@ -185,6 +204,28 @@ test("JSON schema validates initial, recovery, and terminal durable states", asy
   );
   const validate = new Ajv2020({ strict: true }).compile(schema);
   const initial = createQaManagerRunState(spec());
+  let startPersisted = persistAndSend(observeChannel(executionState()));
+  startPersisted = apply(startPersisted, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  startPersisted = apply(startPersisted, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  startPersisted = apply(startPersisted, {
+    type: "start_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
   const recovery = reserveRecovery(terminalHostFailure(executionState()));
   const creating = apply(recovery, {
     type: "begin_continuation_create",
@@ -201,7 +242,7 @@ test("JSON schema validates initial, recovery, and terminal durable states", asy
     type: "emit_terminal",
     actor: "manager",
   });
-  for (const state of [initial, recovery, terminal]) {
+  for (const state of [initial, startPersisted, recovery, terminal]) {
     assert.equal(validate(state), true, JSON.stringify(validate.errors));
   }
 });
@@ -331,7 +372,10 @@ test("browser action cannot start until the selected binding is verified", () =>
         type: "start_browser_action",
         actor: "worker",
         channel: "instagram",
-        actionHash: HASH_C,
+        browser: "chrome",
+        action: QA_BROWSER_ACTION,
+        actionHash: ACTION_HASH,
+        timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
       }),
     /browser binding is not verified/,
   );
@@ -380,6 +424,156 @@ test("host recovery invalidates a verified binding before action start", () => {
   assert.equal(state.coordination.continuation.resumeAt, "accepted_response");
 });
 
+test("browser action start requires an exact hash and the fixed timeout", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  assert.throws(
+    () =>
+      apply(state, {
+        type: "start_browser_action",
+        actor: "worker",
+        channel: "instagram",
+        browser: "chrome",
+        action: QA_BROWSER_ACTION,
+        timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+      }),
+    /actionHash must be a SHA-256 hash/,
+  );
+  assert.throws(
+    () =>
+      apply(state, {
+        type: "start_browser_action",
+        actor: "worker",
+        channel: "instagram",
+        browser: "chrome",
+        action: QA_BROWSER_ACTION,
+        actionHash: HASH_C,
+        timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+      }),
+    /action hash does not match the canonical descriptor/,
+  );
+  assert.throws(
+    () =>
+      apply(state, {
+        type: "start_browser_action",
+        actor: "worker",
+        channel: "instagram",
+        browser: "chrome",
+        action: QA_BROWSER_ACTION,
+        actionHash: ACTION_HASH,
+        timeoutMs: 30_000,
+      }),
+    /browser action timeout must be 60000 ms/,
+  );
+});
+
+test("browser work remains gated until the manager acknowledges the persisted start", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  state = apply(state, {
+    type: "start_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  assert.equal(state.protocol.pending.action.state, "start_persisted");
+  assert.throws(
+    () =>
+      apply(state, {
+        type: "complete_browser_action",
+        actor: "worker",
+        actionHash: ACTION_HASH,
+        outcomeHash: HASH_D,
+      }),
+    /action was not started/,
+  );
+  assert.throws(
+    () =>
+      apply(state, {
+        type: "authorize_browser_action_start",
+        actor: "manager",
+        channel: "instagram",
+        browser: "chrome",
+        action: QA_BROWSER_ACTION,
+        actionHash: HASH_B,
+        timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+      }),
+    /action hash mismatch/,
+  );
+  state = apply(state, {
+    type: "authorize_browser_action_start",
+    actor: "manager",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  assert.equal(state.protocol.pending.action.state, "started");
+});
+
+test("host recovery before the start acknowledgement invalidates the binding and remains retry-safe", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  state = apply(state, {
+    type: "start_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  assert.deepEqual(recoveryCheckpoint(state), {
+    ok: true,
+    resumeAt: "accepted_response",
+  });
+  state = terminalHostFailure(state);
+  assert.equal(state.protocol.pending.action.state, "authorized");
+  assert.equal(state.protocol.pending.action.bindingHash, null);
+  assert.equal(state.protocol.pending.action.label, null);
+  assert.equal(state.protocol.pending.action.hash, null);
+  assert.equal(state.protocol.pending.action.timeoutMs, null);
+  state = reserveRecovery(state);
+  assert.equal(state.coordination.continuation.resumeAt, "accepted_response");
+});
+
 test("failure after action start is terminal and cannot create a recovery continuation", () => {
   let state = acceptAndStart(
     persistAndSend(observeChannel(executionState())),
@@ -404,7 +598,7 @@ test("failure after durable action completion resumes at result persistence", ()
   state = apply(state, {
     type: "complete_browser_action",
     actor: "worker",
-    actionHash: HASH_C,
+    actionHash: ACTION_HASH,
     outcomeHash: HASH_D,
   });
   state = terminalHostFailure(state);

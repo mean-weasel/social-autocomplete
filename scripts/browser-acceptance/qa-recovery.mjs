@@ -1,12 +1,25 @@
 #!/usr/bin/env node
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { link, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const QA_RECOVERY_SCHEMA_VERSION = "qa-manager-run-state/v1";
 export const QA_RECOVERY_RETRY_LIMIT = 1;
+export const QA_BROWSER_ACTION = "bounded_autocomplete_research";
+export const QA_BROWSER_ACTION_TIMEOUT_MS = 60_000;
+
+export function browserActionDescriptorHash({
+  channel,
+  browser,
+  action = QA_BROWSER_ACTION,
+  timeoutMs = QA_BROWSER_ACTION_TIMEOUT_MS,
+}) {
+  return createHash("sha256")
+    .update(JSON.stringify({ action, browser, channel, timeoutMs }))
+    .digest("hex");
+}
 
 const CHANNELS = new Set([
   "facebook",
@@ -242,9 +255,15 @@ function recordTaskTerminal(state, event) {
       state.coordination.continuationHistory.length - 1
     ] = clone(state.coordination.continuation);
   }
-  if (state.protocol.pending?.action?.state === "binding_verified") {
+  if (
+    state.protocol.pending?.action?.state === "binding_verified" ||
+    state.protocol.pending?.action?.state === "start_persisted"
+  ) {
     state.protocol.pending.action.state = "authorized";
     state.protocol.pending.action.bindingHash = null;
+    state.protocol.pending.action.label = null;
+    state.protocol.pending.action.hash = null;
+    state.protocol.pending.action.timeoutMs = null;
   }
   state.coordination.activeTask = null;
 }
@@ -441,7 +460,9 @@ function applyActiveEvent(state, event) {
           state:
             event.requestId === "channel_begin" ? "not_authorized" : "not_required",
           bindingHash: null,
+          label: null,
           hash: null,
+          timeoutMs: null,
           outcomeHash: null,
         },
         result: null,
@@ -518,9 +539,43 @@ function applyActiveEvent(state, event) {
       );
       requireHash(pending.action.bindingHash, "bindingHash");
       invariant(event.channel === pending.channel, "action channel mismatch");
+      invariant(event.browser === state.run.browser, "action browser mismatch");
+      invariant(event.action === QA_BROWSER_ACTION, "browser action label mismatch");
       requireHash(event.actionHash, "actionHash");
-      pending.action.state = "started";
+      invariant(
+        event.timeoutMs === QA_BROWSER_ACTION_TIMEOUT_MS,
+        `browser action timeout must be ${QA_BROWSER_ACTION_TIMEOUT_MS} ms`,
+      );
+      invariant(
+        event.actionHash === browserActionDescriptorHash(event),
+        "action hash does not match the canonical descriptor",
+      );
+      pending.action.state = "start_persisted";
+      pending.action.label = event.action;
       pending.action.hash = event.actionHash;
+      pending.action.timeoutMs = event.timeoutMs;
+      break;
+    }
+    case "authorize_browser_action_start": {
+      requireActor(event, "manager");
+      const pending = state.protocol.pending;
+      invariant(
+        pending?.requestId === "channel_begin",
+        "browser action requires channel_begin",
+      );
+      invariant(
+        pending.action.state === "start_persisted",
+        "browser action start must be persisted before acknowledgement",
+      );
+      invariant(event.channel === pending.channel, "action channel mismatch");
+      invariant(event.browser === state.run.browser, "action browser mismatch");
+      invariant(event.action === pending.action.label, "browser action label mismatch");
+      invariant(event.actionHash === pending.action.hash, "action hash mismatch");
+      invariant(
+        event.timeoutMs === pending.action.timeoutMs,
+        "browser action timeout mismatch",
+      );
+      pending.action.state = "started";
       break;
     }
     case "complete_browser_action": {
@@ -694,6 +749,29 @@ export function assertQaManagerRunState(state) {
     ),
     "completed channel was not selected",
   );
+  const action = state.protocol.pending?.action;
+  if (action) {
+    const hasStartDescriptor = [
+      "start_persisted",
+      "started",
+      "completed",
+    ].includes(action.state);
+    if (hasStartDescriptor) {
+      invariant(action.label === QA_BROWSER_ACTION, "browser action label mismatch");
+      requireHash(action.hash, "actionHash");
+      invariant(
+        action.timeoutMs === QA_BROWSER_ACTION_TIMEOUT_MS,
+        "browser action timeout mismatch",
+      );
+    } else {
+      invariant(action.label === null, "unstarted action must not have a label");
+      invariant(action.hash === null, "unstarted action must not have a hash");
+      invariant(
+        action.timeoutMs === null,
+        "unstarted action must not have a timeout",
+      );
+    }
+  }
   const history = state.coordination.continuationHistory;
   invariant(Array.isArray(history), "continuation history is required");
   invariant(

@@ -83,6 +83,11 @@ browser-action checkpoint, task-terminal, and continuation transition through
 that reducer. Use the deterministic run-state path; never overwrite an existing
 state file or reuse its run-bound authorization. Do not reconstruct recovery
 state from chat or hand-edit it.
+For `browser_action_started`, require the exact channel, browser, action,
+SHA-256 `actionHash`, and `timeoutMs:60000`. Persist `start_browser_action`,
+then persist `authorize_browser_action_start` before sending one exact
+`QA_CHECKPOINT_ACK`. Never acknowledge a malformed start intent, and never use
+prose as the acknowledgement.
 Only the manager may create tasks. A bootstrap worker emits
 `worker_handoff`; the manager persists a post-install continuation lease
 before creating the genuinely fresh execution task.
