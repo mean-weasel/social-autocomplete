@@ -1,6 +1,6 @@
 # Local Codex QA worker runbook
 
-Runbook version: `1.3`
+Runbook version: `1.4`
 
 Use this runbook from a fresh Codex task rooted in the dedicated QA repository.
 It tests an installed Social Metadata Research plugin without modifying product
@@ -22,6 +22,9 @@ must never interpret manager prose as an answer.
 
 The manager task is rooted in the product repository. This worker task is
 rooted in the dedicated QA repository and must not edit product files.
+No worker may create, fork, or authorize another task. In manager-driven mode,
+only the manager owns bootstrap handoff, post-install task creation, and host
+recovery.
 
 ## Run scopes
 
@@ -97,7 +100,12 @@ ambiguity blocks later phases.
 
 ## Phase 2 — start a genuinely fresh task
 
-- [ ] After installation, create a new Codex task rooted in the QA repository.
+- [ ] After installation in manager-driven mode, emit `worker_handoff` with
+  reason `post_install_fresh_task` and stop this bootstrap task cleanly.
+- [ ] Let the manager persist the handoff and create the new Codex task rooted
+  in the QA repository. Never create it from the worker.
+- [ ] In direct-user mode, tell the user a fresh task is required and stop; do
+  not create it yourself.
 - [ ] Do not resume a task that loaded an earlier plugin version.
 - [ ] Confirm the new task read the QA `AGENTS.md` and pinned runbook.
 - [ ] Invoke Social Metadata Research naturally or by its main skill name.
@@ -164,9 +172,22 @@ window.
   will be used.
 - [ ] In manager-driven mode, emit `channel_begin` and continue only after the
   matching scenario response.
+- [ ] Persist and emit `response_accepted` before acting on the response.
+- [ ] Persist `browser_action_started` immediately before the one bounded
+  channel operation and `browser_action_completed` immediately after it.
+- [ ] Before `browser_action_completed`, durably store the sanitized outcome
+  and include its hash; persist the channel result from that exact outcome
+  before emitting `channel_complete`.
 
 If a selected browser is incompatible, request a user-confirmed plan amendment.
 Never switch browsers silently.
+
+On a recovery continuation, read the manager-supplied durable checkpoint. A
+persisted response or result may be re-emitted exactly; it may not be
+recomputed. Continue an accepted action only when its state is `authorized`,
+not `started`. Never repeat an action at `started` or `completed`, and never
+repeat a channel already listed as completed. Report a checkpoint
+contradiction instead of guessing.
 
 ## Phase 6 — perform sanitized channel preflight
 
@@ -278,6 +299,8 @@ selector guess, or broadened read.
 - [ ] In manager-driven mode, record `answerSource: qa_scenario`, scenario and
   oracle IDs, protocol version, whether a human was present, and whether all
   authentication was preexisting.
+- [ ] Record the manager-owned task and continuation history, recovery count,
+  and terminal authorization consumption using sanitized IDs and enums only.
 
 ## Disposition rules
 
@@ -307,4 +330,6 @@ from QA-process findings.
   browser substitution occurred.
 - [ ] Product worktree is clean.
 - [ ] QA artifacts are ignored and uncommitted.
+- [ ] The worker created no task or continuation.
+- [ ] No accepted browser action or completed channel was repeated.
 - [ ] Final disposition and remaining findings are explicit.

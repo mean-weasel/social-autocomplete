@@ -62,6 +62,18 @@ test("manager starter requires event-aware worker supervision", async () => {
   assert.match(starter, /Do not return a final answer while the worker is still active/);
 });
 
+test("manager starter makes recovery manager-owned, durable, and bounded", async () => {
+  const starter = await readFile(managerStarterPath, "utf8");
+
+  assert.match(starter, /qa-manager-run-state\.schema\.json/);
+  assert.match(starter, /qa-recovery\.mjs/);
+  assert.match(starter, /Only the manager may create tasks/);
+  assert.match(starter, /at most one manager-owned recovery continuation/);
+  assert.match(starter, /Persist its\s+deterministic lease before task creation/);
+  assert.match(starter, /Never recover an action at `started`/);
+  assert.match(starter, /consumes the run's one-time browser authorization/);
+});
+
 test("worker dispatch prompt has an exact versioned placeholder contract", async () => {
   const dispatch = await readFile(workerDispatchPath, "utf8");
   const placeholders = [
@@ -88,6 +100,10 @@ test("worker dispatch prompt has an exact versioned placeholder contract", async
   assert.match(dispatch, /Never launch temporary or profile-less Chromium/);
   assert.match(dispatch, /Never publish, enter a\s+composer, scrape/);
   assert.doesNotMatch(dispatch, /wait_threads|afterCursor|approximately 60 seconds/);
+  assert.match(dispatch, /may never create, fork, or\s+authorize another task/);
+  assert.match(dispatch, /worker_handoff/);
+  assert.match(dispatch, /browser_action_started/);
+  assert.match(dispatch, /Never resend an accepted response/);
 });
 
 test("documentation exposes starter, manager, worker dispatch, and worker runbook", async () => {
@@ -130,6 +146,25 @@ test("manager runbook defines cursor and timeout behavior without status polling
   assert.match(protocol, /wait timeout is a local manager\s+heartbeat only/);
   assert.match(protocol, /must never be converted into `run_complete` or `run_stopped`/);
   assert.match(protocol, /waits again without sending a status ping/);
+});
+
+test("protocol and runbooks define fail-closed single-owner host recovery", async () => {
+  const [manager, worker, protocol] = await Promise.all([
+    readFile(managerRunbookPath, "utf8"),
+    readFile("docs/browser-acceptance/runbooks/qa-worker.md", "utf8"),
+    readFile(protocolPath, "utf8"),
+  ]);
+
+  assert.match(manager, /exact retry limit is one/);
+  assert.match(manager, /Only the manager may recover/);
+  assert.match(manager, /continuation_creation_ambiguous/);
+  assert.match(manager, /worker_host_unavailable/);
+  assert.match(worker, /No worker may create, fork, or authorize another task/);
+  assert.match(worker, /Never repeat an action at `started` or `completed`/);
+  assert.match(protocol, /## Durable checkpoints and host recovery/);
+  assert.match(protocol, /retry limit is exactly one recovery continuation/);
+  assert.match(protocol, /ambiguous_browser_action/);
+  assert.match(protocol, /Repeated terminal processing returns the existing terminal record/);
 });
 
 test("manager-worker protocol excludes omitted capability channels", async () => {

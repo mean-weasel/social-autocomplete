@@ -111,6 +111,9 @@ Use these version-controlled materials for repeatable local Codex QA:
   machine-readable handoff.
 - [QA manager configuration schema](schemas/qa-manager-config.schema.json) —
   project-local remembered QA worker repository contract.
+- [QA manager run-state schema](schemas/qa-manager-run-state.schema.json) —
+  durable sequence, action, result, continuation, retry, and one-time
+  authorization checkpoints used by host recovery.
 - [Scenario schema](schemas/qa-scenario.schema.json) and
   [oracle schema](schemas/qa-oracle.schema.json) — machine-readable contracts
   for interview output and independent browser-capability expectations.
@@ -131,6 +134,16 @@ project from the configured absolute repository path and supervises the task
 with cursor-based, event-aware waits. A bounded wait timeout is only a
 heartbeat; the manager does not use recurring automation, send status pings,
 or report completion while the worker remains active.
+
+The manager is the only task creator. It records every transition through
+`scripts/browser-acceptance/qa-recovery.mjs`, reserves a deterministic
+continuation lease before task creation, and allows exactly one host-recovery
+continuation. An ambiguous task creation or browser action stops visibly
+instead of being retried. Run the deterministic recovery suite with:
+
+```sh
+npm run test:qa-recovery
+```
 
 Approved private scenarios live under
 `.social-metadata/qa/scenarios/` in this repository and are ignored by Git.

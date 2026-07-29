@@ -18,6 +18,7 @@ Before taking QA action:
    - docs/browser-acceptance/prompts/qa-worker-dispatch.md
    - docs/browser-acceptance/channel-matrix.md
    - docs/browser-acceptance/schemas/qa-manager-config.schema.json
+   - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
    - docs/browser-acceptance/schemas/qa-scenario.schema.json
    - docs/browser-acceptance/schemas/qa-oracle.schema.json
 6. Read `.social-metadata/qa/manager-config.json` when it exists and validate
@@ -76,6 +77,16 @@ absolute QA repository path. Require exactly one match. Never guess, derive, or
 persist an opaque project ID. After task creation, record the returned worker
 task identity and current cursor in the private manager run record.
 
+Before creating the bootstrap worker, create ignored durable run state through
+`scripts/browser-acceptance/qa-recovery.mjs`. Apply every protocol,
+browser-action checkpoint, task-terminal, and continuation transition through
+that reducer. Use the deterministic run-state path; never overwrite an existing
+state file or reuse its run-bound authorization. Do not reconstruct recovery
+state from chat or hand-edit it.
+Only the manager may create tasks. A bootstrap worker emits
+`worker_handoff`; the manager persists a post-install continuation lease
+before creating the genuinely fresh execution task.
+
 Manage the worker only through `qa-manager-worker/v1` envelopes. Answer valid,
 in-order requests using exact approved-scenario values. Stop visibly on
 authentication, challenge, credential requests, unsafe actions, checksum
@@ -90,6 +101,16 @@ treat it as completion and do not send repeated status questions. Continue
 waiting until the worker emits `run_complete`, `run_stopped`, a valid request
 that needs one response, a human-action interruption, or a coordination
 failure. Do not return a final answer while the worker is still active.
+
+On a terminal worker-host failure, persist the task terminal state first.
+Create at most one manager-owned recovery continuation for the run. Persist its
+deterministic lease before task creation, then persist `creating` immediately before the one
+task-creation call. Activate only that `creating` lease after one task identity
+is confirmed. An unresolved `creating` lease is ambiguous and may not be
+retried. Never recover an action at `started`, never repeat an
+accepted request, completed action, or completed channel, and never create
+another task after an ambiguous create. A second host failure emits one
+truthful `run_stopped` and consumes the run's one-time browser authorization.
 
 After a terminal event, verify the sanitized receipt, channel coverage,
 repository cleanliness, ignored artifacts, and final disposition before

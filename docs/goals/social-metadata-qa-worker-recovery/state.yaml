@@ -65,13 +65,13 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-qa-worker-recovery/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-qa-worker-recovery"
 
-active_task: T001
+active_task: T005
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: low
     objective: "Map the current manager/worker recovery path and the exact duplicate-continuation failure observed in qa_20260729T162038Z."
     inputs:
@@ -88,11 +88,48 @@ tasks:
       - "Failure-state transition map"
       - "Exact implementation files and tests"
       - "Risks and stop conditions"
-    receipt: null
+    receipt:
+      result: done
+      summary: "PM fallback mapped a prompt-driven recovery gap: current source defines initial dispatch, cursor waits, protocol answers, and terminal handling, but no executable continuation state machine. The stopped run persisted one primary continuation plus two recovery task identities after Instagram completed and Facebook sequence 6 was authorized, proving recovery ownership was not exclusive. A durable manager-owned coordinator and failure-injection suite are required; bootstrap workers must only report failure or handoff."
+      evidence:
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+        - scripts/browser-acceptance/verify-release.mjs
+        - .social-metadata/qa/manager-runs/qa-subset-20260729T161801Z.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260729T162038Z.json
+      facts:
+        - "Current source gives the manager ownership of initial worker creation and request responses but defines no durable recovery lease, continuation idempotency key, accepted-action checkpoint, retry counter, or executable recovery transition."
+        - "The observed run preserved runId qa_20260729T162038Z, Chrome, ordered channels [instagram,facebook,linkedin], contiguous sequences 1-7, and one completed Instagram result."
+        - "Facebook channel_begin sequence 6 had a persisted response hash before host failure; therefore safe recovery must not resend or reauthorize that accepted browser action unless the checkpoint proves it was never accepted."
+        - "The manager record contains a primary continuation identity and two recovery task identities, while prior coordination notes say both bootstrap worker and manager created recovery tasks; this is the duplicate-continuation ownership race."
+        - "Existing tests assert documentation wording and channel-subset behavior only; there is no deterministic failure-injection test for host failure or continuation creation."
+        - "Implementation surfaces are the manager/worker protocol, manager and worker runbooks, manager starter and worker dispatch prompts, a new executable recovery-state module under scripts/browser-acceptance, focused tests under tests/browser-acceptance, package test wiring, and release verification wiring."
+        - "Failure transitions to cover are: before request delivery; after delivery before response persistence; after response persistence before browser action; after action before channel result persistence; after durable channel result; and during continuation creation."
+        - "Stop conditions are any design with multiple continuation creators, an ambiguous accepted-action checkpoint, replay of sequence 6 or completed Instagram, unbounded retries, reusable browser authorization, or recovery that changes run identity, browser, channels, checksums, or sequence."
+      contradictions:
+        - "The documentation says the manager supervises one worker, but the durable run record admits multiple recovery identities and has no field that proves which one exclusively owns continuation."
+        - "The protocol's Resume section covers attended authentication continuation, not host-failure recovery, so it cannot distinguish safe retry from duplicate browser work."
+      ambiguity_requiring_judge:
+        - "Choose the exact durable state schema and idempotency boundary for delivered, accepted, persisted, and acted-on protocol state."
+        - "Choose a concrete finite recovery retry bound and terminal run_stopped behavior."
+        - "Choose whether the executable coordinator is a standalone pure module plus CLI fixture driver or integrated into an existing browser-acceptance script."
+        - "Define the exact Worker allowed_files and focused/release verification commands."
+      commands:
+        - cmd: "rg --files docs/browser-acceptance tests scripts .social-metadata/qa/manager-runs /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks /Users/neonwatty/Desktop/social-autocomplete-qa/receipts"
+          status: pass
+        - cmd: "rg -n \"recovery|continuation|worker_host|run_stopped|resumeSupported\" docs tests scripts package.json"
+          status: pass
+        - cmd: "jq sanitized coordination and protocol fields from qa_20260729T162038Z records"
+          status: pass
+      note_needed: false
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Choose the single-owner recovery contract, durable checkpoint model, retry bound, and largest safe implementation package."
     inputs:
@@ -113,11 +150,70 @@ tasks:
       - "complete Worker allowed_files"
       - "focused and release verification commands"
       - "adversarial failure windows"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Approve a fail-closed manager-owned reducer backed by ignored durable state. Workers never create tasks; the bootstrap worker emits a handoff and the manager creates the post-install execution task. After a terminal host failure, the manager may create exactly one recovery continuation. A deterministic lease is persisted before creation; an ambiguous create or ambiguous started browser action stops the run rather than retrying. Persisted responses and results may be replayed as protocol data, but accepted browser actions and completed channels may not be repeated."
+      worker_package:
+        objective: "Implement an executable manager-owned QA recovery reducer/CLI, durable schema, one-recovery bound, fail-closed action and continuation checkpoints, protocol/runbook/prompt integration, and adversarial failure-injection tests."
+        allowed_files:
+          - scripts/browser-acceptance/qa-recovery.mjs
+          - tests/browser-acceptance/qa-recovery.test.mjs
+          - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/runbooks/qa-manager.md
+          - docs/browser-acceptance/runbooks/qa-worker.md
+          - docs/browser-acceptance/prompts/qa-manager-starter.md
+          - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+          - docs/browser-acceptance/README.md
+          - tests/browser-acceptance/qa-manager-prompt.test.mjs
+          - package.json
+        verify:
+          - "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+          - "npm run test:qa-recovery"
+          - "npm run test:qa-config"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "git diff --check"
+        stop_if:
+          - "Any continuation creator other than the manager remains allowed."
+          - "The reducer cannot distinguish response persisted, sent, accepted, browser action started, browser action completed, result persisted, and result emitted."
+          - "A host failure can replay a started or completed browser action or a completed channel."
+          - "More than one recovery continuation can be reserved or activated."
+          - "An ambiguous continuation creation is retried instead of stopping."
+          - "One-time browser authorization becomes reusable, extends beyond the run, or is not consumed at terminal state."
+          - "A required change falls outside allowed_files."
+          - "Verification fails twice for a task-introduced reason."
+      evidence:
+        - "T001 receipt"
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+        - .social-metadata/qa/manager-runs/qa-subset-20260729T161801Z.json
+      missing_evidence:
+        - "T003 must prove reducer behavior at every failure window and full release verification."
+        - "T006 must prove the manager-only contract in one fresh authorized live replay."
+      required_board_updates:
+        - "Copy this worker_package exactly onto T003 before activation."
+        - "Use recoveryRetryLimit=1: one manager-created host-failure recovery continuation after the post-install execution task."
+        - "Persist immutable run identity: runId, scenario/oracle/protocol IDs and hashes, browser, ordered channels, and one-time authorization identity."
+        - "Persist coordination identity: active task purpose and generation; deterministic continuation lease key; lease state reserved, active, closed, or ambiguous; task identity only after confirmed creation."
+        - "Persist protocol checkpoint: next expected sequence; observed event hash; response hash and persisted/sent/accepted state; channel; action state not_required, authorized, started, or completed; result hash and persisted/emitted state; completed channels."
+        - "Permit recovery only after the old task is terminal and no action is ambiguous. If an action is started but not durably completed, stop once as ambiguous_browser_action."
+        - "Persist the continuation lease before task creation. If creation outcome is ambiguous, stop once as continuation_creation_ambiguous and never retry."
+        - "On retry exhaustion or second host failure, emit exactly one run_stopped with reason worker_host_unavailable, blockingProductFinding false, and resumeSupported false."
+        - "Terminal transition consumes the one-time browser authorization and is idempotent; later terminal attempts return the existing terminal record without emitting another result."
+        - "Failure injection must cover before request observation, after response persistence, after response send before acceptance, after acceptance before action start, after action start before completion, after completion before result persistence, after result persistence before emission, after durable channel result, before continuation reservation, after reservation before create, during ambiguous create, and second host failure."
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Implement the Judge-approved manager-owned recovery state machine, durable checkpoints, bounded retry behavior, protocol/runbook changes, and deterministic failure-injection coverage as one coherent slice."
     inputs:
@@ -138,19 +234,66 @@ tasks:
       - "failure-injection tests at every Judge-selected boundary"
       - "updated manager/worker protocol and QA prompts/runbooks"
       - "focused and release verification receipt"
-    allowed_files: []
-    verify: []
+    allowed_files:
+      - "scripts/browser-acceptance/qa-recovery.mjs"
+      - "tests/browser-acceptance/qa-recovery.test.mjs"
+      - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+      - "docs/browser-acceptance/protocol/manager-worker.md"
+      - "docs/browser-acceptance/runbooks/qa-manager.md"
+      - "docs/browser-acceptance/runbooks/qa-worker.md"
+      - "docs/browser-acceptance/prompts/qa-manager-starter.md"
+      - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+      - "docs/browser-acceptance/README.md"
+      - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      - "package.json"
+    verify:
+      - "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
     stop_if:
       - "T002 does not provide exact allowed_files and verification."
       - "A required change falls outside the Judge-approved scope."
       - "The design permits multiple continuation creators or duplicate browser work."
       - "Recovery would widen or reuse browser authorization."
       - "Verification fails twice for reasons introduced by this task."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/README.md
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+        - package.json
+      commands:
+        - cmd: "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+          status: pass
+        - cmd: "npm run test:qa-recovery"
+          status: pass
+        - cmd: "npm run test:qa-config"
+          status: pass
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      summary: "Implemented an atomic manager-owned recovery reducer/CLI and schema with immutable run identity, one-time authorization, response/action/result checkpoints, deterministic continuation leases, and a single recovery limit. Workers now hand off instead of creating tasks. Ambiguous action or task creation stops fail-closed; persisted outcomes/results resume without repeated browser work; terminal emission is idempotent and consumes authorization. Fourteen deterministic recovery tests plus prompt contracts and the full release verifier pass."
+      deviations:
+        - "The delegated Worker timed out without allowed-file changes; the PM fallback implemented and verified the exact Judge-approved package."
+        - "A completed browser action is recoverable only because browser_action_completed now requires the sanitized outcome to be durably stored and hashed first."
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
   - id: T004
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Adversarially review the recovery slice and try to produce duplicate continuation, repeated browser work, stale-sequence acceptance, or unbounded retry."
     inputs:
@@ -169,15 +312,64 @@ tasks:
       - "evidence for no duplicate browser action"
       - "evidence for bounded terminal behavior"
       - "exact correction package if rejected"
-    receipt: null
+    receipt:
+      result: done
+      decision: rejected
+      full_outcome_complete: false
+      rationale: "Needs correction before pinning. The reducer persists a reserved lease, then allows direct activation after task creation. If the manager crashes after invoking create but before activation, durable state is indistinguishable from pre-create and can permit a second create. Add a persisted creating checkpoint before the external call; an unresolved creating state must stop as ambiguous. Also prevent CLI state overwrite from resetting authorization, bind authorization to runId, close active work on run_complete, and require the last persisted result to be emitted before completion."
+      worker_package:
+        objective: "Close the continuation-create crash window and terminal reset paths with a persisted creating state, exclusive run-state creation, run-bound authorization, strict run_complete preconditions, invariants, docs, and adversarial tests."
+        allowed_files:
+          - scripts/browser-acceptance/qa-recovery.mjs
+          - tests/browser-acceptance/qa-recovery.test.mjs
+          - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/runbooks/qa-manager.md
+          - docs/browser-acceptance/prompts/qa-manager-starter.md
+        verify:
+          - "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+          - "npm run test:qa-recovery"
+          - "npm run test:qa-config"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "git diff --check"
+        stop_if:
+          - "A crash after the create call can still leave state that permits another create."
+          - "An unresolved creating lease can be activated without the confirmed identity from that one call."
+          - "The same run-state path can be recreated after terminal authorization consumption."
+          - "run_complete can retain an active task, a pending result, or reusable browser authorization."
+          - "A required change falls outside allowed_files."
+          - "Verification fails twice for a task-introduced reason."
+      evidence:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - "T003 release verification"
+      missing_evidence:
+        - "No test currently distinguishes a reserved lease from a task-creation call already in flight."
+        - "No test proves CLI create refuses an existing terminal state path."
+        - "No test proves run_complete requires the last result to be emitted and leaves no active task."
+      required_board_updates:
+        - "Insert and activate a correction Worker before T005."
+        - "Add continuation state creating and a manager-only begin_continuation_create transition that must be persisted before the external create call."
+        - "Require activate_continuation and continuation_create_failed to consume the same creating lease; reserved cannot activate directly."
+        - "Treat an unresolved creating state after process recovery as continuation_creation_ambiguous and never call create again."
+        - "Make CLI create exclusive and fail when the state path already exists."
+        - "Bind authorizationId deterministically to runId and validate immutable hashes."
+        - "Require run_complete to have no pending result, every result emitted, and close the active task before terminal authorization consumption."
+        - "Strengthen invariants so terminal state has no active task and continuation history has at most one active entry."
+        - "Add a follow-up Judge gate after correction."
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "After the approved product commit exists, synchronize and pin the dedicated QA worker materials to that exact recovery build."
     inputs:
-      - "T004 approval"
+      - "T008 approval"
       - "Exact reviewed product commit"
       - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
     constraints:
@@ -199,11 +391,122 @@ tasks:
       - "Verify sourceCommit equals the exact reviewed product commit."
       - "Verify both tracked worktrees are clean after their commits and private QA paths remain ignored."
     stop_if:
-      - "The product commit is not the exact T004-reviewed build."
+      - "The product commit is not the exact T008-reviewed build."
       - "A required QA edit falls outside allowed_files."
       - "Any private artifact would be staged."
       - "Hash verification fails twice."
     receipt: null
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Close the continuation-create crash window and terminal reset paths identified by T004."
+    inputs:
+      - "T004 adversarial rejection"
+      - "T003 recovery reducer, schema, docs, and tests"
+    constraints:
+      - "Persist creating before the external continuation create call."
+      - "Never retry an unresolved creating lease."
+      - "Do not permit state recreation to reset consumed authorization."
+      - "A terminal run has no active task or pending result."
+      - "Keep the recovery limit exactly one."
+    expected_output:
+      - "persisted continuation creating checkpoint"
+      - "exclusive state creation and run-bound authorization"
+      - "strict terminal invariants"
+      - "adversarial regression tests"
+      - "focused and release verification"
+    allowed_files:
+      - "scripts/browser-acceptance/qa-recovery.mjs"
+      - "tests/browser-acceptance/qa-recovery.test.mjs"
+      - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+      - "docs/browser-acceptance/protocol/manager-worker.md"
+      - "docs/browser-acceptance/runbooks/qa-manager.md"
+      - "docs/browser-acceptance/prompts/qa-manager-starter.md"
+    verify:
+      - "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "A crash after the create call can still permit another create."
+      - "An unresolved creating lease can activate without the one confirmed task identity."
+      - "The same state path can be recreated after terminal authorization consumption."
+      - "run_complete can retain active or pending work."
+      - "A required change falls outside allowed_files."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+      commands:
+        - cmd: "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+          status: pass
+        - cmd: "npm run test:qa-recovery"
+          status: pass
+        - cmd: "npm run test:qa-config"
+          status: pass
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      summary: "Closed the create-call crash window with a persisted manager-only creating lease; reserved can no longer activate directly, and manager restart with unresolved creating stops as continuation_creation_ambiguous. Run-state creation is exclusive, authorization is derived from runId, hashes and task identities are validated, terminal state archives then clears pending checkpoints, and run_complete requires every result emitted while closing active work. Sixteen recovery tests and full release verification pass."
+      deviations:
+        - "The delegated correction Worker timed out; partial allowed-file edits arrived before interruption and were inspected, corrected, completed, and verified by PM fallback."
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
+  - id: T008
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Re-run the adversarial recovery audit after T007 and decide whether the exact build is safe to pin."
+    inputs:
+      - "T004 rejection"
+      - "T007 diff and receipt"
+      - "Focused and release verification"
+    constraints:
+      - "Read-only."
+      - "Reject if reserved and creating are not durably distinct."
+      - "Reject if any reset, duplicate create, action replay, or duplicate terminal path remains."
+    expected_output:
+      - "approved_for_pin | needs_correction"
+      - "failure-window evidence"
+      - "single-owner and terminal invariant evidence"
+      - "exact next correction if rejected"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Approved for commit and QA pin. Executable tests distinguish reserved from creating, reject direct or repeated create transitions, and turn unresolved creating into one terminal ambiguity. Exclusive state creation and run-derived authorization prevent reset. Every response/action/result failure window is either resumable from durable evidence or fail-closed; started actions cannot replay, completed channels advance, one recovery is enforced, run_complete requires emitted results, active work closes, terminal emission is idempotent, and authorization is consumed."
+      worker_package: null
+      evidence:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - "npm run test:qa-recovery: 16 passing tests"
+        - "npm run test:qa-config: 24 passing tests"
+        - "npm run verify:release -- --allow-missing-live-receipts: pass"
+        - "git diff --check: pass"
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "T005 must pin the exact committed build into the dedicated QA repository."
+        - "T006 must perform the fresh authorized three-channel replay."
+      required_board_updates:
+        - "Commit the exact reviewed product build before T005."
+        - "Activate T005 and pin only that exact commit."
   - id: T006
     type: pm
     assignee: PM

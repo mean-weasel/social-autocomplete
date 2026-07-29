@@ -1,6 +1,6 @@
 # QA manager runbook
 
-Runbook version: `1.3`
+Runbook version: `1.4`
 
 Use this from a Codex manager task rooted in the Social Metadata Research
 development repository. The manager interviews the user, writes or edits a
@@ -29,6 +29,9 @@ development repository and must be ignored by Git. Committed files under
 `docs/browser-acceptance/scenarios/examples/` are synthetic, unapproved
 templates and never authorize browser access. Manager run records belong under
 `.social-metadata/qa/manager-runs/`.
+Durable coordination state belongs beside them, must conform to
+`docs/browser-acceptance/schemas/qa-manager-run-state.schema.json`, and is
+updated only through `scripts/browser-acceptance/qa-recovery.mjs`.
 
 The remembered QA worker repository belongs in
 `.social-metadata/qa/manager-config.json` and must conform to
@@ -112,6 +115,9 @@ Then validate with `--require-approved`. Do not dispatch on validation failure.
 - [ ] Verify private scenario, receipts, notes, screenshots, and run state are
   ignored by Git.
 - [ ] Record that the answer source will be `qa_scenario`.
+- [ ] Create durable run state with the exact run identity and one-time browser
+  authorization before creating any task. Use the deterministic run-state path;
+  do not overwrite an existing state file or reuse its authorization ID.
 
 ## Phase 1 — start the worker
 
@@ -136,6 +142,15 @@ the worker runbook or protocol.
 
 Record the worker task ID under `.social-metadata/qa/manager-runs/`. Do not
 reuse a task that loaded an older plugin version.
+
+The first task may bootstrap installation, but it must never create another
+task. After installation it emits `worker_handoff` with reason
+`post_install_fresh_task`. The manager persists the handoff and bootstrap
+terminal state, reserves the post-install continuation lease, and creates the
+fresh execution task. Persist the lease before task creation and activate it
+only after task creation returns one confirmed identity. Persist the lease as
+`creating` immediately before the one external create call; `reserved` may not
+activate directly.
 
 ### Codex task coordination
 
@@ -174,9 +189,46 @@ After dispatch, remain active and supervise the worker:
 7. stop the supervision loop only for `run_complete`, `run_stopped`, a
    human-action interruption, a protocol violation, or a coordination failure.
 
+Apply every request, response, worker acknowledgement, browser-action
+checkpoint, result, task handoff, task terminal state, and continuation
+transition through the durable reducer:
+
+```sh
+node scripts/browser-acceptance/qa-recovery.mjs apply \
+  --state .social-metadata/qa/manager-runs/<run-id>-state.json \
+  --event .social-metadata/qa/manager-runs/<run-id>-event.json
+```
+
+The event file is private, minimal, and overwritten for each transition. Never
+hand-edit sequence, action, result, authorization, or continuation fields.
+
 Surface authentication, challenge, approval, or other human-action
 interruptions to the user without attempting to resolve them. A wait timeout
 is not a worker result, not a protocol event, and not evidence of a hung run.
+
+### Terminal host failure
+
+A task `systemError` or equivalent host-terminal state is coordination
+evidence, not a worker protocol result. Persist the active task as terminal
+before deciding whether recovery is safe. Only the manager may recover:
+
+1. Read the reducer checkpoint; do not reconstruct it from chat.
+2. If an action is `started` without durable `completed`, stop once as
+   `ambiguous_browser_action`.
+3. If no host recovery has been used, reserve its deterministic lease before
+   task creation. The exact retry limit is one.
+4. Persist `creating`, then make one recovery-task create call with the same
+   run ID, checksums, browser, ordered channels, next sequence, completed
+   channels, and persisted hashes.
+5. Activate the lease only after one task identity is returned. If creation is
+   ambiguous—or the manager restarts with unresolved `creating`—stop once as
+   `continuation_creation_ambiguous`; do not retry.
+6. If the recovery task also fails at the host, emit one `run_stopped` with
+   reason `worker_host_unavailable`, no product finding, and
+   `resumeSupported:false`.
+
+Workers may report handoff or terminal facts but may never create a task. At
+most one continuation lease may be reserved or active.
 
 ## Phase 2 — answer worker requests
 
@@ -191,6 +243,13 @@ valid request:
 
 Do not answer from memory, nearby prose, browser state, or prior scenarios.
 Do not add optional advice to a protocol response.
+
+Persist the response before sending it and require the worker's
+`response_accepted` acknowledgement. For `channel_begin`, do not resend the
+response after acceptance. Require `browser_action_started`,
+`browser_action_completed`, and persisted-result checkpoints. A recovered
+worker continues from the recorded checkpoint; it never repeats an accepted
+request, started or completed action, or completed channel.
 
 If the worker emits commentary without an envelope, wait. If it asks a
 question without a valid envelope, stop as `unexpected_request`.
@@ -220,6 +279,9 @@ Require one `run_complete` or `run_stopped` result. Verify:
   `answerSource: qa_scenario`, human presence, and preexisting-auth status;
 - private artifacts remain ignored and uncommitted;
 - product source remains unchanged.
+- one-time browser authorization was consumed by the terminal transition;
+- no second terminal result or recovery task was created;
+- task and continuation history never show two active identities.
 
 Return `pass`, `pass_with_findings`, `blocked`, or `fail` using the worker
 runbook disposition rules. A truthful authentication stop is `blocked`, not a

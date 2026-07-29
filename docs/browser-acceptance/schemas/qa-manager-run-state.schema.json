@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/qa-manager-run-state.schema.json",
+  "title": "QA manager durable run state",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "run",
+    "authorization",
+    "protocol",
+    "coordination",
+    "terminal"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "qa-manager-run-state/v1"
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "runId",
+        "scenarioId",
+        "scenarioSha256",
+        "oracleId",
+        "oracleSha256",
+        "protocolVersion",
+        "protocolSha256",
+        "browser",
+        "channels"
+      ],
+      "properties": {
+        "runId": { "type": "string", "minLength": 1 },
+        "scenarioId": { "type": "string", "minLength": 1 },
+        "scenarioSha256": { "$ref": "#/$defs/sha256" },
+        "oracleId": { "type": "string", "minLength": 1 },
+        "oracleSha256": { "$ref": "#/$defs/sha256" },
+        "protocolVersion": { "const": "qa-manager-worker/v1" },
+        "protocolSha256": { "$ref": "#/$defs/sha256" },
+        "browser": { "enum": ["chrome", "in_app"] },
+        "channels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/channel" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "authorization": {
+      "type": "object",
+      "required": [
+        "authorizationId",
+        "oneTime",
+        "browserAccessAuthorized",
+        "consumed"
+      ],
+      "properties": {
+        "authorizationId": { "type": "string", "minLength": 1 },
+        "oneTime": { "const": true },
+        "browserAccessAuthorized": { "type": "boolean" },
+        "consumed": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "protocol": {
+      "type": "object",
+      "required": [
+        "nextSequence",
+        "pending",
+        "acceptedResponses",
+        "emittedResults",
+        "completedChannels"
+      ],
+      "properties": {
+        "nextSequence": { "type": "integer", "minimum": 1 },
+        "pending": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/pending" }
+          ]
+        },
+        "acceptedResponses": { "type": "array" },
+        "emittedResults": { "type": "array" },
+        "completedChannels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/channel" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "coordination": {
+      "type": "object",
+      "required": [
+        "activeTask",
+        "taskHistory",
+        "handoff",
+        "continuation",
+        "continuationHistory",
+        "recoveryAttempts",
+        "recoveryRetryLimit"
+      ],
+      "properties": {
+        "activeTask": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/task" }
+          ]
+        },
+        "taskHistory": { "type": "array" },
+        "handoff": {
+          "oneOf": [
+            { "type": "object" },
+            { "type": "null" }
+          ]
+        },
+        "continuation": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/continuation" }
+          ]
+        },
+        "continuationHistory": { "type": "array" },
+        "recoveryAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "recoveryRetryLimit": { "const": 1 }
+      },
+      "additionalProperties": false
+    },
+    "terminal": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": [
+            "resultId",
+            "reason",
+            "disposition",
+            "blockingProductFinding",
+            "resumeSupported",
+            "emitted",
+            "checkpoint"
+          ],
+          "properties": {
+            "resultId": { "enum": ["run_complete", "run_stopped"] },
+            "reason": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "null" }
+              ]
+            },
+            "disposition": {
+              "enum": ["pass", "pass_with_findings", "blocked", "fail"]
+            },
+            "blockingProductFinding": { "type": "boolean" },
+            "resumeSupported": { "const": false },
+            "emitted": { "type": "boolean" },
+            "checkpoint": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "#/$defs/pending" }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "channel": {
+      "enum": [
+        "facebook",
+        "instagram",
+        "linkedin",
+        "x",
+        "tiktok",
+        "youtube",
+        "pinterest"
+      ]
+    },
+    "task": {
+      "type": "object",
+      "required": ["taskId", "purpose", "generation", "status"],
+      "properties": {
+        "taskId": { "type": "string", "minLength": 1 },
+        "purpose": {
+          "enum": ["bootstrap", "post_install_execution", "host_recovery"]
+        },
+        "generation": { "type": "integer", "minimum": 0 },
+        "status": { "enum": ["active", "terminal"] },
+        "reason": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "continuation": {
+      "type": "object",
+      "required": ["key", "purpose", "state", "taskId", "resumeAt"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "purpose": {
+          "enum": ["post_install_execution", "host_recovery"]
+        },
+        "state": {
+          "enum": ["reserved", "creating", "active", "closed", "ambiguous"]
+        },
+        "taskId": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "resumeAt": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "pending": {
+      "type": "object",
+      "required": [
+        "sequence",
+        "requestId",
+        "channel",
+        "eventHash",
+        "response",
+        "action",
+        "result"
+      ],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1 },
+        "requestId": { "type": "string", "minLength": 1 },
+        "channel": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/channel" }
+          ]
+        },
+        "eventHash": { "$ref": "#/$defs/sha256" },
+        "response": {
+          "type": "object",
+          "required": ["state", "hash"],
+          "properties": {
+            "state": {
+              "enum": ["none", "persisted", "sent", "accepted"]
+            },
+            "hash": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "#/$defs/sha256" }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "action": {
+          "type": "object",
+          "required": ["state", "hash", "outcomeHash"],
+          "properties": {
+            "state": {
+              "enum": [
+                "not_required",
+                "not_authorized",
+                "authorized",
+                "started",
+                "completed"
+              ]
+            },
+            "hash": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "#/$defs/sha256" }
+              ]
+            },
+            "outcomeHash": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "#/$defs/sha256" }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "result": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["state", "sequence", "resultId", "hash"],
+              "properties": {
+                "state": { "enum": ["persisted", "emitted"] },
+                "sequence": { "type": "integer", "minimum": 1 },
+                "resultId": { "const": "channel_complete" },
+                "hash": { "$ref": "#/$defs/sha256" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

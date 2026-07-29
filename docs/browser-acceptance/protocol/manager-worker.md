@@ -47,6 +47,12 @@ identities, host IDs, cursors, wait durations, and timeout metadata belong only
 to manager coordination state and must not be copied into a protocol envelope,
 worker receipt, or tracked artifact.
 
+The manager is the only task creator. A bootstrap worker that installs the
+plugin must emit a `worker_handoff` result with reason
+`post_install_fresh_task`; it must not create the required fresh task itself.
+The manager persists the handoff, closes the bootstrap task, reserves a
+continuation lease, and then creates the post-install execution task.
+
 The manager supervises one worker with cursor-based, event-aware waits bounded
 to approximately 60 seconds. A transport wait timeout is a local manager
 heartbeat only. It is not a `QA_EVENT`, does not imply that the worker is
@@ -54,6 +60,60 @@ stalled, and must never be converted into `run_complete` or `run_stopped`.
 After a timeout the manager waits again without sending a status ping. New
 worker output advances the cursor so previously processed envelopes are not
 handled twice.
+
+## Durable checkpoints and host recovery
+
+Before dispatch, the manager creates ignored project-local state conforming to
+`schemas/qa-manager-run-state.schema.json`. Every transition is applied through
+`scripts/browser-acceptance/qa-recovery.mjs`; the state is persisted atomically
+before the corresponding external send, browser action, result emission, or
+task creation. The state path is deterministic for the run and `create`
+refuses to overwrite it. The one-time authorization ID is derived from the run
+ID, so a terminal record cannot be reset or repurposed as a fresh run.
+
+The state preserves the exact run ID, scenario/oracle/protocol IDs and hashes,
+browser, ordered channels, one-time authorization ID, next sequence, completed
+channels, response and result hashes, active task, and continuation lease.
+Response checkpoints are `persisted`, `sent`, and `accepted`. A
+`channel_begin` action is separately `authorized`, `started`, and `completed`.
+A result is `persisted` before it is `emitted`.
+
+The worker acknowledges each accepted response through a sanitized
+`response_accepted` event before browser work. The worker records
+`browser_action_started` immediately before the bounded channel action,
+then durably stores the sanitized outcome and records
+`browser_action_completed` with its hash. It persists the channel result from
+that stored outcome before emitting it. These checkpoint events contain only run
+IDs, sequence numbers, enumerated channel/action labels, and hashes; they never
+contain browser or page content.
+
+After a terminal host failure, only the manager may reserve and create a
+recovery continuation. The retry limit is exactly one recovery continuation
+after the post-install execution task. Recovery is allowed only when the old
+task is terminal and the durable checkpoint is unambiguous:
+
+- a persisted response may be sent or accepted without recomputing it;
+- an accepted `channel_begin` whose action has not started may continue without
+  resending or reauthorizing the request;
+- a completed action may proceed to result persistence without repeating it;
+- a persisted result may be emitted without repeating the action or channel;
+- a completed channel advances only to the next selected channel.
+
+An action at `started` without durable `completed` is
+`ambiguous_browser_action` and stops. The manager persists a deterministic
+continuation lease as `reserved`, then persists `creating` immediately before
+the one external task-creation call. Only that `creating` lease may be
+activated with the returned task identity. If the manager restarts with an
+unresolved `creating` lease, or creation may have succeeded but no task
+identity was returned, it is `continuation_creation_ambiguous` and stops; the
+manager never creates another task. A second host failure exhausts the
+single recovery attempt and emits one `run_stopped` with reason
+`worker_host_unavailable`, `blockingProductFinding:false`, and
+`resumeSupported:false`.
+
+Terminal transition consumes the run's one-time browser authorization.
+Repeated terminal processing returns the existing terminal record and may not
+emit a second terminal result.
 
 ## Worker requests
 
@@ -85,6 +145,10 @@ prose.
 
 The worker emits:
 
+- `worker_handoff` after installation when a genuinely fresh task is required;
+- `response_accepted` after durably accepting a manager response;
+- `browser_action_started` and `browser_action_completed` around one bounded
+  authorized channel action;
 - `channel_complete` after every completed channel, including a truthful
   `ui_change` or `not_applicable` result;
 - `authentication_required`, `challenge`, `locale_mismatch`, or
@@ -117,10 +181,12 @@ The manager stops without answering when:
 The final manager report distinguishes `blocked` external prerequisites from a
 `fail` contract violation.
 
-## Resume
+## Human-action resume
 
 An unattended run never resumes itself after authentication or challenge.
 After the user completes the manual action in the same selected browser, the
 manager may start a new attended continuation against the same product run ID.
 The receipt must record the transition from unattended to attended and may no
-longer claim that no human was present.
+longer claim that no human was present. This explicit human-action path is
+separate from host recovery and requires fresh browser authorization when the
+prior run already reached a terminal result.

@@ -20,6 +20,9 @@ Manager/worker protocol:
 - SHA-256: {{PROTOCOL_SHA256}}
 
 This task is rooted in the dedicated QA repository. It is worker-only.
+It may emit handoff and checkpoint events, but it may never create, fork, or
+authorize another task. Only the manager creates post-install or recovery
+continuations.
 
 Before taking QA action:
 
@@ -46,6 +49,17 @@ Use only `qa-manager-worker/v1` envelopes for manager interaction. Never infer
 an answer from manager prose. Never request or handle credentials, account
 identities, profile paths, cookies, tokens, one-time codes, or saved browser
 state.
+
+After installation, emit `worker_handoff` with
+`post_install_fresh_task`; do not create the fresh task yourself. In an
+execution or recovery task, acknowledge a persisted response before using it.
+For `channel_begin`, record `browser_action_started` immediately before the
+bounded action, durably store the sanitized outcome, record
+`browser_action_completed` with its hash, and persist the result from that
+exact outcome before emission. On recovery, use the manager-supplied
+durable checkpoint. Never resend an accepted response, repeat an action at
+`started` or `completed`, or revisit a completed channel. Stop on any
+checkpoint contradiction.
 
 Authenticated browser work may use only the user's existing visible Chrome
 profile. Never launch temporary or profile-less Chromium. Public browser work
