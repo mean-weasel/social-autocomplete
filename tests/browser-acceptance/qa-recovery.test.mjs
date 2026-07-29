@@ -107,6 +107,13 @@ function acceptAndStart(state) {
     actor: "worker",
     responseHash: HASH_B,
   });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: state.protocol.pending.channel,
+    browser: state.run.browser,
+    bindingHash: HASH_D,
+  });
   return apply(state, {
     type: "start_browser_action",
     actor: "worker",
@@ -308,6 +315,69 @@ test("failure after acceptance but before action start resumes without resending
   state = reserveRecovery(state);
   assert.equal(state.coordination.continuation.resumeAt, "accepted_response");
   assert.equal(state.protocol.acceptedResponses.length, 1);
+});
+
+test("browser action cannot start until the selected binding is verified", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  assert.equal(state.protocol.pending.action.state, "authorized");
+  assert.throws(
+    () =>
+      apply(state, {
+        type: "start_browser_action",
+        actor: "worker",
+        channel: "instagram",
+        actionHash: HASH_C,
+      }),
+    /browser binding is not verified/,
+  );
+});
+
+test("binding loss before action start remains retry-safe and never becomes ambiguous", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  assert.deepEqual(recoveryCheckpoint(state), {
+    ok: true,
+    resumeAt: "accepted_response",
+  });
+  state = apply(state, {
+    type: "stop_run",
+    actor: "manager",
+    reason: "browser_binding_unavailable",
+  });
+  assert.equal(state.terminal.reason, "browser_binding_unavailable");
+  assert.equal(state.terminal.checkpoint.action.state, "authorized");
+  assert.notEqual(state.terminal.reason, "ambiguous_browser_action");
+});
+
+test("host recovery invalidates a verified binding before action start", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  assert.equal(state.protocol.pending.action.state, "binding_verified");
+  state = terminalHostFailure(state);
+  assert.equal(state.protocol.pending.action.state, "authorized");
+  assert.equal(state.protocol.pending.action.bindingHash, null);
+  state = reserveRecovery(state);
+  assert.equal(state.coordination.continuation.resumeAt, "accepted_response");
 });
 
 test("failure after action start is terminal and cannot create a recovery continuation", () => {

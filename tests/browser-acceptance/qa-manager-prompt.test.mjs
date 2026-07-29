@@ -102,6 +102,10 @@ test("worker dispatch prompt has an exact versioned placeholder contract", async
   assert.doesNotMatch(dispatch, /wait_threads|afterCursor|approximately 60 seconds/);
   assert.match(dispatch, /may never create, fork, or\s+authorize another task/);
   assert.match(dispatch, /worker_handoff/);
+  assert.match(dispatch, /verify_browser_binding/);
+  assert.match(dispatch, /browser_binding_verified/);
+  assert.match(dispatch, /Never assume a\s+binding object survives a Codex turn/);
+  assert.match(dispatch, /browser_binding_unavailable/);
   assert.match(dispatch, /browser_action_started/);
   assert.match(dispatch, /Never resend an accepted response/);
 });
@@ -161,6 +165,10 @@ test("protocol and runbooks define fail-closed single-owner host recovery", asyn
   assert.match(manager, /worker_host_unavailable/);
   assert.match(worker, /No worker may create, fork, or authorize another task/);
   assert.match(worker, /Never repeat an action at `started` or `completed`/);
+  assert.match(worker, /establish the\s+selected host browser binding while the action is still `authorized`/);
+  assert.match(worker, /Never\s+assume a runtime object from an earlier Codex turn still exists/);
+  assert.match(protocol, /`authorized`, `binding_verified`,\s+`started`, and `completed`/);
+  assert.match(protocol, /prior verification is invalidated by a\s+host continuation/);
   assert.match(protocol, /## Durable checkpoints and host recovery/);
   assert.match(protocol, /retry limit is exactly one recovery continuation/);
   assert.match(protocol, /ambiguous_browser_action/);

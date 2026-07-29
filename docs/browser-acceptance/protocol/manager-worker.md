@@ -75,11 +75,18 @@ The state preserves the exact run ID, scenario/oracle/protocol IDs and hashes,
 browser, ordered channels, one-time authorization ID, next sequence, completed
 channels, response and result hashes, active task, and continuation lease.
 Response checkpoints are `persisted`, `sent`, and `accepted`. A
-`channel_begin` action is separately `authorized`, `started`, and `completed`.
+`channel_begin` action is separately `authorized`, `binding_verified`,
+`started`, and `completed`.
 A result is `persisted` before it is `emitted`.
 
 The worker acknowledges each accepted response through a sanitized
-`response_accepted` event before browser work. The worker records
+`response_accepted` event before browser work. While the action is still only
+`authorized`, it establishes the selected host browser binding for the current
+task turn, persists `verify_browser_binding`, and emits
+`browser_binding_verified` with the selected browser, channel, and a sanitized
+binding-check hash. It must repeat this verification for every channel and
+after every task or process boundary; prior verification is invalidated by a
+host continuation. Only then may the worker record
 `browser_action_started` immediately before the bounded channel action,
 then durably stores the sanitized outcome and records
 `browser_action_completed` with its hash. It persists the channel result from
@@ -94,7 +101,8 @@ task is terminal and the durable checkpoint is unambiguous:
 
 - a persisted response may be sent or accepted without recomputing it;
 - an accepted `channel_begin` whose action has not started may continue without
-  resending or reauthorizing the request;
+  resending or reauthorizing the request, but must establish and verify the
+  selected browser binding again before starting;
 - a completed action may proceed to result persistence without repeating it;
 - a persisted result may be emitted without repeating the action or channel;
 - a completed channel advances only to the next selected channel.
@@ -147,6 +155,9 @@ The worker emits:
 
 - `worker_handoff` after installation when a genuinely fresh task is required;
 - `response_accepted` after durably accepting a manager response;
+- `browser_binding_verified` after `verify_browser_binding` is durably
+  persisted for the selected channel and task turn, before the action-start
+  checkpoint;
 - `browser_action_started` and `browser_action_completed` around one bounded
   authorized channel action;
 - `channel_complete` after every completed channel, including a truthful

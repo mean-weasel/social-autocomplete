@@ -242,6 +242,10 @@ function recordTaskTerminal(state, event) {
       state.coordination.continuationHistory.length - 1
     ] = clone(state.coordination.continuation);
   }
+  if (state.protocol.pending?.action?.state === "binding_verified") {
+    state.protocol.pending.action.state = "authorized";
+    state.protocol.pending.action.bindingHash = null;
+  }
   state.coordination.activeTask = null;
 }
 
@@ -436,6 +440,7 @@ function applyActiveEvent(state, event) {
         action: {
           state:
             event.requestId === "channel_begin" ? "not_authorized" : "not_required",
+          bindingHash: null,
           hash: null,
           outcomeHash: null,
         },
@@ -485,6 +490,21 @@ function applyActiveEvent(state, event) {
       }
       break;
     }
+    case "verify_browser_binding": {
+      requireActor(event, "worker");
+      const pending = state.protocol.pending;
+      invariant(
+        pending?.requestId === "channel_begin",
+        "browser binding verification requires channel_begin",
+      );
+      invariant(pending.action.state === "authorized", "action is not authorized");
+      invariant(event.channel === pending.channel, "binding channel mismatch");
+      invariant(event.browser === state.run.browser, "binding browser mismatch");
+      requireHash(event.bindingHash, "bindingHash");
+      pending.action.state = "binding_verified";
+      pending.action.bindingHash = event.bindingHash;
+      break;
+    }
     case "start_browser_action": {
       requireActor(event, "worker");
       const pending = state.protocol.pending;
@@ -492,7 +512,11 @@ function applyActiveEvent(state, event) {
         pending?.requestId === "channel_begin",
         "browser action requires channel_begin",
       );
-      invariant(pending.action.state === "authorized", "action is not authorized");
+      invariant(
+        pending.action.state === "binding_verified",
+        "browser binding is not verified",
+      );
+      requireHash(pending.action.bindingHash, "bindingHash");
       invariant(event.channel === pending.channel, "action channel mismatch");
       requireHash(event.actionHash, "actionHash");
       pending.action.state = "started";

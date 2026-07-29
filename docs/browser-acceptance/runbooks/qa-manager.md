@@ -246,10 +246,14 @@ Do not add optional advice to a protocol response.
 
 Persist the response before sending it and require the worker's
 `response_accepted` acknowledgement. For `channel_begin`, do not resend the
-response after acceptance. Require `browser_action_started`,
+response after acceptance. Require a persisted `verify_browser_binding` and
+emitted `browser_binding_verified` for the selected browser and channel in the
+current task turn before
+`browser_action_started`,
 `browser_action_completed`, and persisted-result checkpoints. A recovered
-worker continues from the recorded checkpoint; it never repeats an accepted
-request, started or completed action, or completed channel.
+worker re-establishes and verifies the binding before an unstarted accepted
+action; it never repeats an accepted request, started or completed action, or
+completed channel.
 
 If the worker emits commentary without an envelope, wait. If it asks a
 question without a valid envelope, stop as `unexpected_request`.

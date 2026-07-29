@@ -1,0 +1,43 @@
+{
+  "task": "T007",
+  "result": "done",
+  "summary": "Added a durable per-channel browser-binding checkpoint between channel authorization and browser action start. The recovery reducer now rejects action start until the selected binding is verified in the current task turn, invalidates that proof across host continuations, and preserves binding failures before start as retry-safe rather than ambiguous.",
+  "changed": [
+    "scripts/browser-acceptance/qa-recovery.mjs",
+    "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json",
+    "docs/browser-acceptance/protocol/manager-worker.md",
+    "docs/browser-acceptance/runbooks/qa-manager.md",
+    "docs/browser-acceptance/runbooks/qa-worker.md",
+    "docs/browser-acceptance/prompts/qa-worker-dispatch.md",
+    "docs/browser-acceptance/README.md",
+    "skills/social-metadata-research/SKILL.md",
+    "skills/_shared/browser-research-contract.md",
+    "tests/browser-acceptance/qa-recovery.test.mjs",
+    "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+  ],
+  "proof": {
+    "actionStartRequiresCurrentBinding": true,
+    "bindingLossBeforeStartIsRetrySafe": true,
+    "hostContinuationInvalidatesBindingProof": true,
+    "startedActionRemainsNonRepeatable": true,
+    "liveBrowserUsed": false
+  },
+  "verification": [
+    {
+      "command": "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs tests/browser-acceptance/coverage.test.mjs",
+      "result": "pass",
+      "tests": 33
+    },
+    {
+      "command": "npm run verify:release -- --allow-missing-live-receipts",
+      "result": "pass",
+      "offline": "pass",
+      "cleanInstall": "pass",
+      "subprocess": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ]
+}

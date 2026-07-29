@@ -173,6 +173,14 @@ window.
 - [ ] In manager-driven mode, emit `channel_begin` and continue only after the
   matching scenario response.
 - [ ] Persist and emit `response_accepted` before acting on the response.
+- [ ] For every channel and after every task/process boundary, establish the
+  selected host browser binding while the action is still `authorized`.
+  Verify the binding is available for the selected browser and channel, then
+  persist `verify_browser_binding` and emit `browser_binding_verified`. Never
+  assume a runtime object from an earlier Codex turn still exists.
+- [ ] If binding setup fails before `verify_browser_binding`, record
+  `browser_binding_unavailable` without persisting `browser_action_started`.
+  Do not retry or switch browsers inside that channel turn.
 - [ ] Persist `browser_action_started` immediately before the one bounded
   channel operation and `browser_action_completed` immediately after it.
 - [ ] Before `browser_action_completed`, durably store the sanitized outcome
@@ -185,9 +193,11 @@ Never switch browsers silently.
 On a recovery continuation, read the manager-supplied durable checkpoint. A
 persisted response or result may be re-emitted exactly; it may not be
 recomputed. Continue an accepted action only when its state is `authorized`,
-not `started`. Never repeat an action at `started` or `completed`, and never
-repeat a channel already listed as completed. Report a checkpoint
-contradiction instead of guessing.
+not `started`. Re-establish and verify the selected browser binding in the
+recovery task even if the prior task had verified it before terminating.
+Never repeat an action at `started` or `completed`, and never repeat a channel
+already listed as completed. Report a checkpoint contradiction instead of
+guessing.
 
 ## Phase 6 — perform sanitized channel preflight
 

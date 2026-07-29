@@ -54,7 +54,13 @@ After installation, emit `worker_handoff` with
 `post_install_fresh_task`; do not create the fresh task yourself. In an
 execution or recovery task, acknowledge a persisted response before using it.
 For `channel_begin`, record `browser_action_started` immediately before the
-bounded action, durably store the sanitized outcome, record
+bounded action only after establishing and recording `verify_browser_binding`
+and emitting `browser_binding_verified` for the selected channel and browser
+in the current task turn. Never assume a binding object survives a Codex turn
+or task boundary. If binding setup fails,
+emit `browser_binding_unavailable` while the action remains `authorized`; do
+not record `browser_action_started`. After starting, durably store the
+sanitized outcome, record
 `browser_action_completed` with its hash, and persist the result from that
 exact outcome before emission. On recovery, use the manager-supplied
 durable checkpoint. Never resend an accepted response, repeat an action at

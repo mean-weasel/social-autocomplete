@@ -268,8 +268,15 @@
                 "not_required",
                 "not_authorized",
                 "authorized",
+                "binding_verified",
                 "started",
                 "completed"
+              ]
+            },
+            "bindingHash": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "#/$defs/sha256" }
               ]
             },
             "hash": {

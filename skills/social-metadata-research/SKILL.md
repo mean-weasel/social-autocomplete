@@ -57,7 +57,12 @@ read.
 
 Pause before each channel, select its dedicated skill, and follow the [shared research contract](../_shared/browser-research-contract.md). Use the thin router policy to choose the allowed browser:
 
-- Read `nextAction.browserSelection` and reuse that exact host browser binding. If the binding was lost after a task or process restart, reconnect to the same selected surface before continuing.
+- Read `nextAction.browserSelection` and reuse that exact host browser binding.
+  Before every channel, establish and verify that binding in the current task
+  turn before considering the browser action started. Never assume a Chrome or
+  in-app Browser runtime object survives a Codex turn, task, or process
+  boundary. If reconnection fails, pause visibly as
+  `browser_binding_unavailable` while the channel action remains unstarted.
 - Codex: Chrome for authenticated sessions; in-app Browser only for public TikTok or YouTube research, or Pinterest search-term research.
 - Claude: Claude in Chrome. If unavailable, return a visible capability interruption.
 

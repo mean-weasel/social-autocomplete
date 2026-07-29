@@ -16,6 +16,10 @@ host browser binding while the choice remains effective. Before every channel,
 read the effective selection from the CLI next action; if that surface is not
 allowed for the channel, pause for a user-confirmed browser amendment before
 continuing. Never treat an ambient browser window as the user's selection.
+Establish and verify the selected host binding anew for every channel and
+after every task or process boundary. This check happens before the durable
+action-start checkpoint; a missing binding is
+`browser_binding_unavailable`, not an ambiguous started action.
 
 Tracked receipts contain only channel/module, host/browser, locale, semantic
 checkpoint states, bounded interaction status, and the screenshot policy. They
