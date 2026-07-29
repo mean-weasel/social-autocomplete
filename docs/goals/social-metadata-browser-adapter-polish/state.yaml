@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-browser-adapter-polish"
   kind: specific
   tranche: "Map, implement, and prove current authenticated Chrome search-entry adapters for Instagram, Facebook, and LinkedIn."
-  status: blocked
+  status: active
   oracle:
     signal: "Fresh sanitized Chrome receipts plus fixtures and release verification prove current native search-entry recognition and bounded autocomplete evidence without weakening privacy or evidence rules."
     cadence: "after the implementation package and at final live audit"
@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: null
+active_task: T009
 
 tasks:
   - id: T001
@@ -574,7 +574,7 @@ tasks:
       - "Do not access a browser or approve a scenario."
       - "Do not install from a movable product checkout."
     expected_output:
-      - "Clean immutable source checkout at exactly 484d340"
+      - "Clean immutable source checkout at exactly ef5767daa9c3dd131a2d849421151b88311eb62a"
       - "QA source.json references that checkout and commit"
       - "Worker runbook reflects browser_binding_verified lifecycle"
       - "Tracked QA pin commit with all hashes verified"
@@ -592,10 +592,34 @@ tasks:
         - "QA tracked worktree contains only the committed pin update; private QA paths remain ignored."
         - "Local marketplace source points at the immutable ef5767d checkout."
       summary: "Pinned the lifecycle fix into the dedicated QA repository without browser access. The next run must use a fresh one-time authorization."
+  - id: T009
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: high
+    objective: "Supervise a fresh exact-pinned Instagram→Facebook→LinkedIn Chrome replay with per-channel browser-binding verification."
+    inputs:
+      - "T008 exact QA pin ef5767daa9c3dd131a2d849421151b88311eb62a"
+      - "Approved synthetic three-channel scenario"
+      - "qa-manager-worker/v1 binding verification extension"
+    constraints:
+      - "Use only the existing visible Chrome profile."
+      - "Preserve exact channel order and manager-owned durable recovery."
+      - "Require browser_binding_verified before browser_action_started for every channel."
+      - "Never repeat a started/completed action or completed channel."
+      - "Stop visibly on authentication, challenge, locale mismatch, unsafe request, protocol contradiction, or host ambiguity."
+      - "Consume the one-time authorization at terminal state."
+      - "Do not persist private browser content or credentials."
+    expected_output:
+      - "Current sanitized outcomes for Instagram, Facebook, and LinkedIn"
+      - "No cross-turn browser-binding ambiguity"
+      - "Bounded autocomplete evidence where the native surfaces support it"
+      - "One truthful run_complete or bounded run_stopped"
+    receipt: null
   - id: T999
     type: judge
     assignee: Judge
-    status: blocked
+    status: queued
     reasoning_hint: high
     objective: "Audit whether implementation, exact QA pinning, and fresh live evidence satisfy the browser-adapter polish oracle."
     inputs:
@@ -615,13 +639,7 @@ tasks:
       - "full_outcome_complete: true | false"
       - "Requirement-to-evidence mapping"
       - "Missing evidence and exact next task if incomplete"
-    receipt:
-      result: blocked
-      blocked_reason: "The final audit requires a fresh exact-pinned live replay of ef5767daa9c3dd131a2d849421151b88311eb62a. The prior authorization was consumed by run qa_20260729T222110Z."
-      waiting_for_user_approval: true
-      required_reply: "APPROVE QA BROWSER RUN"
-      resume_supported: true
-      summary: "Implementation and QA pinning are complete; browser execution waits for a new one-time release."
+    receipt: null
 checks:
   dirty_fingerprint: "T005 receipt and board transition only"
   last_verification:
