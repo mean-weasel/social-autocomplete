@@ -67,13 +67,13 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-qa-channel-subsets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-qa-channel-subsets"
 
-active_task: T001
+active_task: T004
 
 tasks:
   - id: T001
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Validate the existing capability-oracle plan, migration boundary, exhaustive proof strategy, Worker write scope, and replay acceptance criteria before implementation."
     inputs:
@@ -91,11 +91,58 @@ tasks:
       - "Exact product Worker objective and allowed_files"
       - "Focused and release verification commands"
       - "Adversarial failure modes for selected-only dispatch"
-    receipt: null
+    receipt:
+      result: done
+      harness: codex
+      decision: approved
+      full_outcome_complete: false
+      rationale: "PM fallback approves one breaking internal migration to qa-oracle/v2 because QA source pinning makes dual-version support unnecessary. Remove scenario identity coupling; capability applicability must declare browser, authentication state, scopes, modules, tiers, modes, and available channels. Oracle integrity still requires outcomes for every advertised channel, while a scenario may use any nonempty ordered subset. Exhaustive tests must call a pure, non-mutating compatibility check for all 13,699 Chrome and 15 in-app sequences, plus file-level schema negatives. The existing T002 scope is sufficient."
+      worker_package:
+        objective: "Implement qa-oracle/v2 capability profiles for Chrome and in-app research, subset-aware non-mutating compatibility validation, exhaustive ordered-subset and negative tests, and aligned manager/worker documentation without changing the stable CLI/JSON contract."
+        allowed_files:
+          - scripts/browser-acceptance/validate-qa-config.mjs
+          - docs/browser-acceptance/schemas/qa-oracle.schema.json
+          - docs/browser-acceptance/oracles/chrome-all-channels-autocomplete.yaml
+          - docs/browser-acceptance/oracles/chrome-authenticated-research.yaml
+          - docs/browser-acceptance/oracles/in-app-public-research.yaml
+          - docs/browser-acceptance/runbooks/qa-manager.md
+          - docs/browser-acceptance/runbooks/qa-worker.md
+          - docs/browser-acceptance/prompts/qa-manager-starter.md
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/README.md
+          - tests/browser-acceptance/qa-config.test.mjs
+          - tests/browser-acceptance/qa-manager-prompt.test.mjs
+        verify:
+          - "npm run test:qa-config"
+          - "npm run typecheck"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "git diff --check"
+        stop_if:
+          - "A required change falls outside allowed_files."
+          - "Compatibility would broaden in_app access or weaken authentication safety."
+          - "Any selected list is sorted, inherited, expanded, or mutated."
+          - "The exhaustive tests do not assert exact sequence counts."
+          - "Verification fails twice for reasons introduced by this task."
+      evidence:
+        - scripts/browser-acceptance/validate-qa-config.mjs
+        - docs/browser-acceptance/schemas/qa-oracle.schema.json
+        - docs/browser-acceptance/oracles/chrome-all-channels-autocomplete.yaml
+        - tests/browser-acceptance/qa-config.test.mjs
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - .social-metadata/qa/scenarios/chrome-instagram-facebook-linkedin-autocomplete.yaml
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "Implementation and exhaustive test results"
+        - "Adversarial product review"
+        - "Exact QA source pin"
+        - "Selected-only live manager/worker replay"
+      required_board_updates: []
   - id: T002
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Implement the Judge-approved capability-oracle migration, subset-aware validation, exhaustive ordered-subset tests, and aligned manager/worker documentation as one coherent product-contract slice."
     inputs:
@@ -142,11 +189,39 @@ tasks:
       - "Compatibility would require broadening in_app browser access or weakening authentication safety."
       - "Any selected-channel order is sorted, inherited, or expanded."
       - "Verification fails twice for reasons introduced by this task."
-    receipt: null
+    receipt:
+      result: done
+      harness: codex
+      changed_files:
+        - scripts/browser-acceptance/validate-qa-config.mjs
+        - docs/browser-acceptance/schemas/qa-oracle.schema.json
+        - docs/browser-acceptance/oracles/chrome-all-channels-autocomplete.yaml
+        - docs/browser-acceptance/oracles/chrome-authenticated-research.yaml
+        - docs/browser-acceptance/oracles/in-app-public-research.yaml
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/README.md
+        - tests/browser-acceptance/qa-config.test.mjs
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - cmd: "npm run test:qa-config"
+          status: pass
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      summary: "Migrated QA expectations to browser capability oracles, made compatibility selection-aware and non-mutating, proved every valid ordered Chrome and in-app subset, and aligned the manager/worker contract so omitted channels cannot enter a run."
+      deviations:
+        - "The delegated Worker timed out; late in-scope edits arrived after interruption, and the PM completed and reviewed the same bounded slice without widening allowed_files."
+      verification_attempts: 1
   - id: T003
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Adversarially review the completed product slice against the full subset oracle and decide whether it is safe to commit and pin for live QA."
     inputs:
@@ -165,11 +240,47 @@ tasks:
       - "Evidence that exhaustive counts and negative cases are real"
       - "Evidence that manager and worker cannot infer extra oracle channels"
       - "Exact correction Worker package if rejected"
-    receipt: null
+    receipt:
+      result: done
+      harness: codex
+      decision: approved_for_pin
+      full_outcome_complete: false
+      rationale: "PM fallback adversarial review approves pinning. The validator treats the oracle as a browser capability map, checks every selected channel without reordering or mutation, and rejects browser, channel, authentication, and outcome-map incompatibilities. Tests enumerate all 13,699 ordered Chrome subsets and all 15 in-app subsets, assert exact counts and preserved order, and include the saved three-channel sequence. Manager, worker, and protocol text make scenario.channels exclusive and classify any omitted-channel action or receipt as a contradiction. Release verification is green."
+      worker_package:
+        objective: "Synchronize the dedicated QA worker materials and pin their source manifest to the exact committed, Judge-approved product revision and checksums."
+        allowed_files:
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+        verify:
+          - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+          - "Verify every workerFiles and managerSourceOnlyFiles sourceSha256 against the pinned product tree and every workerFiles qaSha256 against the QA-local copy."
+          - "Verify /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json sourceCommit equals product git rev-parse HEAD."
+          - "Verify both tracked worktrees are clean after their commits and private QA paths remain ignored."
+        stop_if:
+          - "The product worktree is dirty or HEAD differs from the T003-reviewed commit."
+          - "A changed canonical worker file cannot be represented by the existing adaptation rules."
+          - "A required QA edit falls outside allowed_files."
+          - "Any private QA artifact would be staged."
+          - "Hash verification fails twice."
+      evidence:
+        - tests/browser-acceptance/qa-config.test.mjs
+        - scripts/browser-acceptance/validate-qa-config.mjs
+        - docs/browser-acceptance/schemas/qa-oracle.schema.json
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - "npm run verify:release -- --allow-missing-live-receipts"
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "Exact QA source pin"
+        - "Selected-only live manager/worker replay"
+      required_board_updates: []
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "After PM commits the Judge-approved product slice, synchronize the dedicated QA worker materials and pin their source manifest to that exact product commit and checksums."
     inputs:

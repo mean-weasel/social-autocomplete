@@ -1,30 +1,122 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://social-metadata.local/schemas/qa-oracle.schema.json",
-  "title": "Social metadata manager QA oracle",
+  "title": "Social metadata manager QA capability oracle",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schemaVersion",
     "oracleId",
-    "scenarioId",
     "protocolVersion",
+    "applicability",
     "startupRequestOrder",
     "invariants",
     "channelOutcomes",
     "terminalInterruptions"
   ],
   "properties": {
-    "schemaVersion": { "const": "qa-oracle/v1" },
+    "schemaVersion": { "const": "qa-oracle/v2" },
     "oracleId": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_]{2,63}$"
     },
-    "scenarioId": {
-      "type": "string",
-      "pattern": "^[a-z][a-z0-9_]{2,63}$"
-    },
     "protocolVersion": { "const": "qa-manager-worker/v1" },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "browser",
+        "authenticationStates",
+        "scopes",
+        "modules",
+        "evidenceTiers",
+        "modes",
+        "availableChannels"
+      ],
+      "properties": {
+        "browser": { "enum": ["chrome", "in_app"] },
+        "authenticationStates": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["already_signed_in", "public_surface"] }
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["setup", "preflight", "research"] }
+        },
+        "modules": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["hashtag", "search-term"] }
+        },
+        "evidenceTiers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["autocomplete_only", "results_sample"] }
+        },
+        "modes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["guided", "automatic"] }
+        },
+        "availableChannels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "facebook",
+              "instagram",
+              "linkedin",
+              "x",
+              "tiktok",
+              "youtube",
+              "pinterest"
+            ]
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "browser": { "const": "chrome" } },
+            "required": ["browser"]
+          },
+          "then": {
+            "properties": {
+              "authenticationStates": {
+                "const": ["already_signed_in"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "browser": { "const": "in_app" } },
+            "required": ["browser"]
+          },
+          "then": {
+            "properties": {
+              "authenticationStates": {
+                "const": ["public_surface"]
+              },
+              "availableChannels": {
+                "type": "array",
+                "items": {
+                  "enum": ["tiktok", "youtube", "pinterest"]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
     "startupRequestOrder": {
       "const": [
         "browser_selection",
@@ -69,19 +161,22 @@
     "channelOutcomes": {
       "type": "object",
       "minProperties": 1,
-      "additionalProperties": {
-        "type": "array",
-        "minItems": 1,
-        "uniqueItems": true,
-        "items": {
-          "enum": [
-            "ready",
-            "authentication_required",
-            "challenge",
-            "locale_mismatch",
-            "ui_change",
-            "not_applicable"
-          ]
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(facebook|instagram|linkedin|x|tiktok|youtube|pinterest)$": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ready",
+              "authentication_required",
+              "challenge",
+              "locale_mismatch",
+              "ui_change",
+              "not_applicable"
+            ]
+          }
         }
       }
     },

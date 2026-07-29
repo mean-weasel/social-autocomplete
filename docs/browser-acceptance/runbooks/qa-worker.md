@@ -1,6 +1,6 @@
 # Local Codex QA worker runbook
 
-Runbook version: `1.2`
+Runbook version: `1.3`
 
 Use this runbook from a fresh Codex task rooted in the dedicated QA repository.
 It tests an installed Social Metadata Research plugin without modifying product
@@ -117,7 +117,13 @@ Independent top-level channel skills are not required.
 
   > Which channels should I research, and in what order?
 
-- [ ] Verify all seven supported channels are available.
+- [ ] Verify all seven channel playbooks are packaged. Offer only the channels
+  advertised by the confirmed browser's capability oracle.
+- [ ] Treat the capability oracle's available channels as choices, not the run
+  plan. The approved scenario's nonempty ordered subset is the complete and
+  exclusive run plan.
+- [ ] Never sort the scenario list into oracle order or add an available
+  channel that the scenario omitted.
 - [ ] Verify no CLI plan is created before both answers are recorded.
 - [ ] Verify inferred topic, locale, modules, evidence tier, and mode are
   proposed for confirmation after browser and channels.
@@ -166,6 +172,10 @@ Never switch browsers silently.
 
 For each selected channel, use the channel matrix and perform one bounded
 structural check:
+
+Iterate `scenario.channels` exactly as recorded. Stop as an oracle
+contradiction if a request, browser action, result, or receipt would name an
+unselected channel.
 
 - [ ] Open or target only the intended channel surface.
 - [ ] Filter target matching inside the browser-control operation.

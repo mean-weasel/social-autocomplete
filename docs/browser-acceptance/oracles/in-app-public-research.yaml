@@ -1,0 +1,65 @@
+schemaVersion: qa-oracle/v2
+oracleId: in_app_public_research_v2
+protocolVersion: qa-manager-worker/v1
+applicability:
+  browser: in_app
+  authenticationStates:
+    - public_surface
+  scopes:
+    - setup
+    - preflight
+    - research
+  modules:
+    - hashtag
+    - search-term
+  evidenceTiers:
+    - autocomplete_only
+    - results_sample
+  modes:
+    - guided
+    - automatic
+  availableChannels:
+    - tiktok
+    - youtube
+    - pinterest
+startupRequestOrder:
+  - browser_selection
+  - ordered_channel_selection
+  - plan_confirmation
+invariants:
+  exactlyOneTopLevelOrchestrator: true
+  linkedPlaybooks:
+    - facebook
+    - instagram
+    - linkedin
+    - x
+    - tiktok
+    - youtube
+    - pinterest
+  noPlanBeforeBrowserAndChannels: true
+  newRunInheritance: false
+  answerSource: qa_scenario
+  credentialHandling: false
+  temporaryBrowser: false
+  publishing: false
+channelOutcomes:
+  tiktok: &public_outcomes
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+  youtube: *public_outcomes
+  pinterest:
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+    - not_applicable
+terminalInterruptions:
+  - authentication_required
+  - challenge
+  - unsafe_request
+  - unexpected_request
+  - oracle_contradiction

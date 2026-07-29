@@ -1,7 +1,31 @@
-schemaVersion: qa-oracle/v1
-oracleId: chrome_all_channels_autocomplete_v1
-scenarioId: chrome_all_channels_autocomplete
+schemaVersion: qa-oracle/v2
+oracleId: chrome_authenticated_research_v2
 protocolVersion: qa-manager-worker/v1
+applicability:
+  browser: chrome
+  authenticationStates:
+    - already_signed_in
+  scopes:
+    - setup
+    - preflight
+    - research
+  modules:
+    - hashtag
+    - search-term
+  evidenceTiers:
+    - autocomplete_only
+    - results_sample
+  modes:
+    - guided
+    - automatic
+  availableChannels:
+    - facebook
+    - instagram
+    - linkedin
+    - x
+    - tiktok
+    - youtube
+    - pinterest
 startupRequestOrder:
   - browser_selection
   - ordered_channel_selection
@@ -23,42 +47,17 @@ invariants:
   temporaryBrowser: false
   publishing: false
 channelOutcomes:
-  facebook:
+  facebook: &authenticated_outcomes
     - ready
     - authentication_required
     - challenge
     - locale_mismatch
     - ui_change
-  instagram:
-    - ready
-    - authentication_required
-    - challenge
-    - locale_mismatch
-    - ui_change
-  linkedin:
-    - ready
-    - authentication_required
-    - challenge
-    - locale_mismatch
-    - ui_change
-  x:
-    - ready
-    - authentication_required
-    - challenge
-    - locale_mismatch
-    - ui_change
-  tiktok:
-    - ready
-    - authentication_required
-    - challenge
-    - locale_mismatch
-    - ui_change
-  youtube:
-    - ready
-    - authentication_required
-    - challenge
-    - locale_mismatch
-    - ui_change
+  instagram: *authenticated_outcomes
+  linkedin: *authenticated_outcomes
+  x: *authenticated_outcomes
+  tiktok: *authenticated_outcomes
+  youtube: *authenticated_outcomes
   pinterest:
     - ready
     - authentication_required

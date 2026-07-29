@@ -1,6 +1,6 @@
 # QA manager runbook
 
-Runbook version: `1.2`
+Runbook version: `1.3`
 
 Use this from a Codex manager task rooted in the Social Metadata Research
 development repository. The manager interviews the user, writes or edits a
@@ -44,7 +44,9 @@ supports them, but require confirmation before writing an approved scenario:
 
 1. QA scope: `setup`, `preflight`, or `research`.
 2. Browser: `chrome` or `in_app`.
-3. Channels and exact order.
+3. Any nonempty ordered subset of the channels available in the selected
+   browser. Each channel may appear at most once. Chrome offers all seven
+   channels; `in_app` offers TikTok, YouTube, and Pinterest public surfaces.
 4. Synthetic creative brief. Never place private production content in QA.
 5. UI locale, region, and timezone.
 6. Modules: `hashtag`, `search-term`, or both.
@@ -65,6 +67,17 @@ Copy the closest committed example into `.social-metadata/qa/scenarios/`,
 change its ID, and normalize the answers. Keep the canonical oracle under
 `docs/browser-acceptance/oracles/` separate; user scenario answers must not
 rewrite expected product behavior.
+
+Select the canonical capability oracle from the confirmed browser:
+
+- Chrome: `oracles/chrome-authenticated-research.yaml`
+- Codex in-app browser: `oracles/in-app-public-research.yaml`
+
+The oracle advertises browser capabilities and allowed outcomes. It is not a
+run plan: `scenario.channels` remains the sole authority for the selected
+channels and their order. Never generate an oracle from questionnaire answers,
+sort channels into oracle order, add omitted oracle channels, or ask the user
+to broaden a valid subset merely to match an oracle.
 
 Run validation without approval first:
 
@@ -90,7 +103,10 @@ Then validate with `--require-approved`. Do not dispatch on validation failure.
 - [ ] Verify the product source revision and QA runbook checksums.
 - [ ] Verify the product worktree is clean or explicitly approved as the build.
 - [ ] Verify the dedicated QA repository path and its pinned worker runbook.
-- [ ] Verify the scenario and oracle IDs match.
+- [ ] Verify the scenario is compatible with the selected capability oracle.
+- [ ] Verify every selected channel is advertised by the oracle and has an
+  allowed outcome, while additional advertised oracle channels remain outside
+  the run plan.
 - [ ] Compute and record the scenario checksum.
 - [ ] Verify approval has not expired.
 - [ ] Verify private scenario, receipts, notes, screenshots, and run state are
@@ -182,6 +198,9 @@ question without a valid envelope, stop as `unexpected_request`.
 ## Phase 3 — process channel outcomes
 
 Check every result against the independent oracle and ordered channel list.
+Process only the exact ordered channels in the scenario. Extra capability
+channels in the oracle must never produce a request, browser action, outcome,
+or receipt entry.
 `ui_change` may be recorded and continued only when the scenario permits it.
 `not_applicable` is valid for Pinterest hashtag without browser interaction.
 

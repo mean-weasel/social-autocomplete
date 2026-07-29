@@ -113,11 +113,14 @@ Use these version-controlled materials for repeatable local Codex QA:
   project-local remembered QA worker repository contract.
 - [Scenario schema](schemas/qa-scenario.schema.json) and
   [oracle schema](schemas/qa-oracle.schema.json) — machine-readable contracts
-  for interview output and independent expectations.
+  for interview output and independent browser-capability expectations.
 - [Example scenario](scenarios/examples/chrome-all-channels-autocomplete.yaml)
-  and [its independent oracle](oracles/chrome-all-channels-autocomplete.yaml) —
-  committed synthetic starting points that must be copied and approved before
-  use.
+  — a committed synthetic starting point that must be copied and approved
+  before use.
+- [Chrome capability oracle](oracles/chrome-authenticated-research.yaml) and
+  [in-app capability oracle](oracles/in-app-public-research.yaml) — canonical
+  browser capability maps. A scenario may select any nonempty ordered subset
+  they advertise; extra oracle channels never enter the run.
 
 The development repository owns the canonical protocol. A separate QA
 repository contains only the pinned worker runbook, worker templates, source
@@ -151,7 +154,7 @@ Validate a scenario and oracle before dispatch:
 ```sh
 npm run qa:scenario:validate -- \
   --scenario docs/browser-acceptance/scenarios/examples/chrome-all-channels-autocomplete.yaml \
-  --oracle docs/browser-acceptance/oracles/chrome-all-channels-autocomplete.yaml
+  --oracle docs/browser-acceptance/oracles/chrome-authenticated-research.yaml
 ```
 
 Add `--require-approved` only for a private scenario that has completed the

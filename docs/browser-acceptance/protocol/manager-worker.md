@@ -70,6 +70,12 @@ The expected startup order is browser, ordered channels, then plan. One
 `channel_begin` request follows for each channel not skipped by an earlier
 terminal interruption.
 
+A capability oracle may advertise channels that the scenario did not select.
+Those extra channels are not part of the run. The manager and worker must use
+the exact `scenario.channels` array, in its recorded order, as the exclusive
+source for `ordered_channel_selection`, `channel_begin`, browser actions,
+results, and receipt entries. Oracle order is never authoritative.
+
 The manager must reject duplicate or out-of-order sequence numbers, a changed
 run ID, a mismatched request ID, and any answer not represented exactly in the
 validated scenario. It must never answer a request by inferring from worker
@@ -95,14 +101,16 @@ in, click through a challenge, or ask the worker to do so.
 
 The manager stops without answering when:
 
-- the scenario is missing, invalid, unapproved, expired, or does not match the
-  oracle;
+- the scenario is missing, invalid, unapproved, expired, or is incompatible
+  with the selected capability oracle;
 - `requireHumanBeforeBrowserAccess` is true and no human has explicitly
   released the run;
 - the worker emits an unknown request or asks for credentials, codes, cookies,
   tokens, account identity, private content, broad browser data, publishing, or
   composer interaction;
 - the worker response sequence, run ID, scenario ID, or channel order diverges;
+- the worker requests, researches, reports, or records a channel omitted from
+  the scenario;
 - authentication, challenge, or another interruption marked `stop` occurs;
 - a result contradicts a canonical oracle invariant.
 

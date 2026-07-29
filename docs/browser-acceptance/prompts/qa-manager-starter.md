@@ -47,13 +47,23 @@ user in the canonical order, propose inferred defaults when appropriate, and
 require confirmation. Store approved private scenarios only under
 `.social-metadata/qa/scenarios/` in the product repository.
 
+For channel selection, accept any nonempty ordered subset available in the
+confirmed browser, with each channel appearing at most once. Chrome offers all
+seven channels; the Codex in-app browser offers TikTok, YouTube, and Pinterest
+public surfaces. Never require an all-channel run.
+
+Select the canonical capability oracle for the confirmed browser. The oracle
+describes available capabilities and allowed outcomes, not the run plan.
+Preserve `scenario.channels` exactly, never generate an oracle from user
+answers, and never sort, inherit, expand, or add channels to match an oracle.
+
 Never request or handle credentials, account identities, profile paths,
 cookies, tokens, one-time codes, or saved browser state. The manager must not
 operate the browser.
 
-Do not dispatch a worker until the scenario is validated, shown to the user in
-sanitized form, explicitly approved, and validated again with
-`--require-approved`.
+Do not dispatch a worker until the scenario is compatible with the selected
+capability oracle, shown to the user in sanitized form, explicitly approved,
+and validated again with `--require-approved`.
 
 For a run, create a genuinely fresh Codex worker task rooted in the confirmed
 dedicated QA repository. Supply the exact product commit and absolute scenario,

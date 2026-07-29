@@ -66,73 +66,109 @@ function formatAjvErrors(label, errors) {
   }));
 }
 
-function customErrors(scenario, oracle, requireApproved) {
+export function checkQaCompatibility(
+  scenario,
+  oracle,
+  { requireApproved = false, now = Date.now() } = {},
+) {
   const errors = [];
   const push = (path, code, message) =>
     errors.push({ source: "cross_contract", path, code, message });
 
-  if (scenario.scenarioId !== oracle.scenarioId) {
-    push(
-      "/scenarioId",
-      "oracle_mismatch",
-      "scenarioId must match oracle.scenarioId",
-    );
-  }
-
+  const selectedChannels = scenario.channels ?? [];
   const authenticationChannels = Object.keys(
     scenario.authentication?.byChannel ?? {},
   );
   if (
-    authenticationChannels.length !== scenario.channels.length ||
-    scenario.channels.some((channel) => !authenticationChannels.includes(channel))
+    authenticationChannels.length !== selectedChannels.length ||
+    selectedChannels.some(
+      (channel) => !authenticationChannels.includes(channel),
+    )
   ) {
     push(
       "/authentication/byChannel",
-      "channel_coverage",
+      "authentication_channel_coverage",
       "authentication.byChannel must contain exactly the selected channels",
     );
   }
 
+  const applicability = oracle.applicability ?? {};
+  const availableChannels = applicability.availableChannels ?? [];
   const oracleChannels = Object.keys(oracle.channelOutcomes ?? {});
+  for (const channel of availableChannels) {
+    if (!oracleChannels.includes(channel)) {
+      push(
+        `/channelOutcomes/${channel}`,
+        "oracle_channel_outcome_missing",
+        `capability oracle advertises a channel without outcomes: ${channel}`,
+      );
+    }
+  }
+  for (const channel of oracleChannels) {
+    if (!availableChannels.includes(channel)) {
+      push(
+        `/channelOutcomes/${channel}`,
+        "oracle_channel_outcome_unadvertised",
+        `capability oracle defines outcomes for an unadvertised channel: ${channel}`,
+      );
+    }
+  }
+
+  if (scenario.browser !== applicability.browser) {
+    push(
+      "/browser",
+      "oracle_browser_mismatch",
+      "scenario browser is not supported by this capability oracle",
+    );
+  }
+  if (!applicability.scopes?.includes(scenario.scope)) {
+    push(
+      "/scope",
+      "oracle_scope_unsupported",
+      "scenario scope is not supported by this capability oracle",
+    );
+  }
   if (
-    oracleChannels.length !== scenario.channels.length ||
-    scenario.channels.some((channel) => !oracleChannels.includes(channel))
+    scenario.modules?.some(
+      (moduleName) => !applicability.modules?.includes(moduleName),
+    )
   ) {
     push(
-      "/channelOutcomes",
-      "channel_coverage",
-      "oracle channelOutcomes must contain exactly the selected channels",
+      "/modules",
+      "oracle_module_unsupported",
+      "scenario module is not supported by this capability oracle",
+    );
+  }
+  if (!applicability.evidenceTiers?.includes(scenario.evidenceTier)) {
+    push(
+      "/evidenceTier",
+      "oracle_evidence_tier_unsupported",
+      "scenario evidence tier is not supported by this capability oracle",
+    );
+  }
+  if (!applicability.modes?.includes(scenario.mode)) {
+    push(
+      "/mode",
+      "oracle_mode_unsupported",
+      "scenario mode is not supported by this capability oracle",
     );
   }
 
-  for (const channel of scenario.channels) {
+  for (const [index, channel] of selectedChannels.entries()) {
+    if (!availableChannels.includes(channel)) {
+      push(
+        `/channels/${index}`,
+        "oracle_channel_unsupported",
+        `${channel} is not available in this capability oracle`,
+      );
+    }
     const expectedState =
       scenario.authentication?.byChannel?.[channel]?.expectedState;
-    if (scenario.browser === "chrome" && expectedState === "public_surface") {
+    if (!applicability.authenticationStates?.includes(expectedState)) {
       push(
         `/authentication/byChannel/${channel}/expectedState`,
-        "browser_auth_mismatch",
-        "Chrome scenarios must use preexisting signed-in state",
-      );
-    }
-    if (
-      scenario.browser === "in_app" &&
-      !["tiktok", "youtube", "pinterest"].includes(channel)
-    ) {
-      push(
-        "/channels",
-        "browser_channel_mismatch",
-        "in_app supports only TikTok, YouTube, and Pinterest public QA",
-      );
-    }
-    if (
-      scenario.browser === "in_app" &&
-      expectedState !== "public_surface"
-    ) {
-      push(
-        `/authentication/byChannel/${channel}/expectedState`,
-        "browser_auth_mismatch",
-        "in_app scenarios must use public_surface",
+        "oracle_authentication_mismatch",
+        `${expectedState ?? "missing"} authentication is not supported`,
       );
     }
   }
@@ -145,7 +181,7 @@ function customErrors(scenario, oracle, requireApproved) {
       "credentials may never be authorized",
     );
   }
-  if (authorization.expiresAt && Date.parse(authorization.expiresAt) <= Date.now()) {
+  if (authorization.expiresAt && Date.parse(authorization.expiresAt) <= now) {
     push(
       "/authorization/expiresAt",
       "approval_expired",
@@ -195,10 +231,10 @@ export async function validateQaConfig({
 
   if (scenarioValid && oracleValid) {
     errors.push(
-      ...customErrors(
+      ...checkQaCompatibility(
         scenarioDocument.value,
         oracleDocument.value,
-        requireApproved,
+        { requireApproved },
       ),
     );
   }
@@ -216,6 +252,9 @@ export async function validateQaConfig({
     requireHumanBeforeBrowserAccess:
       scenarioDocument.value?.authorization?.requireHumanBeforeBrowserAccess ??
       null,
+    selectedChannels: Array.isArray(scenarioDocument.value?.channels)
+      ? [...scenarioDocument.value.channels]
+      : null,
     errors,
   };
 }
