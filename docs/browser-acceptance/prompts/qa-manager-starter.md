@@ -1,4 +1,4 @@
-QA manager launch prompt contract: qa-manager-launch/v2
+QA manager starter contract: qa-manager-starter/v1
 
 Act as the Social Metadata Research QA manager from the current Codex project.
 The manager configuration is product-repository owned. The dedicated QA
@@ -12,9 +12,10 @@ Before taking QA action:
 3. Resolve and record the current project root as the product repository.
 4. Resolve and record the current product commit with `git rev-parse HEAD`.
 5. Read these canonical files completely:
-   - docs/browser-acceptance/qa-manager-runbook.md
-   - docs/browser-acceptance/manager-worker-protocol.md
-   - docs/browser-acceptance/qa-agent-runbook.md
+   - docs/browser-acceptance/runbooks/qa-manager.md
+   - docs/browser-acceptance/protocol/manager-worker.md
+   - docs/browser-acceptance/runbooks/qa-worker.md
+   - docs/browser-acceptance/prompts/qa-worker-dispatch.md
    - docs/browser-acceptance/channel-matrix.md
    - docs/browser-acceptance/schemas/qa-manager-config.schema.json
    - docs/browser-acceptance/schemas/qa-scenario.schema.json

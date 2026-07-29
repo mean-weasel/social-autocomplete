@@ -1,6 +1,6 @@
 # QA manager runbook
 
-Runbook version: `1.1`
+Runbook version: `1.2`
 
 Use this from a Codex manager task rooted in the Social Metadata Research
 development repository. The manager interviews the user, writes or edits a
@@ -9,12 +9,12 @@ starts a fresh worker task rooted in the dedicated QA repository, and answers
 only the worker's stable protocol requests.
 
 The manager does not operate the browser. The worker follows the
-[QA agent runbook](qa-agent-runbook.md). Read that runbook, the
-[manager/worker protocol](manager-worker-protocol.md), and the
-[channel matrix](channel-matrix.md) completely before beginning.
+[QA worker runbook](qa-worker.md). Read that runbook, the
+[manager/worker protocol](../protocol/manager-worker.md), and the
+[channel matrix](../channel-matrix.md) completely before beginning.
 
 A fresh manager task starts by following the versioned
-[launch prompt](templates/qa-manager-launch-prompt.md) directly. The prompt
+[manager starter](../prompts/qa-manager-starter.md) directly. The prompt
 resolves the current product root and commit, reads or establishes the ignored
 project-local manager configuration, and asks which manager mode to use.
 
@@ -111,6 +111,12 @@ checksums, and the exact product commit. Prompt it to:
 6. emit only stable protocol envelopes for manager interaction;
 7. write ignored, sanitized QA artifacts only in the QA repository; and
 8. stop on the protocol's safety conditions.
+
+Build that task prompt from
+`docs/browser-acceptance/prompts/qa-worker-dispatch.md`. Replace every
+placeholder with the validated run-specific value, verify no placeholder
+remains, and send the completed prompt without adding instructions that weaken
+the worker runbook or protocol.
 
 Record the worker task ID under `.social-metadata/qa/manager-runs/`. Do not
 reuse a task that loaded an older plugin version.

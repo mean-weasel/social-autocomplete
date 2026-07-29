@@ -1,7 +1,7 @@
 # Local browser QA channel matrix
 
 Use this matrix with the
-[local Codex QA agent runbook](qa-agent-runbook.md). Semantic landmarks are
+[local Codex QA worker runbook](runbooks/qa-worker.md). Semantic landmarks are
 structural labels, not selectors or copied page text.
 
 | Channel | Allowed browser/access | Search entry checkpoint | Hashtag expectation | Acceptable preflight outcomes |

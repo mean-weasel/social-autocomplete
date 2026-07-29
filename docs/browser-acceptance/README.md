@@ -89,24 +89,26 @@ and release stack before dogfooding. The final command without that flag
 requires fresh passing public and authenticated receipts. A loading or locator
 failure is `ui_change`, never native empty.
 
-## QA agent materials
+## QA manager and worker materials
 
 Use these version-controlled materials for repeatable local Codex QA:
 
-- [QA agent runbook](qa-agent-runbook.md) — phased, step-by-step execution
+- [QA worker runbook](runbooks/qa-worker.md) — phased, step-by-step execution
   procedure and stop conditions.
-- [QA manager runbook](qa-manager-runbook.md) — interviews the user, writes an
+- [QA manager runbook](runbooks/qa-manager.md) — interviews the user, writes an
   approved scenario, starts a fresh worker task, and supplies only
   predetermined answers.
-- [Manager/worker protocol](manager-worker-protocol.md) — stable request,
+- [Manager starter](prompts/qa-manager-starter.md) — directly executable entry
+  point for a fresh product-repository manager task.
+- [Worker dispatch prompt](prompts/qa-worker-dispatch.md) — versioned
+  manager-to-worker handoff populated with run-specific paths and checksums.
+- [Manager/worker protocol](protocol/manager-worker.md) — stable request,
   response, result, and stop envelopes for scenario-driven QA.
 - [Channel matrix](channel-matrix.md) — channel/module checkpoints and allowed
   outcomes.
 - [QA run-note template](templates/qa-run-note.md) — human-readable run record.
 - [QA receipt template](templates/qa-receipt.v1.json) — sanitized
   machine-readable handoff.
-- [QA manager launch prompt](templates/qa-manager-launch-prompt.md) — versioned,
-  directly executable bootstrap for a fresh product-repository manager task.
 - [QA manager configuration schema](schemas/qa-manager-config.schema.json) —
   project-local remembered QA worker repository contract.
 - [Scenario schema](schemas/qa-scenario.schema.json) and
@@ -131,7 +133,7 @@ repository and remain ignored by Git.
 Open a fresh Codex task rooted in this repository and say:
 
 ```text
-Follow docs/browser-acceptance/templates/qa-manager-launch-prompt.md.
+Follow docs/browser-acceptance/prompts/qa-manager-starter.md.
 ```
 
 The prompt resolves the current product root and commit itself. It reads the

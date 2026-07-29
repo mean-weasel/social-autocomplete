@@ -1,21 +1,21 @@
-# Local Codex QA agent runbook
+# Local Codex QA worker runbook
 
-Runbook version: `1.1`
+Runbook version: `1.2`
 
 Use this runbook from a fresh Codex task rooted in the dedicated QA repository.
 It tests an installed Social Metadata Research plugin without modifying product
 source. Read the entire runbook and the
-[channel matrix](channel-matrix.md) before beginning.
+[channel matrix](../channel-matrix.md) before beginning.
 
 This runbook supports two interaction sources:
 
 - `direct_user`: ask the user every required question.
 - `synthetic_manager`: emit the exact envelopes in the
-  [manager/worker protocol](manager-worker-protocol.md) and accept answers only
-  from the manager's validated, explicitly approved scenario.
+  [manager/worker protocol](../protocol/manager-worker.md) and accept answers
+  only from the manager's validated, explicitly approved scenario.
 
 In manager-driven mode, read the
-[QA manager runbook](qa-manager-runbook.md), the protocol, and the named
+[QA manager runbook](qa-manager.md), the protocol, and the named
 scenario and oracle before Phase 0. A scenario answer counts as prior user
 confirmation only when validation with `--require-approved` passes. The worker
 must never interpret manager prose as an answer.
@@ -65,7 +65,7 @@ reason as a QA blocker without exposing private browser data.
 - [ ] Read the QA repository `AGENTS.md`, this runbook, and the channel matrix.
 - [ ] Record run ID, date/time, locale, QA scope, product path, source commit,
   QA branch, and intended channels in a copy of
-  [the run-note template](templates/qa-run-note.md).
+  [the run-note template](../templates/qa-run-note.md).
 - [ ] Record `interactionSource`, and for manager-driven runs record the
   scenario ID, oracle ID, scenario checksum, approval timestamp, and whether a
   human is present.

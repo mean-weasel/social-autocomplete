@@ -3,7 +3,7 @@
   "kind": "local_codex_acceptance",
   "runId": "replace-me",
   "capturedAt": "1970-01-01T00:00:00.000Z",
-  "runbookVersion": "1.1",
+  "runbookVersion": "1.2",
   "scope": "setup",
   "automation": {
     "managerDriven": false,

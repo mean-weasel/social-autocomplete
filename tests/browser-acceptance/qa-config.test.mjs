@@ -73,8 +73,8 @@ test("scenario authentication coverage cannot omit a selected channel", async ()
 
 test("manager configuration is product-owned and workers are QA-repository isolated", async () => {
   const [managerRunbook, workerRunbook, acceptanceReadme] = await Promise.all([
-    readFile("docs/browser-acceptance/qa-manager-runbook.md", "utf8"),
-    readFile("docs/browser-acceptance/qa-agent-runbook.md", "utf8"),
+    readFile("docs/browser-acceptance/runbooks/qa-manager.md", "utf8"),
+    readFile("docs/browser-acceptance/runbooks/qa-worker.md", "utf8"),
     readFile("docs/browser-acceptance/README.md", "utf8"),
   ]);
 
