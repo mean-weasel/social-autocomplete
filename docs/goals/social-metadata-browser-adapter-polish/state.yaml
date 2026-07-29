@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -391,7 +391,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "After Judge approval and a product commit, synchronize the dedicated QA repository to that exact adapter build."
     inputs:
@@ -422,11 +422,26 @@ tasks:
       - "A required QA edit falls outside allowed_files."
       - "Any private artifact would be staged."
       - "Hash verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+      commands:
+        - cmd: "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+          status: pass
+        - cmd: "Verify every declared sourceSha256 and qaSha256 against exact bytes"
+          status: pass
+        - cmd: "Verify sourceCommit equals bf4b27f4f0212cff5ade9f34bbb899953828bb91"
+          status: pass
+        - cmd: "Verify product and QA tracked worktrees are clean and private QA paths remain ignored"
+          status: pass
+      summary: "Pinned the T004-approved product build bf4b27f4f0212cff5ade9f34bbb899953828bb91 into the dedicated QA repository. Synchronized QA worker runbook 1.5 and the route-aware channel matrix, verified every declared source and QA SHA-256, confirmed .social-metadata, notes, receipts, and screenshots remain ignored, and committed only the three approved QA files as ad8d0cdf53148f004f8ffa229534cefd9d145d4f."
   - id: T006
     type: pm
     assignee: PM
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Obtain fresh one-time authorization and supervise the exact Instagram→Facebook→LinkedIn autocomplete-only Chrome replay."
     inputs:
@@ -471,8 +486,11 @@ tasks:
     receipt: null
 
 checks:
-  dirty_fingerprint: "new GoalBuddy control files only"
+  dirty_fingerprint: "T005 receipt and board transition only"
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: pass
+    task: T005
+    commands:
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "QA source and adapted-file SHA-256 verification"
+      - "git diff --check in product and QA repositories"
