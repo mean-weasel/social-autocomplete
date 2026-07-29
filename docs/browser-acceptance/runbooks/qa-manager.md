@@ -1,6 +1,6 @@
 # QA manager runbook
 
-Runbook version: `1.4`
+Runbook version: `1.5`
 
 Use this from a Codex manager task rooted in the Social Metadata Research
 development repository. The manager interviews the user, writes or edits a

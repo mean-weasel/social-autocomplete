@@ -1,6 +1,6 @@
 # Local Codex QA worker runbook
 
-Runbook version: `1.5`
+Runbook version: `1.6`
 
 Use this runbook from a fresh Codex task rooted in the dedicated QA repository.
 It tests an installed Social Metadata Research plugin without modifying product

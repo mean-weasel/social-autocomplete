@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T007
+active_task: T008
 
 tasks:
   - id: T001
@@ -486,7 +486,7 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Make each channel action reacquire and verify the selected Chrome binding before persisting browser_action_started, with deterministic tests for cross-turn binding loss."
     inputs:
@@ -529,6 +529,38 @@ tasks:
       - "Fixture or protocol tests proving binding loss cannot create ambiguous_browser_action"
       - "Focused tests and release verification pass"
       - "New exact source commit ready for QA pinning"
+    receipt:
+      result: done
+      source_commit: "484d340"
+      artifact: "docs/goals/social-metadata-browser-adapter-polish/notes/T007-receipt.json"
+      verification:
+        - "33 focused browser-acceptance tests passed"
+        - "Full release verifier passed: offline, clean install, and subprocess"
+        - "git diff --check passed"
+      summary: "Action start now requires a current-turn binding proof; host continuations invalidate prior proofs, and pre-start binding loss remains retry-safe."
+  - id: T008
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    objective: "Pin the T007-approved lifecycle build into the dedicated QA repository and prepare a new exact-revision live replay."
+    inputs:
+      - "T007 commit 484d340"
+      - "Dedicated QA repository /Users/neonwatty/Desktop/social-autocomplete-qa"
+      - "Existing immutable-source pin pattern"
+    constraints:
+      - "Create a new ignored immutable product worktree at exactly 484d340."
+      - "Synchronize only QA-local files whose source contracts changed."
+      - "Update every declared SHA-256 and verify source/QA adaptations."
+      - "Keep private QA artifacts ignored and uncommitted."
+      - "Do not access a browser or approve a scenario."
+      - "Do not install from a movable product checkout."
+    expected_output:
+      - "Clean immutable source checkout at exactly 484d340"
+      - "QA source.json references that checkout and commit"
+      - "Worker runbook reflects browser_binding_verified lifecycle"
+      - "Tracked QA pin commit with all hashes verified"
+      - "Scenario reset to unapproved pending fresh authorization"
     receipt: null
   - id: T999
     type: judge
@@ -542,6 +574,7 @@ tasks:
       - "Focused and release verification"
       - "Sanitized T006 receipt"
       - "T007 lifecycle-fix receipt and subsequent exact-pinned live replay"
+      - "T008 exact QA pin receipt"
     constraints:
       - "Read-only."
       - "Reject completion if any selected channel still has a locally fixable stale generic landmark failure."
