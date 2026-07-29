@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-qa-worker-recovery"
   kind: recovery
   tranche: "Design, implement, and prove single-owner recovery for manager-driven QA worker-host failures."
-  status: active
+  status: done
   oracle:
     signal: "Deterministic recovery tests and a supervised replay prove one manager-owned continuation, exact protocol state preservation, no duplicate browser work, and bounded truthful termination."
     cadence: "after the recovery Worker package and at final audit"
@@ -65,7 +65,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-qa-worker-recovery/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-qa-worker-recovery"
 
-active_task: T005
+active_task: null
 
 tasks:
   - id: T001
@@ -365,7 +365,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "After the approved product commit exists, synchronize and pin the dedicated QA worker materials to that exact recovery build."
     inputs:
@@ -395,7 +395,25 @@ tasks:
       - "A required QA edit falls outside allowed_files."
       - "Any private artifact would be staged."
       - "Hash verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+      commands:
+        - cmd: "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+          status: pass
+        - cmd: "Verify 19 declared sourceSha256 and qaSha256 values against exact bytes"
+          status: pass
+        - cmd: "Verify sourceCommit equals 8daf2452cfebd8bc089049e034924cdd8e82527b"
+          status: pass
+        - cmd: "Verify tracked product and QA worktrees are clean after commits and private QA paths remain ignored"
+          status: pass
+      summary: "Synchronized the QA-local worker runbook to v1.4 while preserving QA-relative link adaptations. source.json now pins reviewed product commit 8daf2452, includes the new durable run-state schema, and matches all 19 declared source/QA hashes. QA commit b5a83fc contains only the two authorized tracked files; private notes, receipts, screenshots, scenarios, and run state remain ignored."
+      deviations: []
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
   - id: T007
     type: worker
     assignee: Worker
@@ -510,7 +528,7 @@ tasks:
   - id: T006
     type: pm
     assignee: PM
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Obtain fresh one-time authorization and supervise a clean Instagram→Facebook→LinkedIn replay through terminal completion using the manager-owned recovery contract."
     inputs:
@@ -532,11 +550,84 @@ tasks:
       - "Instagram, Facebook, LinkedIn selected-only outcomes"
       - "no omitted or duplicate channel/browser action"
       - "run_complete or truthful bounded run_stopped"
-    receipt: null
+    receipt:
+      result: done
+      run_id: "qa_20260729T191755Z"
+      disposition: pass_with_findings
+      summary: "Fresh one-time Chrome authorization drove one bootstrap handoff and one manager-created post-install execution task through terminal completion. The exclusive ordered subset [instagram, facebook, linkedin] completed exactly once with three truthful non-terminal ui_change outcomes and no fabricated autocomplete recommendations. No recovery continuation was needed, no omitted channel was touched, and terminal transition consumed authorization."
+      source:
+        product_commit: "8daf2452cfebd8bc089049e034924cdd8e82527b"
+        qa_commit: "b5a83fc0f7452b6487352464fa785e48a717d7e2"
+        scenario_id: "chrome_instagram_facebook_linkedin_autocomplete"
+        approved_scenario_sha256: "e06e01ec0a612278f7bcbbced2e5ac0814d2996b6d98e1a0c43f2307047ac0a0"
+        oracle_sha256: "12f60d111ee3ac00bae102f5cecf25069c0a5af369cc08a8b2f69eaca1ac8cfa"
+        protocol_sha256: "31a1aebdbf0fa489d7c325374448ddffec4de33ed0e2214c8568ad24367f9f40"
+      task_history:
+        - task_id: "019faf51-0c80-7b52-95f7-c91be81eafa3"
+          purpose: bootstrap
+          status: terminal
+          reason: handoff_complete
+        - task_id: "019faf55-f23a-7043-ba42-53d37b5994d0"
+          purpose: post_install_execution
+          status: terminal
+          reason: run_complete
+      coordination:
+        manager_only_task_creation: true
+        continuation_count: 1
+        post_install_continuations: 1
+        host_recovery_attempts: 0
+        simultaneous_active_tasks_observed: false
+        duplicate_task_identity_observed: false
+      protocol:
+        accepted_request_sequences: [1, 2, 3, 4, 6, 8]
+        emitted_result_sequences: [5, 7, 9]
+        completed_channels: [instagram, facebook, linkedin]
+        omitted_channels_observed: false
+        duplicate_channels_observed: false
+        duplicate_browser_actions_observed: false
+        pending_at_terminal: false
+      channel_outcomes:
+        instagram:
+          status: ui_change
+          route_class: instagram_search
+          expected_landmark: instagram_native_search_entry
+          observed_landmark: instagram_authenticated_navigation
+          outcome_hash: "66e3e9554dfab5938c6a00dacfb7caa56dffa86c01921f6c80f36767a671b845"
+        facebook:
+          status: ui_change
+          route_class: facebook_search
+          expected_landmark: facebook_native_search_entry
+          observed_landmark: facebook_search_unavailable
+          outcome_hash: "bbb51a76bf229052575e71ae04a631132a4f6248efc73d005604b6401023a626"
+        linkedin:
+          status: ui_change
+          route_class: linkedin_authenticated_feed
+          expected_landmark: linkedin_native_search_entry
+          observed_landmark: linkedin_authenticated_feed_navigation
+          outcome_hash: "1b107d2109bb71a3f4f9aab1e4cf690fe0a58fc9724a9ceca99b1da9e407f0ad"
+      authorization:
+        one_time: true
+        consumed_at_terminal: true
+        browser_access_authorized_after_terminal: false
+        scenario_returned_to_unapproved: true
+      evidence:
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260729T191755Z.json"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_20260729T191755Z.md"
+        - ".social-metadata/qa/manager-runs/qa_20260729T191755Z-state.json"
+      commands:
+        - cmd: "node scripts/browser-acceptance/qa-recovery.mjs check --state .social-metadata/qa/manager-runs/qa_20260729T191755Z-state.json"
+          status: pass
+        - cmd: "sha256sum /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260729T191755Z.json"
+          status: pass
+          output: "106ac3f519e7895d2ac1b92050fd653528c10f58e3163de16dffa2b21269c7b3"
+        - cmd: "npm run qa:scenario:validate -- --scenario .social-metadata/qa/scenarios/chrome-instagram-facebook-linkedin-autocomplete.yaml --oracle docs/browser-acceptance/oracles/chrome-authenticated-research.yaml"
+          status: pass
+      remaining_findings:
+        - "Instagram, Facebook, and LinkedIn native search-entry adapters need assisted UI review before live autocomplete evidence can be collected."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Audit whether deterministic recovery proof, release verification, exact QA pinning, and the supervised replay satisfy the full recovery outcome."
     inputs:
@@ -555,11 +646,39 @@ tasks:
       - "full_outcome_complete: true | false"
       - "requirement-to-evidence mapping"
       - "missing evidence and exact next task if incomplete"
-    receipt: null
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      rationale: "Fresh audit satisfies the full recovery oracle. Sixteen deterministic tests cover every response/action/result and continuation-creation failure window, enforce manager-only creation, one recovery, fail-closed ambiguity, terminal idempotency, and consumed run-bound authorization. Release verification passes. QA commit b5a83fc pins product commit 8daf245 with all 19 declared hashes verified. The live durable state and sanitized receipt preserve run/browser/order/hashes, record each selected channel exactly once, no omitted or duplicate action, no live continuation, and terminal authorization consumption. All three ui_change outcomes are truthful and explicitly allowed by the oracle and scenario."
+      evidence:
+        - "Manager ownership and creating-lease crash window: qa-recovery reducer plus cases 3-4 and 13; only manager transitions reserve/create, and unresolved creating stops as continuation_creation_ambiguous."
+        - "Exact one-recovery bound: QA_RECOVERY_RETRY_LIMIT=1 and cases 13-14 prove no retry after ambiguous creation and one idempotent worker_host_unavailable stop after a second host failure."
+        - "No replay: cases 5-12 cover request, response, action, and result boundaries through completed-channel advancement."
+        - "Immutable identity and one-time authorization: case 1 plus reducer invariants preserve run/browser/channels/hashes and bind authorization to runId."
+        - "Terminal idempotency: cases 14-16 require every result emitted and leave no active task, live continuation, pending checkpoint, or reusable authorization."
+        - "Fresh verification: 16/16 recovery tests, 24/24 QA configuration tests, and full release verification passed."
+        - "Exact pin: product 8daf2452cfebd8bc089049e034924cdd8e82527b; QA b5a83fc0f7452b6487352464fa785e48a717d7e2; all 19 declared hashes match."
+        - "Live replay qa_20260729T191755Z records channel_begin 4/6/8 and channel results 5/7/9 for Instagram, Facebook, LinkedIn exactly once in order, with no omitted channel or duplicate action."
+        - "The independent Chrome oracle permits ui_change for all three selected channels and the approved scenario required record_and_continue, so three truthful UI changes and zero recommendations are a valid pass_with_findings outcome."
+      missing_evidence: []
+      required_board_updates: []
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
 
 checks:
-  dirty_fingerprint: "new GoalBuddy control files only"
+  dirty_fingerprint: "GoalBuddy state and generated local board only; product build remains exact commit 8daf2452cfebd8bc089049e034924cdd8e82527b"
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: pass
+    task: T999
+    commands:
+      - "npm run test:qa-recovery: pass, 16/16"
+      - "npm run test:qa-config: pass, 24/24"
+      - "npm run verify:release -- --allow-missing-live-receipts: pass"
+      - "git diff --check: pass"
+      - "qa-recovery check for qa_20260729T191755Z: pass, terminal run_complete"
+      - "QA source pin verification: 19/19 hashes match"
+      - "QA tracked worktree: clean at b5a83fc0f7452b6487352464fa785e48a717d7e2"
+      - "Product implementation: exact 8daf2452cfebd8bc089049e034924cdd8e82527b"
+      - "Private scenario post-run validation: pass, unapproved and browserAccessAuthorized false"
