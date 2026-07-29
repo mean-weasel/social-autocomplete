@@ -1,0 +1,262 @@
+version: 2
+
+goal:
+  title: "Social Metadata QA Worker Recovery"
+  slug: "social-metadata-qa-worker-recovery"
+  kind: recovery
+  tranche: "Design, implement, and prove single-owner recovery for manager-driven QA worker-host failures."
+  status: active
+  oracle:
+    signal: "Deterministic recovery tests and a supervised replay prove one manager-owned continuation, exact protocol state preservation, no duplicate browser work, and bounded truthful termination."
+    cadence: "after the recovery Worker package and at final audit"
+    final_proof: "Failure injection before and after channel_begin produces at most one continuation, preserves runId and sequence, never repeats completed channels, never adds omitted channels, and either completes the saved three-channel run or stops truthfully at the retry bound."
+  intake:
+    original_request: "Harden worker-host recovery, then rerun the saved three-channel QA scenario."
+    interpreted_outcome: "Manager-driven QA survives worker-host failure safely and deterministically without duplicate continuation or browser work."
+    input_shape: recovery
+    audience: "Codex QA users and social-metadata plugin maintainers"
+    authority: approved
+    proof_type: test
+    completion_proof: "Automated failure-injection coverage plus one supervised selected-only replay."
+    likely_misfire: "Adding retries that allow both manager and worker to spawn continuations, replay protocol answers, repeat browser actions, or silently exceed the approved run."
+    blind_spots_considered:
+      - "Failure before versus after a protocol response is delivered"
+      - "Manager versus worker recovery ownership"
+      - "Durable sequence, cursor, channel, and completed-work checkpoints"
+      - "Retry exhaustion and truthful run_stopped"
+      - "One-time browser authorization and same-run continuation boundaries"
+    existing_plan_facts:
+      - "Only the manager should own recovery task creation."
+      - "Recovery must preserve the same runId, sequence, browser, channel order, and approved scenario."
+      - "At most one continuation task may be active."
+      - "Completed channels and browser actions must never repeat."
+      - "Retries must be bounded and visibly terminal."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/social-metadata-qa-worker-recovery/"
+    command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-qa-worker-recovery"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: low
+    objective: "Map the current manager/worker recovery path and the exact duplicate-continuation failure observed in qa_20260729T162038Z."
+    inputs:
+      - "Completed channel-subset goal receipts"
+      - "QA manager and worker runbooks"
+      - "Manager/worker protocol"
+      - "Existing QA coordination tests"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Do not expose private browser or account data."
+    expected_output:
+      - "Recovery ownership map"
+      - "Failure-state transition map"
+      - "Exact implementation files and tests"
+      - "Risks and stop conditions"
+    receipt: null
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Choose the single-owner recovery contract, durable checkpoint model, retry bound, and largest safe implementation package."
+    inputs:
+      - "T001 receipt"
+      - "Completed qa_20260729T162038Z manager/worker evidence"
+      - "Current QA manager/worker protocol and runbooks"
+      - "Existing coordination and prompt-contract tests"
+    constraints:
+      - "Read-only."
+      - "Do not implement."
+      - "The manager must be the only continuation-task creator."
+      - "Preserve same-run authorization without making approval reusable."
+      - "Reject any design that cannot distinguish delivered, accepted, persisted, and acted-on protocol state."
+    expected_output:
+      - "approved recovery state machine"
+      - "exact retry bound and terminal behavior"
+      - "durable idempotency/checkpoint fields"
+      - "complete Worker allowed_files"
+      - "focused and release verification commands"
+      - "adversarial failure windows"
+    receipt: null
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the Judge-approved manager-owned recovery state machine, durable checkpoints, bounded retry behavior, protocol/runbook changes, and deterministic failure-injection coverage as one coherent slice."
+    inputs:
+      - "T001 evidence map"
+      - "T002 recovery contract"
+      - "Current manager/worker QA package"
+    constraints:
+      - "Only the manager creates continuation tasks."
+      - "At most one live continuation identity may exist per run."
+      - "Preserve runId, scenario/oracle hashes, browser, ordered channels, sequence, completed channels, and accepted-action checkpoints."
+      - "Never repeat a completed channel or accepted browser action."
+      - "Retry exhaustion emits exactly one truthful run_stopped."
+      - "Do not broaden browser access, channel availability, credential authority, publishing, or scraping."
+      - "Keep the stable CLI/JSON research contract unchanged."
+    expected_output:
+      - "one manager-owned recovery implementation path"
+      - "durable idempotent recovery state"
+      - "failure-injection tests at every Judge-selected boundary"
+      - "updated manager/worker protocol and QA prompts/runbooks"
+      - "focused and release verification receipt"
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "T002 does not provide exact allowed_files and verification."
+      - "A required change falls outside the Judge-approved scope."
+      - "The design permits multiple continuation creators or duplicate browser work."
+      - "Recovery would widen or reuse browser authorization."
+      - "Verification fails twice for reasons introduced by this task."
+    receipt: null
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Adversarially review the recovery slice and try to produce duplicate continuation, repeated browser work, stale-sequence acceptance, or unbounded retry."
+    inputs:
+      - "T002 recovery contract"
+      - "T003 diff and receipt"
+      - "Focused failure-injection output"
+      - "Full release verification"
+    constraints:
+      - "Read-only."
+      - "Do not implement."
+      - "Test failure before delivery, after delivery before persistence, after persistence before action, after action before result, and during continuation creation."
+      - "Reject wording-only success."
+    expected_output:
+      - "approved_for_pin | needs_correction"
+      - "evidence for single recovery owner"
+      - "evidence for no duplicate browser action"
+      - "evidence for bounded terminal behavior"
+      - "exact correction package if rejected"
+    receipt: null
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "After the approved product commit exists, synchronize and pin the dedicated QA worker materials to that exact recovery build."
+    inputs:
+      - "T004 approval"
+      - "Exact reviewed product commit"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+    constraints:
+      - "Edit only Judge-approved QA worker files and source manifest entries."
+      - "Do not commit private QA artifacts."
+      - "Every source and QA hash must match exact bytes."
+      - "Preserve product-owned manager configuration and QA-owned worker execution."
+    expected_output:
+      - "exact QA source pin"
+      - "synchronized worker materials"
+      - "clean committed QA tracked worktree"
+      - "hash-verification receipt"
+    allowed_files:
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+    verify:
+      - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+      - "Verify every sourceSha256 and qaSha256."
+      - "Verify sourceCommit equals the exact reviewed product commit."
+      - "Verify both tracked worktrees are clean after their commits and private QA paths remain ignored."
+    stop_if:
+      - "The product commit is not the exact T004-reviewed build."
+      - "A required QA edit falls outside allowed_files."
+      - "Any private artifact would be staged."
+      - "Hash verification fails twice."
+    receipt: null
+  - id: T006
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: high
+    objective: "Obtain fresh one-time authorization and supervise a clean Instagram→Facebook→LinkedIn replay through terminal completion using the manager-owned recovery contract."
+    inputs:
+      - "T005 exact QA pin"
+      - "Saved synthetic three-channel scenario"
+      - "Dedicated QA repository"
+      - "Current Codex task coordination tools"
+    constraints:
+      - "Ask for fresh explicit browser authorization immediately before dispatch."
+      - "Create one initial worker and let only the manager create any continuation."
+      - "Never allow two active continuation identities."
+      - "Preserve the same runId and exact channel order through recovery."
+      - "Do not repeat a completed channel or accepted browser action."
+      - "Stop visibly on authentication, challenge, unsafe request, retry exhaustion, or protocol contradiction."
+      - "Consume one-time authorization after the terminal result."
+    expected_output:
+      - "sanitized protocol transcript"
+      - "exact worker and continuation identity history"
+      - "Instagram, Facebook, LinkedIn selected-only outcomes"
+      - "no omitted or duplicate channel/browser action"
+      - "run_complete or truthful bounded run_stopped"
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether deterministic recovery proof, release verification, exact QA pinning, and the supervised replay satisfy the full recovery outcome."
+    inputs:
+      - "All done receipts"
+      - "Final product and QA commits"
+      - "Failure-injection results"
+      - "Sanitized T006 receipt"
+    constraints:
+      - "Read-only."
+      - "Reject completion if recovery ownership is ambiguous."
+      - "Reject completion if any failure window can create duplicate continuation or browser work."
+      - "Reject completion if retries are unbounded or authorization becomes reusable."
+      - "Treat truthful external interruptions as outcomes only when deterministic recovery invariants still pass."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "requirement-to-evidence mapping"
+      - "missing evidence and exact next task if incomplete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "new GoalBuddy control files only"
+  last_verification:
+    result: unknown
+    task: null
+    commands: []
