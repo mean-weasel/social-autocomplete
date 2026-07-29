@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T009
+active_task: T010
 
 tasks:
   - id: T001
@@ -595,7 +595,7 @@ tasks:
   - id: T009
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Supervise a fresh exact-pinned Instagram→Facebook→LinkedIn Chrome replay with per-channel browser-binding verification."
     inputs:
@@ -615,6 +615,51 @@ tasks:
       - "No cross-turn browser-binding ambiguity"
       - "Bounded autocomplete evidence where the native surfaces support it"
       - "One truthful run_complete or bounded run_stopped"
+    receipt:
+      result: done
+      run_id: "qa_20260729T230840Z"
+      disposition: "run_stopped"
+      reason: "ambiguous_browser_action"
+      full_outcome_complete: false
+      blocking_product_finding: false
+      source_commit: "ef5767daa9c3dd131a2d849421151b88311eb62a"
+      summary: "The exact-pinned replay proved current-turn Chrome binding verification for Instagram, then stopped before any accepted action or evidence result. The worker emitted browser_action_started without the reducer-required actionHash and began the local operation before manager acceptance; the operation timed out, so replay was correctly forbidden. Facebook and LinkedIn were not started. The one-time authorization was consumed and the scenario reset to unapproved."
+      evidence:
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260729T230840Z.json"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_20260729T230840Z.md"
+        - ".social-metadata/qa/manager-runs/qa_20260729T230840Z-state.json"
+      facts:
+        - "The exact source, QA pin, scenario, oracle, protocol, cache, and pre-browser prompt checks passed."
+        - "Run isolation and exclusive Instagram→Facebook→LinkedIn ordering passed."
+        - "Instagram browser_binding_verified was durably accepted before the action-start envelope."
+        - "The action-start envelope omitted actionHash and was rejected by the manager reducer."
+        - "The worker had already begun the Chrome operation, which then timed out, making the action ambiguous and non-replayable."
+        - "No channel_complete, channel-native evidence, or recommendation was claimed."
+        - "Product and tracked QA worktrees remained clean; private artifacts stayed ignored and uncommitted."
+      next_task: T010
+  - id: T010
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Choose the smallest fail-closed protocol and worker-runbook change that guarantees a valid hashed action-start checkpoint is durably accepted before any Chrome operation begins, and that makes bounded browser-operation timeouts explicit."
+    inputs:
+      - "T009 stopped-run receipt"
+      - "qa-manager-worker/v1 protocol and reducer"
+      - "QA manager/worker prompts and runbooks"
+      - "Current browser-control skill constraints"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Do not weaken no-replay, privacy, one-time authorization, or manager-owned recovery."
+      - "Prefer an additive deterministic checkpoint over prose-only coordination."
+      - "Do not change the stable social metadata CLI/JSON contract."
+    expected_output:
+      - "Approved checkpoint handshake and exact event fields"
+      - "Bounded timeout contract"
+      - "One coherent Worker package with allowed_files"
+      - "Focused and release verification commands"
+      - "Exact repin and fresh-run prerequisites"
     receipt: null
   - id: T999
     type: judge
