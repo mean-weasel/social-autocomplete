@@ -36,7 +36,8 @@
     "example:subprocess": "npm run build --silent && node examples/subprocess-consumer/run.mjs",
     "test:diagnostics": "npm run build --silent && node --test dist/tests/browser-acceptance/diagnostics.test.js",
     "test:browser-harness": "npm run build --silent && node --test dist/tests/browser-acceptance/harness.test.js tests/browser-acceptance/coverage.test.mjs",
-    "test:qa-config": "node --test tests/browser-acceptance/qa-config.test.mjs",
+    "test:qa-config": "node --test tests/browser-acceptance/qa-config.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs",
+    "qa:manager:prompt": "node scripts/browser-acceptance/render-qa-manager-prompt.mjs",
     "qa:scenario:validate": "node scripts/browser-acceptance/validate-qa-config.mjs",
     "verify:release": "node scripts/browser-acceptance/verify-release.mjs"
   },

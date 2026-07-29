@@ -13,6 +13,11 @@ The manager does not operate the browser. The worker follows the
 [manager/worker protocol](manager-worker-protocol.md), and the
 [channel matrix](channel-matrix.md) completely before beginning.
 
+A fresh manager task may be bootstrapped from the versioned
+[launch-prompt template](templates/qa-manager-launch-prompt.md). Render it with
+`npm run qa:manager:prompt -- --qa-repository <absolute-path>` so the prompt
+records the current product path, QA path, mode, and expected product commit.
+
 ## Modes
 
 - `configure`: interview, normalize, validate, show, and approve a scenario.

@@ -105,6 +105,8 @@ Use these version-controlled materials for repeatable local Codex QA:
 - [QA run-note template](templates/qa-run-note.md) — human-readable run record.
 - [QA receipt template](templates/qa-receipt.v1.json) — sanitized
   machine-readable handoff.
+- [QA manager launch prompt](templates/qa-manager-launch-prompt.md) — versioned
+  bootstrap template for starting a fresh product-repository manager task.
 - [Scenario schema](schemas/qa-scenario.schema.json) and
   [oracle schema](schemas/qa-oracle.schema.json) — machine-readable contracts
   for interview output and independent expectations.
@@ -123,6 +125,17 @@ Approved private scenarios live under
 `.social-metadata/qa/scenarios/` in this repository and are ignored by Git.
 Worker run notes, receipts, screenshots, and browser run state live in the QA
 repository and remain ignored by Git.
+
+Render the manager prompt with current paths and product commit:
+
+```sh
+npm run qa:manager:prompt -- \
+  --qa-repository /Users/neonwatty/Desktop/social-autocomplete-qa \
+  --mode configure_and_run
+```
+
+The renderer writes the completed prompt to stdout. Paste it into a fresh Codex
+task rooted in this development repository.
 
 Validate a scenario and oracle before dispatch:
 
