@@ -1,0 +1,262 @@
+version: 2
+
+goal:
+  title: "Social Metadata QA Channel Subsets"
+  slug: "social-metadata-qa-channel-subsets"
+  kind: existing_plan
+  tranche: "Implement and prove capability-oracle support for any valid ordered channel subset."
+  status: active
+  oracle:
+    signal: "Exhaustive ordered-subset tests, clean release verification, exact QA source pinning, and selected-only manager/worker replay proof."
+    cadence: "after the product Worker slice, after QA pinning, and at final audit"
+    final_proof: "All 13,699 Chrome subsets and 15 in-app subsets pass compatibility coverage; release verification passes; the QA repository pins the exact product commit; and the saved three-channel scenario dispatches only Instagram, Facebook, and LinkedIn in order."
+  intake:
+    original_request: "Organize the approved channel-subset oracle fix as a GoalBuddy Prep board."
+    interpreted_outcome: "Allow every fresh QA run to use any valid nonempty ordered channel subset without oracle-driven expansion."
+    input_shape: existing_plan
+    audience: "Codex QA users and social-metadata plugin maintainers"
+    authority: approved
+    proof_type: test
+    completion_proof: "The full goal oracle passes and final audit records full_outcome_complete: true."
+    likely_misfire: "Relaxing equality while still sorting, inheriting, dispatching, or recording channels the user did not select."
+    blind_spots_considered:
+      - "Browser-specific channel availability"
+      - "Oracle migration and compatibility selection"
+      - "Duplicate or empty selections"
+      - "Scenario order versus oracle order"
+      - "QA source commit and checksum pinning"
+      - "Live authentication and UI-change interruptions"
+    existing_plan_facts:
+      - "Chrome supports any ordered subset of seven channels."
+      - "The in-app browser supports any ordered subset of TikTok, YouTube, and Pinterest."
+      - "Each selected channel appears at most once."
+      - "The scenario is the sole authority for selected channel order."
+      - "The oracle describes browser capabilities and allowed outcomes."
+      - "The saved Instagram, Facebook, LinkedIn scenario must be reusable."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/social-metadata-qa-channel-subsets/"
+    command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-qa-channel-subsets"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Validate the existing capability-oracle plan, migration boundary, exhaustive proof strategy, Worker write scope, and replay acceptance criteria before implementation."
+    inputs:
+      - "docs/goals/social-metadata-qa-channel-subsets/goal.md"
+      - "The current qa-oracle/v1 contract and validator"
+      - "The existing ignored Instagram, Facebook, LinkedIn QA scenario"
+    constraints:
+      - "Read-only."
+      - "Do not implement."
+      - "Preserve arbitrary nonempty ordered subsets and browser-specific availability."
+      - "Reject any design that dynamically writes an oracle from user answers."
+    expected_output:
+      - "approved | needs_board_amendment"
+      - "Final oracle migration decision"
+      - "Exact product Worker objective and allowed_files"
+      - "Focused and release verification commands"
+      - "Adversarial failure modes for selected-only dispatch"
+    receipt: null
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the Judge-approved capability-oracle migration, subset-aware validation, exhaustive ordered-subset tests, and aligned manager/worker documentation as one coherent product-contract slice."
+    inputs:
+      - "T001 receipt"
+      - "docs/goals/social-metadata-qa-channel-subsets/goal.md"
+      - "The current qa-oracle/v1 schema, validator, canonical oracle, manager starter, manager runbook, worker runbook, protocol, and focused QA tests"
+    constraints:
+      - "A scenario may select any nonempty ordered subset available in its chosen browser."
+      - "Each selected channel appears at most once."
+      - "Scenario order is authoritative and must never be sorted by oracle order."
+      - "Authentication coverage remains exact for selected channels."
+      - "The oracle may advertise additional available channels but may not inject them into the run."
+      - "Use canonical browser-capability oracles; never generate or edit an oracle from questionnaire answers."
+      - "Chrome supports all seven channels; in_app supports only TikTok, YouTube, and Pinterest public surfaces."
+      - "Preserve Pinterest hashtag not_applicable, stable CLI/JSON behavior, and fail-closed incompatibility errors."
+    expected_output:
+      - "Versioned capability-oracle schema and canonical Chrome/in-app oracle fixtures"
+      - "Subset-aware compatibility validation with specific visible error codes"
+      - "Exhaustive proof for 13,699 Chrome and 15 in-app nonempty ordered subsets"
+      - "Negative tests for empty, duplicate, unsupported-browser/channel, missing-outcome, and authentication-coverage cases"
+      - "Manager and worker instructions that preserve selected-only order and never force all channels"
+      - "Focused and release verification receipt"
+    allowed_files:
+      - "scripts/browser-acceptance/validate-qa-config.mjs"
+      - "docs/browser-acceptance/schemas/qa-oracle.schema.json"
+      - "docs/browser-acceptance/oracles/chrome-all-channels-autocomplete.yaml"
+      - "docs/browser-acceptance/oracles/chrome-authenticated-research.yaml"
+      - "docs/browser-acceptance/oracles/in-app-public-research.yaml"
+      - "docs/browser-acceptance/runbooks/qa-manager.md"
+      - "docs/browser-acceptance/runbooks/qa-worker.md"
+      - "docs/browser-acceptance/prompts/qa-manager-starter.md"
+      - "docs/browser-acceptance/protocol/manager-worker.md"
+      - "docs/browser-acceptance/README.md"
+      - "tests/browser-acceptance/qa-config.test.mjs"
+      - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+    verify:
+      - "npm run test:qa-config"
+      - "npm run typecheck"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The final oracle shape or migration direction differs materially from the T001 Judge decision."
+      - "A required change falls outside allowed_files."
+      - "Compatibility would require broadening in_app browser access or weakening authentication safety."
+      - "Any selected-channel order is sorted, inherited, or expanded."
+      - "Verification fails twice for reasons introduced by this task."
+    receipt: null
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Adversarially review the completed product slice against the full subset oracle and decide whether it is safe to commit and pin for live QA."
+    inputs:
+      - "T001 receipt"
+      - "T002 receipt"
+      - "T002 diff"
+      - "Focused and release verification output"
+    constraints:
+      - "Read-only."
+      - "Do not implement."
+      - "Try to disprove arbitrary subset acceptance, order preservation, browser compatibility, and omitted-channel exclusion."
+      - "Reject wording-only success or tests that exercise only the all-channel example."
+    expected_output:
+      - "approved_for_pin | needs_correction"
+      - "full_outcome_complete: false"
+      - "Evidence that exhaustive counts and negative cases are real"
+      - "Evidence that manager and worker cannot infer extra oracle channels"
+      - "Exact correction Worker package if rejected"
+    receipt: null
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "After PM commits the Judge-approved product slice, synchronize the dedicated QA worker materials and pin their source manifest to that exact product commit and checksums."
+    inputs:
+      - "T003 approval receipt"
+      - "Exact committed product HEAD"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+      - "Changed canonical worker materials from the product repository"
+    constraints:
+      - "Do not begin until the product worktree is clean at the exact reviewed commit."
+      - "Preserve manager configuration ownership in the product repository and worker execution ownership in the QA repository."
+      - "Adapt only repository-relative links required by the worker-only QA workspace."
+      - "Do not commit private QA notes, receipts, screenshots, or .social-metadata state."
+      - "Every sourceSha256 and qaSha256 must match the exact file bytes."
+    expected_output:
+      - "QA-local worker materials synchronized when required"
+      - "runbooks/source.json pinned to the exact product commit"
+      - "Hash-verification receipt"
+      - "Clean committed QA repository with private artifacts still ignored"
+    allowed_files:
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+    verify:
+      - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+      - "Verify every workerFiles and managerSourceOnlyFiles sourceSha256 against the pinned product tree and every workerFiles qaSha256 against the QA-local copy."
+      - "Verify /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json sourceCommit equals product git rev-parse HEAD."
+      - "Verify both tracked worktrees are clean after their commits and private QA paths remain ignored."
+    stop_if:
+      - "The product worktree is dirty or HEAD differs from the T003-reviewed commit."
+      - "A changed canonical worker file cannot be represented by the existing adaptation rules."
+      - "A required QA edit falls outside allowed_files."
+      - "Any private QA artifact would be staged."
+      - "Hash verification fails twice."
+    receipt: null
+  - id: T005
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: high
+    objective: "Resume the saved three-channel QA workflow, obtain final browser authorization, dispatch a fresh worker, and supervise selected-only execution through a terminal protocol outcome."
+    inputs:
+      - "T004 receipt"
+      - "The existing ignored Instagram, Facebook, LinkedIn scenario and saved manager configuration"
+      - "The existing QA manager task, or a fresh manager task if its loaded source is stale"
+      - "The pinned QA repository"
+    constraints:
+      - "Reuse questionnaire answers but do not infer final browser authorization."
+      - "Show the normalized sanitized scenario and ask for explicit approval before setting approved or browserAccessAuthorized."
+      - "Resolve the QA Codex project from its configured absolute repository path; do not persist opaque project IDs."
+      - "Create a genuinely fresh worker task after approval."
+      - "Use cursor-based waits; a timeout is a heartbeat, not completion."
+      - "Never request or handle credentials, account identities, tokens, cookies, profile paths, or browser storage."
+      - "Dispatch exactly Instagram, Facebook, and LinkedIn in that order."
+      - "Authentication, challenge, and truthful ui_change outcomes may block research but must not add omitted channels."
+    expected_output:
+      - "Approved scenario checksum and compatible oracle checksum"
+      - "Protocol receipt proving browser selection, exact ordered channels, and plan confirmation"
+      - "Exactly three channel_begin requests unless a prior terminal interruption stops the run"
+      - "No X, TikTok, YouTube, or Pinterest channel action or receipt entry"
+      - "run_complete or truthful run_stopped disposition"
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether capability oracles, exhaustive tests, release verification, exact QA pinning, and selected-only replay evidence satisfy the complete user outcome."
+    inputs:
+      - "All done task receipts"
+      - "Final product and QA commits"
+      - "Last focused and release verification"
+      - "Sanitized T005 manager/worker receipt"
+    constraints:
+      - "Read-only."
+      - "Reject completion if any required Worker or PM task remains queued, active, or unreceipted."
+      - "Reject completion if only representative subsets were tested."
+      - "Reject completion if omitted channels can enter the run through oracle order, defaults, inheritance, or receipt generation."
+      - "Treat truthful authentication or platform ui_change as external outcomes, not subset-contract failure."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Mapping from every original requirement to evidence"
+      - "Missing evidence and exact next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "goal-prep control files only"
+  last_verification:
+    result: unknown
+    task: null
+    commands: []
