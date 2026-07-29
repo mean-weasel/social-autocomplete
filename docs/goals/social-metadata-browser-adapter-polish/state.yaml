@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-browser-adapter-polish"
   kind: specific
   tranche: "Map, implement, and prove current authenticated Chrome search-entry adapters for Instagram, Facebook, and LinkedIn."
-  status: active
+  status: blocked
   oracle:
     signal: "Fresh sanitized Chrome receipts plus fixtures and release verification prove current native search-entry recognition and bounded autocomplete evidence without weakening privacy or evidence rules."
     cadence: "after the implementation package and at final live audit"
@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T008
+active_task: null
 
 tasks:
   - id: T001
@@ -533,6 +533,24 @@ tasks:
       result: done
       source_commit: "484d340"
       artifact: "docs/goals/social-metadata-browser-adapter-polish/notes/T007-receipt.json"
+      changed_files:
+        - "scripts/browser-acceptance/qa-recovery.mjs"
+        - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+        - "docs/browser-acceptance/protocol/manager-worker.md"
+        - "docs/browser-acceptance/runbooks/qa-manager.md"
+        - "docs/browser-acceptance/runbooks/qa-worker.md"
+        - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+        - "skills/social-metadata-research/SKILL.md"
+        - "skills/_shared/browser-research-contract.md"
+        - "tests/browser-acceptance/qa-recovery.test.mjs"
+        - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      commands:
+        - cmd: "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs tests/browser-acceptance/coverage.test.mjs"
+          status: pass
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
       verification:
         - "33 focused browser-acceptance tests passed"
         - "Full release verifier passed: offline, clean install, and subprocess"
@@ -541,15 +559,15 @@ tasks:
   - id: T008
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Pin the T007-approved lifecycle build into the dedicated QA repository and prepare a new exact-revision live replay."
     inputs:
-      - "T007 commit 484d340"
+      - "T007 implementation commit 484d340 and versioned contract commit ef5767d"
       - "Dedicated QA repository /Users/neonwatty/Desktop/social-autocomplete-qa"
       - "Existing immutable-source pin pattern"
     constraints:
-      - "Create a new ignored immutable product worktree at exactly 484d340."
+      - "Create a new ignored immutable product worktree at exactly ef5767daa9c3dd131a2d849421151b88311eb62a."
       - "Synchronize only QA-local files whose source contracts changed."
       - "Update every declared SHA-256 and verify source/QA adaptations."
       - "Keep private QA artifacts ignored and uncommitted."
@@ -561,11 +579,23 @@ tasks:
       - "Worker runbook reflects browser_binding_verified lifecycle"
       - "Tracked QA pin commit with all hashes verified"
       - "Scenario reset to unapproved pending fresh authorization"
-    receipt: null
+    receipt:
+      result: done
+      source_commit: "ef5767daa9c3dd131a2d849421151b88311eb62a"
+      immutable_source: "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-ef5767d"
+      qa_commit: "1e504b2"
+      evidence:
+        - "Immutable source checkout is clean at exactly ef5767daa9c3dd131a2d849421151b88311eb62a."
+        - "QA runbook version 1.6 includes verify_browser_binding and browser_binding_verified."
+        - "Manager runbook version 1.5 is pinned through source.json."
+        - "Every declared sourceSha256 and qaSha256 matches."
+        - "QA tracked worktree contains only the committed pin update; private QA paths remain ignored."
+        - "Local marketplace source points at the immutable ef5767d checkout."
+      summary: "Pinned the lifecycle fix into the dedicated QA repository without browser access. The next run must use a fresh one-time authorization."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: blocked
     reasoning_hint: high
     objective: "Audit whether implementation, exact QA pinning, and fresh live evidence satisfy the browser-adapter polish oracle."
     inputs:
@@ -585,7 +615,13 @@ tasks:
       - "full_outcome_complete: true | false"
       - "Requirement-to-evidence mapping"
       - "Missing evidence and exact next task if incomplete"
-    receipt: null
+    receipt:
+      result: blocked
+      blocked_reason: "The final audit requires a fresh exact-pinned live replay of ef5767daa9c3dd131a2d849421151b88311eb62a. The prior authorization was consumed by run qa_20260729T222110Z."
+      waiting_for_user_approval: true
+      required_reply: "APPROVE QA BROWSER RUN"
+      resume_supported: true
+      summary: "Implementation and QA pinning are complete; browser execution waits for a new one-time release."
 checks:
   dirty_fingerprint: "T005 receipt and board transition only"
   last_verification:
