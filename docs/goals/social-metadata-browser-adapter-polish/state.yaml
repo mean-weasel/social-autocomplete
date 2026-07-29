@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T006
+active_task: T007
 
 tasks:
   - id: T001
@@ -441,7 +441,7 @@ tasks:
   - id: T006
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Obtain fresh one-time authorization and supervise the exact Instagram→Facebook→LinkedIn autocomplete-only Chrome replay."
     inputs:
@@ -461,6 +461,72 @@ tasks:
       - "No omitted or duplicate channel/action"
       - "No fabricated recommendations or popularity claims"
       - "run_complete or truthful bounded run_stopped"
+    receipt:
+      result: done
+      outcome: pass_with_findings
+      run_id: "qa_20260729T222110Z"
+      disposition: "run_stopped"
+      terminal_reason: "ambiguous_browser_action"
+      authorization_consumed: true
+      completed_channels:
+        - instagram
+      remaining_channels:
+        - facebook
+        - linkedin
+      evidence:
+        - "Exact immutable source, marketplace, installed cache HEAD, scenario, oracle, and protocol checks passed."
+        - "Browser, ordered-channel, and plan responses were durably accepted in order."
+        - "Instagram completed truthfully as ui_change / instagram_target_unavailable without query interaction."
+        - "Facebook response was accepted and browser_action_started was persisted."
+        - "The Chrome binding was unavailable in the next Codex turn before a durable outcome existed."
+        - "The manager stopped without retrying the ambiguous action; LinkedIn was not reached."
+        - "No credentials, screenshots, publishing, composer interaction, fabricated evidence, or private browser content were persisted."
+      finding: "The execution worker assumes a Chrome runtime binding survives across Codex turns. It must instead establish and verify the selected binding while channel_begin is accepted but before browser_action_started is persisted."
+      summary: "The exact-pinned live replay reached browser execution and exposed a fail-closed QA orchestration lifecycle defect. The run stopped correctly and supplied a reproducible fix target."
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: "Make each channel action reacquire and verify the selected Chrome binding before persisting browser_action_started, with deterministic tests for cross-turn binding loss."
+    inputs:
+      - "T006 run qa_20260729T222110Z checkpoint and sanitized note"
+      - "Chrome control skill lifecycle"
+      - "QA manager/worker protocol and recovery reducer"
+      - "QA worker prompt and runbooks"
+    constraints:
+      - "Do not weaken the no-repeat rule for started or completed actions."
+      - "Binding setup and availability checks must occur while the action is only authorized."
+      - "A binding failure before started must produce a truthful retry-safe interruption; no browser action may be claimed."
+      - "Keep one-time authorization, channel order, privacy rules, and existing-profile-only requirements unchanged."
+      - "Do not persist tab lists, URLs, page text, DOM, identities, credentials, cookies, tokens, screenshots, or profile paths."
+      - "Do not access a live browser while implementing or testing."
+    allowed_files:
+      - "skills/social-metadata-research/SKILL.md"
+      - "skills/_shared/browser-research-contract.md"
+      - "docs/browser-acceptance/README.md"
+      - "docs/browser-acceptance/protocol/manager-worker.md"
+      - "docs/browser-acceptance/runbooks/qa-manager.md"
+      - "docs/browser-acceptance/runbooks/qa-worker.md"
+      - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+      - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      - "tests/browser-acceptance/qa-recovery.test.mjs"
+      - "tests/browser-acceptance/browser-safety.test.mjs"
+      - "docs/goals/social-metadata-browser-adapter-polish/notes/T007-receipt.json"
+    verify:
+      - "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs tests/browser-acceptance/browser-safety.test.mjs"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The fix would permit retrying an action already persisted as started or completed."
+      - "The host offers no way to establish and check a browser binding before the action-start checkpoint."
+      - "Verification requires live browser access or private browser content."
+    expected_output:
+      - "Explicit per-channel browser-binding lifecycle contract"
+      - "Worker/runbook guidance that reinitializes the Chrome runtime before each action"
+      - "Fixture or protocol tests proving binding loss cannot create ambiguous_browser_action"
+      - "Focused tests and release verification pass"
+      - "New exact source commit ready for QA pinning"
     receipt: null
   - id: T999
     type: judge
@@ -473,6 +539,7 @@ tasks:
       - "Final product and QA commits"
       - "Focused and release verification"
       - "Sanitized T006 receipt"
+      - "T007 lifecycle-fix receipt and subsequent exact-pinned live replay"
     constraints:
       - "Read-only."
       - "Reject completion if any selected channel still has a locally fixable stale generic landmark failure."
