@@ -15,8 +15,9 @@ The manager does not operate the browser. The worker follows the
 
 A fresh manager task may be bootstrapped from the versioned
 [launch-prompt template](templates/qa-manager-launch-prompt.md). Render it with
-`npm run qa:manager:prompt -- --qa-repository <absolute-path>` so the prompt
-records the current product path, QA path, mode, and expected product commit.
+`npm run --silent qa:manager:prompt -- --qa-repository <absolute-path>` so the
+prompt records the current product path, QA path, mode, and expected product
+commit without an npm banner.
 
 ## Modes
 

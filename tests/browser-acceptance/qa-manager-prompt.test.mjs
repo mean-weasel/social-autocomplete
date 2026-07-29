@@ -20,6 +20,15 @@ test("manager launch template has a stable contract and complete placeholders", 
   );
 });
 
+test("documented launch command emits a copy-ready prompt without the npm banner", async () => {
+  const [readme, runbook] = await Promise.all([
+    readFile("docs/browser-acceptance/README.md", "utf8"),
+    readFile("docs/browser-acceptance/qa-manager-runbook.md", "utf8"),
+  ]);
+  assert.match(readme, /npm run --silent qa:manager:prompt --/);
+  assert.match(runbook, /npm run --silent qa:manager:prompt --/);
+});
+
 test("rendered manager prompt resolves ownership, paths, mode, and commit", async () => {
   const rendered = await renderManagerPrompt({
     productRepository: "/example/product",

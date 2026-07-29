@@ -129,13 +129,13 @@ repository and remain ignored by Git.
 Render the manager prompt with current paths and product commit:
 
 ```sh
-npm run qa:manager:prompt -- \
+npm run --silent qa:manager:prompt -- \
   --qa-repository /Users/neonwatty/Desktop/social-autocomplete-qa \
   --mode configure_and_run
 ```
 
-The renderer writes the completed prompt to stdout. Paste it into a fresh Codex
-task rooted in this development repository.
+The silent renderer writes only the completed prompt to stdout. Paste it into
+a fresh Codex task rooted in this development repository.
 
 Validate a scenario and oracle before dispatch:
 
