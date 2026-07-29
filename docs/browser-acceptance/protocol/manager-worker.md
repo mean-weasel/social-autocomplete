@@ -40,6 +40,21 @@ the QA run, and sanitized structural labels. They must not contain creative
 text, suggestions, page text, URLs, browser target metadata, account
 identifiers, DOM, screenshots, credentials, tokens, or storage state.
 
+## Transport and liveness
+
+Protocol envelopes travel through the Codex task-messaging transport. Task
+identities, host IDs, cursors, wait durations, and timeout metadata belong only
+to manager coordination state and must not be copied into a protocol envelope,
+worker receipt, or tracked artifact.
+
+The manager supervises one worker with cursor-based, event-aware waits bounded
+to approximately 60 seconds. A transport wait timeout is a local manager
+heartbeat only. It is not a `QA_EVENT`, does not imply that the worker is
+stalled, and must never be converted into `run_complete` or `run_stopped`.
+After a timeout the manager waits again without sending a status ping. New
+worker output advances the cursor so previously processed envelopes are not
+handled twice.
+
 ## Worker requests
 
 The worker may request only:

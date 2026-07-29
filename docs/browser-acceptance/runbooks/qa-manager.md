@@ -121,6 +121,47 @@ the worker runbook or protocol.
 Record the worker task ID under `.social-metadata/qa/manager-runs/`. Do not
 reuse a task that loaded an older plugin version.
 
+### Codex task coordination
+
+Before dispatch, confirm that the host provides equivalent capabilities for
+project listing, task creation, cursor-based task waiting, and task messaging.
+Current Codex hosts expose these as `list_projects`, `create_thread`,
+`wait_threads`, and `send_message_to_thread`. If any required capability is
+unavailable, stop as `coordination_unavailable`. Do not substitute shell
+polling, a recurring automation, or an operating-system timer.
+
+Resolve the configured QA repository as a Codex project at run time:
+
+1. list the available projects;
+2. match the configured absolute QA repository path;
+3. require exactly one matching project;
+4. create the worker task in that project using the completed dispatch prompt;
+5. record the returned worker task identity and initial cursor in the private
+   manager run record.
+
+Never guess or derive a project ID, and never persist an opaque project ID in
+manager configuration. The absolute repository path is the durable selection;
+the project identity is resolved afresh for each run.
+
+After dispatch, remain active and supervise the worker:
+
+1. wait on the single worker task using its current `afterCursor` and a bounded
+   timeout of approximately 60 seconds;
+2. when new output arrives, process any complete protocol envelope, record the
+   latest cursor, and wait again;
+3. when a valid request arrives, send exactly one `QA_RESPONSE` through the
+   task-messaging capability, then resume waiting;
+4. when the wait times out with no new output, treat it only as a manager
+   heartbeat and wait again from the same cursor;
+5. never send repeated “status?” messages merely because a wait timed out;
+6. do not return a final answer while the worker remains active; and
+7. stop the supervision loop only for `run_complete`, `run_stopped`, a
+   human-action interruption, a protocol violation, or a coordination failure.
+
+Surface authentication, challenge, approval, or other human-action
+interruptions to the user without attempting to resolve them. A wait timeout
+is not a worker result, not a protocol event, and not evidence of a hung run.
+
 ## Phase 2 — answer worker requests
 
 Maintain expected `runId`, `sequence`, request ID, and next channel. For each

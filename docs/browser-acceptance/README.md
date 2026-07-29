@@ -123,7 +123,11 @@ The development repository owns the canonical protocol. A separate QA
 repository contains only the pinned worker runbook, worker templates, source
 commit/checksums, isolated run state, and QA artifacts. Run the manager and its
 configuration interview from this development repository. It dispatches a
-fresh worker task rooted in the QA repository.
+fresh worker task rooted in the QA repository. The manager resolves that Codex
+project from the configured absolute repository path and supervises the task
+with cursor-based, event-aware waits. A bounded wait timeout is only a
+heartbeat; the manager does not use recurring automation, send status pings,
+or report completion while the worker remains active.
 
 Approved private scenarios live under
 `.social-metadata/qa/scenarios/` in this repository and are ignored by Git.

@@ -35,6 +35,12 @@ Before taking QA action:
 11. Verify the QA repository `runbooks/source.json` pins the current product
     commit and declares `managerConfiguration: product_repository` and
     `workerExecution: qa_repository`.
+12. Confirm that the Codex task capabilities needed for supervision are
+    available: project listing, task creation, cursor-based task waiting, and
+    task messaging. In current Codex hosts these are exposed as
+    `list_projects`, `create_thread`, `wait_threads`, and
+    `send_message_to_thread`. Stop as `coordination_unavailable` before
+    dispatch if an equivalent capability is unavailable.
 
 Follow the confirmed manager mode exactly. For configuration, interview the
 user in the canonical order, propose inferred defaults when appropriate, and
@@ -55,6 +61,11 @@ oracle, and protocol paths with their checksums. The worker must follow its
 pinned runbook, must not edit product source or manager configuration, and must
 write artifacts only to ignored QA-repository paths.
 
+Resolve the QA Codex project by listing projects and matching the configured
+absolute QA repository path. Require exactly one match. Never guess, derive, or
+persist an opaque project ID. After task creation, record the returned worker
+task identity and current cursor in the private manager run record.
+
 Manage the worker only through `qa-manager-worker/v1` envelopes. Answer valid,
 in-order requests using exact approved-scenario values. Stop visibly on
 authentication, challenge, credential requests, unsafe actions, checksum
@@ -62,9 +73,17 @@ mismatches, unexpected requests, changed channel order, or oracle
 contradictions. Continue after `ui_change` only when the approved scenario says
 `record_and_continue`.
 
-Monitor the worker through `run_complete` or `run_stopped`. Verify the
-sanitized receipt, channel coverage, repository cleanliness, ignored artifacts,
-and final disposition before reporting completion.
+Remain active after dispatch. Wait for the worker with a cursor-based,
+event-aware task wait bounded to approximately 60 seconds. Advance the cursor
+when new output arrives. A wait timeout is only a manager heartbeat: do not
+treat it as completion and do not send repeated status questions. Continue
+waiting until the worker emits `run_complete`, `run_stopped`, a valid request
+that needs one response, a human-action interruption, or a coordination
+failure. Do not return a final answer while the worker is still active.
+
+After a terminal event, verify the sanitized receipt, channel coverage,
+repository cleanliness, ignored artifacts, and final disposition before
+reporting completion.
 
 Do not begin browser work or create the worker before any required repository
 selection, mode selection, interview, validation, and explicit approval are
