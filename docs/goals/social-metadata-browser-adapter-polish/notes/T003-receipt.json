@@ -1,0 +1,66 @@
+{
+  "goalbuddy_receipt_v1": {
+    "result": "done",
+    "task_id": "T003",
+    "board_path": "/Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-browser-adapter-polish/state.yaml",
+    "changed_files": [
+      "assets/host-contract.json",
+      "docs/browser-acceptance/README.md",
+      "docs/browser-acceptance/channel-matrix.md",
+      "docs/browser-acceptance/runbooks/qa-worker.md",
+      "fixtures/channels/scenarios.json",
+      "fixtures/diagnostics/acceptance-matrix.json",
+      "fixtures/diagnostics/surface-cases.json",
+      "scripts/browser-acceptance/harness.mjs",
+      "skills/_shared/browser-research-contract.md",
+      "skills/facebook-metadata-research/SKILL.md",
+      "skills/instagram-metadata-research/SKILL.md",
+      "skills/linkedin-metadata-research/SKILL.md",
+      "src/channels/diagnostics.ts",
+      "src/channels/playbooks/facebook.ts",
+      "src/channels/playbooks/instagram.ts",
+      "src/channels/playbooks/linkedin.ts",
+      "src/channels/types.ts",
+      "tests/browser-acceptance/diagnostics.test.ts",
+      "tests/browser-acceptance/harness.test.ts",
+      "tests/channels/fixture-replay.test.ts",
+      "tests/channels/playbooks.test.ts",
+      "tests/hosts/host-parity.ts"
+    ],
+    "commands": [
+      {
+        "cmd": "npm run typecheck",
+        "status": "pass"
+      },
+      {
+        "cmd": "npm run lint:playbooks",
+        "status": "pass"
+      },
+      {
+        "cmd": "npm run test:channels",
+        "status": "pass"
+      },
+      {
+        "cmd": "npm run test:diagnostics",
+        "status": "pass"
+      },
+      {
+        "cmd": "npm run test:browser-harness",
+        "status": "pass"
+      },
+      {
+        "cmd": "npm run test:host-parity",
+        "status": "pass"
+      },
+      {
+        "cmd": "npm run verify:offline",
+        "status": "pass"
+      },
+      {
+        "cmd": "git diff --check",
+        "status": "pass"
+      }
+    ],
+    "summary": "Implemented one fail-closed semantic adapter contract for Facebook, Instagram, LinkedIn, and existing Pinterest variants. Ready classification now requires targetMatched=true, an exact enumerated ready route, and the route's exact native search-entry landmark. The acceptance harness accepts the QA protocol's top-level diagnostic projection, validates it against per-channel allowlists, preserves only bounded labels, permits entry preflight before results exist, and rejects authenticated screenshot capture. Playbooks and QA guidance allow one evidenced in-origin native Search navigation activation followed by the same bounded projection, with no guessed URL/selector, broader read, or second recovery. Fixtures cover ready, authenticated-shell, and target-unavailable variants, including the prior live failure shapes."
+  }
+}

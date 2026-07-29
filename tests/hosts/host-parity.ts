@@ -46,6 +46,7 @@ interface HostContract {
       projection: {
         structuralBooleans: string[];
         sanitizedStatus: boolean;
+        routeClass: boolean;
         expectedLandmark: boolean;
         observedLandmark: boolean;
       };
@@ -120,6 +121,7 @@ export async function checkHostParity(): Promise<{ ok: true; hosts: number; skil
     "resultsLandmarkPresent",
   ]);
   assert.equal(contract.shared.authenticatedInspection.projection.sanitizedStatus, true);
+  assert.equal(contract.shared.authenticatedInspection.projection.routeClass, true);
   assert.equal(contract.shared.authenticatedInspection.projection.expectedLandmark, true);
   assert.equal(contract.shared.authenticatedInspection.projection.observedLandmark, true);
   assert.equal(contract.shared.codexCatalog.model, "single_orchestrator_with_linked_channel_resources");

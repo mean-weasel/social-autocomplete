@@ -1,0 +1,61 @@
+{
+  "goalbuddy_receipt_v1": {
+    "result": "done",
+    "task_id": "T001",
+    "board_path": "/Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-browser-adapter-polish/state.yaml",
+    "summary": "PM fallback mapped a contract gap, not three executable browser drivers. LinkedIn has fail-closed route/landmark enums and fixtures; Facebook and Instagram remain generic playbooks with official-only or acceptance-gap search checkpoints. The prior live worker emitted Facebook/Instagram route and landmark labels that the TypeScript diagnostic unions, fixture matrix, and acceptance harness do not model. The harness classifies only generic booleans and drops optional diagnostics from its receipt. Browser control lives in the shared/channel skills and QA runbook, so the next package must align semantic enums, harness receipts, fixtures, playbooks, and bounded recovery instructions without selectors or broad reads.",
+    "evidence": [
+      "src/channels/types.ts",
+      "src/channels/diagnostics.ts",
+      "src/channels/playbooks/facebook.ts",
+      "src/channels/playbooks/instagram.ts",
+      "src/channels/playbooks/linkedin.ts",
+      "scripts/browser-acceptance/harness.mjs",
+      "skills/_shared/browser-research-contract.md",
+      "skills/facebook-metadata-research/SKILL.md",
+      "skills/instagram-metadata-research/SKILL.md",
+      "skills/linkedin-metadata-research/SKILL.md",
+      "fixtures/diagnostics/surface-cases.json",
+      "fixtures/diagnostics/acceptance-matrix.json",
+      "fixtures/channels/scenarios.json",
+      "tests/browser-acceptance/diagnostics.test.ts",
+      "tests/browser-acceptance/harness.test.ts",
+      "tests/channels/playbooks.test.ts",
+      "/Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260729T191755Z.json",
+      "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa-worker/qa_20260729T191755Z/instagram-outcome.json",
+      "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa-worker/qa_20260729T191755Z/facebook-outcome.json",
+      "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa-worker/qa_20260729T191755Z/linkedin-outcome.json"
+    ],
+    "facts": [
+      "SurfaceRouteClass, SurfaceExpectedLandmark, and SurfaceObservedLandmark enumerate only generic, LinkedIn, and Pinterest variants; Facebook and Instagram live labels are absent.",
+      "semanticSearchEntryMissing treats every non-generic diagnostic as either LinkedIn or Pinterest, so adding Facebook/Instagram route values without replacing that binary branch would misclassify them as Pinterest.",
+      "Facebook search evidence is official_only and both authenticated autocomplete and result fields remain acceptance gaps.",
+      "Instagram search evidence is official_only while authenticated autocomplete and result fields remain acceptance gaps.",
+      "LinkedIn correctly requires linkedin_search plus linkedin_native_search_entry and keeps authenticated Feed/navigation as ui_change.",
+      "The generic browser acceptance harness rejects private keys and classifies search/results booleans, but it neither validates nor preserves routeClass, expectedLandmark, observedLandmark, or target match in its receipt.",
+      "The prior run found Instagram targetMatch true with authenticated navigation but no recognized search entry; Facebook and LinkedIn targetMatch false; no module interaction occurred.",
+      "The repository contains no browser selector implementation. Host agents execute the bounded operation from the shared contract, channel skill, and QA worker runbook."
+    ],
+    "contradictions": [
+      "The live QA receipt claims structured Facebook and Instagram diagnostics, but the product's diagnostic enum and acceptance matrix cannot represent or validate those exact labels.",
+      "The goal asks to update browser adapters, while current source provides declarative playbooks and a checklist harness rather than executable per-channel browser-control adapters."
+    ],
+    "ambiguity_requiring_judge": [
+      "Decide whether the next slice should formalize declarative semantic adapters only or add executable pure per-channel projection helpers without introducing browser selectors.",
+      "Decide whether results landmarks are required before autocomplete interaction; the current harness requires them even though a search-entry preflight may occur before results exist.",
+      "Define safe bounded recovery: one evidenced native navigation/search-entry action and reclassification, with no guessed URL, selector, or broader read.",
+      "Choose whether optional sanitized diagnostics extend receiptVersion 1.0 or require a receipt contract version change."
+    ],
+    "commands": [
+      {
+        "cmd": "rg --files and rg -n across channel playbooks, diagnostics, fixtures, tests, browser-acceptance docs, and sanitized QA receipts",
+        "status": "pass"
+      },
+      {
+        "cmd": "Read current Facebook, Instagram, LinkedIn playbooks, diagnostic types/classifier, acceptance harness, shared browser contract, fixtures, and focused tests",
+        "status": "pass"
+      }
+    ],
+    "note_needed": false
+  }
+}

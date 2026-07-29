@@ -1,0 +1,78 @@
+{
+  "goalbuddy_receipt_v1": {
+    "result": "done",
+    "task_id": "T002",
+    "board_path": "/Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-browser-adapter-polish/state.yaml",
+    "decision": "approved",
+    "full_outcome_complete": false,
+    "rationale": "Approve one declarative semantic-adapter package, not selector automation. Add exact Facebook, Instagram, and target-unavailable route/landmark enums; replace the LinkedIn/Pinterest binary classifier with an explicit per-route contract; validate target match before route readiness; and preserve optional sanitized diagnostics in acceptance receipts. A preflight may be ready with a search entry before result landmarks exist. Permit exactly one evidenced in-origin native Search navigation control, then re-run the same bounded projection; never guess a URL/selector or broaden target reads. Keep receiptVersion 1.0 because the diagnostic field is optional and additive.",
+    "worker_package": {
+      "objective": "Implement explicit safe semantic diagnostic contracts for Facebook, Instagram, and LinkedIn; preserve sanitized diagnostics in browser acceptance receipts; make result landmarks interaction-phase aware; and update the three playbooks, skills, fixtures, tests, host contract, and QA documentation as one coherent package.",
+      "allowed_files": [
+        "src/channels/types.ts",
+        "src/channels/diagnostics.ts",
+        "src/channels/playbooks/facebook.ts",
+        "src/channels/playbooks/instagram.ts",
+        "src/channels/playbooks/linkedin.ts",
+        "scripts/browser-acceptance/harness.mjs",
+        "assets/host-contract.json",
+        "skills/_shared/browser-research-contract.md",
+        "skills/facebook-metadata-research/SKILL.md",
+        "skills/instagram-metadata-research/SKILL.md",
+        "skills/linkedin-metadata-research/SKILL.md",
+        "fixtures/diagnostics/surface-cases.json",
+        "fixtures/diagnostics/acceptance-matrix.json",
+        "fixtures/channels/scenarios.json",
+        "tests/channels/playbooks.test.ts",
+        "tests/channels/fixture-replay.test.ts",
+        "tests/browser-acceptance/diagnostics.test.ts",
+        "tests/browser-acceptance/harness.test.ts",
+        "tests/hosts/host-parity.ts",
+        "docs/browser-acceptance/README.md",
+        "docs/browser-acceptance/channel-matrix.md",
+        "docs/browser-acceptance/runbooks/qa-worker.md"
+      ],
+      "verify": [
+        "npm run typecheck",
+        "npm run lint:playbooks",
+        "npm run test:channels",
+        "npm run test:diagnostics",
+        "npm run test:browser-harness",
+        "npm run test:host-parity",
+        "npm run verify:offline",
+        "git diff --check"
+      ],
+      "stop_if": [
+        "Any readiness path can pass without targetMatched=true and the route's exact native search-entry landmark.",
+        "A fix requires a guessed URL, selector, broad tab enumeration, copied page text, account identity, or a second/broader read after failure.",
+        "Results landmarks remain mandatory before an autocomplete interaction begins.",
+        "Facebook or Instagram labels remain outside the typed contract or harness allowlist.",
+        "LinkedIn authenticated Feed/navigation can pass without linkedin_native_search_entry.",
+        "The optional receipt diagnostic can contain unbounded or non-enumerated strings.",
+        "A required change falls outside allowed_files.",
+        "Verification fails twice for a task-introduced reason."
+      ]
+    },
+    "evidence": [
+      "T001 receipt",
+      "src/channels/types.ts",
+      "src/channels/diagnostics.ts",
+      "scripts/browser-acceptance/harness.mjs",
+      "skills/_shared/browser-research-contract.md",
+      "assets/host-contract.json",
+      "/Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260729T191755Z.json"
+    ],
+    "subgoal_contract": null,
+    "parallel_safety": null,
+    "blocked_tasks": [],
+    "missing_evidence": [
+      "T003 must prove the explicit route/landmark contract and phase-aware harness behavior with focused and offline verification.",
+      "T006 must prove the declarative contract against fresh existing-Chrome surfaces; fixtures alone cannot complete the goal."
+    ],
+    "required_board_updates": [
+      "Copy worker_package exactly onto T003 before activation.",
+      "Keep the implementation as one coherent write package.",
+      "Do not activate live browser work until T004 approves and T005 pins the exact committed build."
+    ]
+  }
+}

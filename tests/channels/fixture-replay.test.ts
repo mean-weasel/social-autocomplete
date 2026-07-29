@@ -7,10 +7,18 @@ test("channel fixtures replay success, zero, interruption, failure, and Pinteres
   assert.deepEqual(await runChannelFixtureReplay(), { channels: 7, cases: 29 });
 });
 
-test("channel fixtures preserve route-aware LinkedIn and Pinterest boundaries", async () => {
+test("channel fixtures preserve route-aware semantic boundaries", async () => {
   const fixtures = JSON.parse(await readFile("fixtures/channels/scenarios.json", "utf8"));
+  const facebook = fixtures.find(({ channel }: { channel: string }) => channel === "facebook");
+  const instagram = fixtures.find(({ channel }: { channel: string }) => channel === "instagram");
   const linkedin = fixtures.find(({ channel }: { channel: string }) => channel === "linkedin");
   const pinterest = fixtures.find(({ channel }: { channel: string }) => channel === "pinterest");
+  assert.equal(facebook.success.targetMatched, true);
+  assert.equal(facebook.success.diagnostic.routeClass, "facebook_search");
+  assert.equal(facebook.failure.diagnostic.routeClass, "facebook_target_unavailable");
+  assert.equal(instagram.success.targetMatched, true);
+  assert.equal(instagram.success.diagnostic.routeClass, "instagram_search");
+  assert.equal(instagram.failure.diagnostic.routeClass, "instagram_authenticated_shell");
   assert.equal(linkedin.success.diagnostic.routeClass, "linkedin_search");
   assert.equal(linkedin.failure.diagnostic.routeClass, "linkedin_authenticated_feed");
   assert.equal(linkedin.failure.explicitNativeEmpty, true);

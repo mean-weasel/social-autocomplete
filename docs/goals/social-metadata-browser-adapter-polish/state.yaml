@@ -1,0 +1,478 @@
+version: 2
+
+goal:
+  title: "Social Metadata Browser Adapter Polish"
+  slug: "social-metadata-browser-adapter-polish"
+  kind: specific
+  tranche: "Map, implement, and prove current authenticated Chrome search-entry adapters for Instagram, Facebook, and LinkedIn."
+  status: active
+  oracle:
+    signal: "Fresh sanitized Chrome receipts plus fixtures and release verification prove current native search-entry recognition and bounded autocomplete evidence without weakening privacy or evidence rules."
+    cadence: "after the implementation package and at final live audit"
+    final_proof: "A fresh one-time-authorized Instagram→Facebook→LinkedIn run plus final Judge mapping records full_outcome_complete: true."
+  intake:
+    original_request: "Plan the next browser-adapter polish round and rerun the same three-channel QA scenario."
+    interpreted_outcome: "Instagram, Facebook, and LinkedIn reach their current native search surfaces safely and produce validated bounded autocomplete evidence."
+    input_shape: specific
+    audience: "Codex and Claude users of browser-first social metadata research"
+    authority: requested
+    proof_type: demo
+    completion_proof: "Current live Chrome evidence for both modules on the selected three channels, or an exact truthful external blocker that does not weaken the contract."
+    likely_misfire: "Suppressing ui_change with permissive landmark logic instead of recognizing the real native search surface safely."
+    blind_spots_considered:
+      - "Responsive and account-specific authenticated layouts"
+      - "Route changes and search controls revealed only after bounded navigation"
+      - "Target acquisition without broad tab enumeration"
+      - "Locale drift and native-empty confusion"
+      - "Platform-side autocomplete unavailability"
+    existing_plan_facts:
+      - "Selected order is Instagram, Facebook, LinkedIn."
+      - "Authenticated work uses the existing visible Chrome profile."
+      - "Hashtag and search-term modules use autocomplete_only evidence."
+      - "One-time authorization is required immediately before live browser work."
+      - "Manager-owned recovery and stable CLI/JSON contracts remain unchanged."
+      - "Claude testing and CI are deferred."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
+    command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
+
+active_task: T005
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: low
+    objective: "Map the current Instagram, Facebook, and LinkedIn browser adapters, diagnostics, fixtures, prior live receipts, and bounded Chrome-control seams."
+    inputs:
+      - "T006 receipt from social-metadata-qa-worker-recovery"
+      - "Current channel playbooks and diagnostics"
+      - "Browser acceptance harness and sanitized fixtures"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Do not expose private QA artifacts beyond sanitized fields."
+    expected_output:
+      - "Current adapter and landmark map"
+      - "Exact stale or missing recognition paths"
+      - "Shared versus channel-specific implementation seams"
+      - "Candidate allowed_files and verification commands"
+    receipt:
+      result: done
+      summary: "PM fallback mapped a contract gap, not three executable browser drivers. LinkedIn has fail-closed route/landmark enums and fixtures; Facebook and Instagram remain generic playbooks with official-only or acceptance-gap search checkpoints. The prior live worker emitted Facebook/Instagram route and landmark labels that the TypeScript diagnostic unions, fixture matrix, and acceptance harness do not model. The harness classifies only generic booleans and drops optional diagnostics from its receipt. Browser control lives in the shared/channel skills and QA runbook, so the next package must align semantic enums, harness receipts, fixtures, playbooks, and bounded recovery instructions without selectors or broad reads."
+      evidence:
+        - src/channels/types.ts
+        - src/channels/diagnostics.ts
+        - src/channels/playbooks/facebook.ts
+        - src/channels/playbooks/instagram.ts
+        - src/channels/playbooks/linkedin.ts
+        - scripts/browser-acceptance/harness.mjs
+        - skills/_shared/browser-research-contract.md
+        - skills/facebook-metadata-research/SKILL.md
+        - skills/instagram-metadata-research/SKILL.md
+        - skills/linkedin-metadata-research/SKILL.md
+        - fixtures/diagnostics/surface-cases.json
+        - fixtures/diagnostics/acceptance-matrix.json
+        - fixtures/channels/scenarios.json
+        - tests/browser-acceptance/diagnostics.test.ts
+        - tests/browser-acceptance/harness.test.ts
+        - tests/channels/playbooks.test.ts
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260729T191755Z.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa-worker/qa_20260729T191755Z/instagram-outcome.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa-worker/qa_20260729T191755Z/facebook-outcome.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa-worker/qa_20260729T191755Z/linkedin-outcome.json
+      facts:
+        - "SurfaceRouteClass, SurfaceExpectedLandmark, and SurfaceObservedLandmark enumerate only generic, LinkedIn, and Pinterest variants; Facebook and Instagram live labels are absent."
+        - "semanticSearchEntryMissing treats every non-generic diagnostic as either LinkedIn or Pinterest, so adding Facebook/Instagram route values without replacing that binary branch would misclassify them as Pinterest."
+        - "Facebook search evidence is official_only and both authenticated autocomplete and result fields remain acceptance gaps."
+        - "Instagram search evidence is official_only while authenticated autocomplete and result fields remain acceptance gaps."
+        - "LinkedIn correctly requires linkedin_search plus linkedin_native_search_entry and keeps authenticated Feed/navigation as ui_change."
+        - "The generic browser acceptance harness rejects private keys and classifies search/results booleans, but it neither validates nor preserves routeClass, expectedLandmark, observedLandmark, or target match in its receipt."
+        - "The prior run found Instagram targetMatch true with authenticated navigation but no recognized search entry; Facebook and LinkedIn targetMatch false; no module interaction occurred."
+        - "The repository contains no browser selector implementation. Host agents execute the bounded operation from the shared contract, channel skill, and QA worker runbook."
+      contradictions:
+        - "The live QA receipt claims structured Facebook and Instagram diagnostics, but the product's diagnostic enum and acceptance matrix cannot represent or validate those exact labels."
+        - "The goal asks to update browser adapters, while current source provides declarative playbooks and a checklist harness rather than executable per-channel browser-control adapters."
+      ambiguity_requiring_judge:
+        - "Decide whether the next slice should formalize declarative semantic adapters only or add executable pure per-channel projection helpers without introducing browser selectors."
+        - "Decide whether results landmarks are required before autocomplete interaction; the current harness requires them even though a search-entry preflight may occur before results exist."
+        - "Define safe bounded recovery: one evidenced native navigation/search-entry action and reclassification, with no guessed URL, selector, or broader read."
+        - "Choose whether optional sanitized diagnostics extend receiptVersion 1.0 or require a receipt contract version change."
+      commands:
+        - cmd: "rg --files and rg -n across channel playbooks, diagnostics, fixtures, tests, browser-acceptance docs, and sanitized QA receipts"
+          status: pass
+        - cmd: "Read current Facebook, Instagram, LinkedIn playbooks, diagnostic types/classifier, acceptance harness, shared browser contract, fixtures, and focused tests"
+          status: pass
+      note_needed: false
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Choose the safe semantic landmark and bounded navigation contract for the three-channel adapter package."
+    inputs:
+      - "T001 receipt"
+      - "Prior live ui_change outcomes"
+      - "Existing privacy and browser-acceptance contracts"
+    constraints:
+      - "Read-only."
+      - "Reject permissive selectors, broad tab reads, page-content extraction, route guessing, and UI-change suppression without current evidence."
+      - "Prefer one coherent Worker package when shared diagnostics and tests overlap."
+    expected_output:
+      - "Approved adapter contract"
+      - "Exact Worker objective"
+      - "Complete allowed_files"
+      - "Focused and release verification commands"
+      - "Per-channel stop conditions"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Approve one declarative semantic-adapter package, not selector automation. Add exact Facebook, Instagram, and target-unavailable route/landmark enums; replace the LinkedIn/Pinterest binary classifier with an explicit per-route contract; validate target match before route readiness; and preserve optional sanitized diagnostics in acceptance receipts. A preflight may be ready with a search entry before result landmarks exist. Permit exactly one evidenced in-origin native Search navigation control, then re-run the same bounded projection; never guess a URL/selector or broaden target reads. Keep receiptVersion 1.0 because the diagnostic field is optional and additive."
+      worker_package:
+        objective: "Implement explicit safe semantic diagnostic contracts for Facebook, Instagram, and LinkedIn; preserve sanitized diagnostics in browser acceptance receipts; make result landmarks interaction-phase aware; and update the three playbooks, skills, fixtures, tests, host contract, and QA documentation as one coherent package."
+        allowed_files:
+          - src/channels/types.ts
+          - src/channels/diagnostics.ts
+          - src/channels/playbooks/facebook.ts
+          - src/channels/playbooks/instagram.ts
+          - src/channels/playbooks/linkedin.ts
+          - scripts/browser-acceptance/harness.mjs
+          - assets/host-contract.json
+          - skills/_shared/browser-research-contract.md
+          - skills/facebook-metadata-research/SKILL.md
+          - skills/instagram-metadata-research/SKILL.md
+          - skills/linkedin-metadata-research/SKILL.md
+          - fixtures/diagnostics/surface-cases.json
+          - fixtures/diagnostics/acceptance-matrix.json
+          - fixtures/channels/scenarios.json
+          - tests/channels/playbooks.test.ts
+          - tests/channels/fixture-replay.test.ts
+          - tests/browser-acceptance/diagnostics.test.ts
+          - tests/browser-acceptance/harness.test.ts
+          - tests/hosts/host-parity.ts
+          - docs/browser-acceptance/README.md
+          - docs/browser-acceptance/channel-matrix.md
+          - docs/browser-acceptance/runbooks/qa-worker.md
+        verify:
+          - "npm run typecheck"
+          - "npm run lint:playbooks"
+          - "npm run test:channels"
+          - "npm run test:diagnostics"
+          - "npm run test:browser-harness"
+          - "npm run test:host-parity"
+          - "npm run verify:offline"
+          - "git diff --check"
+        stop_if:
+          - "Any readiness path can pass without targetMatched=true and the route's exact native search-entry landmark."
+          - "A fix requires a guessed URL, selector, broad tab enumeration, copied page text, account identity, or a second/broader read after failure."
+          - "Results landmarks remain mandatory before an autocomplete interaction begins."
+          - "Facebook or Instagram labels remain outside the typed contract or harness allowlist."
+          - "LinkedIn authenticated Feed/navigation can pass without linkedin_native_search_entry."
+          - "The optional receipt diagnostic can contain unbounded or non-enumerated strings."
+          - "A required change falls outside allowed_files."
+          - "Verification fails twice for a task-introduced reason."
+      evidence:
+        - "T001 receipt"
+        - src/channels/types.ts
+        - src/channels/diagnostics.ts
+        - scripts/browser-acceptance/harness.mjs
+        - skills/_shared/browser-research-contract.md
+        - assets/host-contract.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260729T191755Z.json
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "T003 must prove the explicit route/landmark contract and phase-aware harness behavior with focused and offline verification."
+        - "T006 must prove the declarative contract against fresh existing-Chrome surfaces; fixtures alone cannot complete the goal."
+      required_board_updates:
+        - "Copy worker_package exactly onto T003 before activation."
+        - "Keep the implementation as one coherent write package."
+        - "Do not activate live browser work until T004 approves and T005 pins the exact committed build."
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Implement explicit safe semantic diagnostic contracts for Facebook, Instagram, and LinkedIn; preserve sanitized diagnostics in browser acceptance receipts; make result landmarks interaction-phase aware; and update the three playbooks, skills, fixtures, tests, host contract, and QA documentation as one coherent package."
+    inputs:
+      - "T001 evidence map"
+      - "T002 approved adapter contract"
+    constraints:
+      - "Preserve existing visible Chrome as the only authenticated browser."
+      - "Keep inspection bounded and structural."
+      - "Do not weaken authentication, challenge, locale, native-empty, or ui_change classifications."
+      - "Do not change the stable CLI/JSON observation contract."
+      - "Do not operate a live browser."
+    expected_output:
+      - "Current route-aware semantic landmark recognition for all three channels"
+      - "Sanitized account/layout variant fixtures"
+      - "Regression tests for prior ui_change outcomes and unsafe fallbacks"
+      - "Updated playbooks and diagnostics documentation"
+    allowed_files:
+      - "src/channels/types.ts"
+      - "src/channels/diagnostics.ts"
+      - "src/channels/playbooks/facebook.ts"
+      - "src/channels/playbooks/instagram.ts"
+      - "src/channels/playbooks/linkedin.ts"
+      - "scripts/browser-acceptance/harness.mjs"
+      - "assets/host-contract.json"
+      - "skills/_shared/browser-research-contract.md"
+      - "skills/facebook-metadata-research/SKILL.md"
+      - "skills/instagram-metadata-research/SKILL.md"
+      - "skills/linkedin-metadata-research/SKILL.md"
+      - "fixtures/diagnostics/surface-cases.json"
+      - "fixtures/diagnostics/acceptance-matrix.json"
+      - "fixtures/channels/scenarios.json"
+      - "tests/channels/playbooks.test.ts"
+      - "tests/channels/fixture-replay.test.ts"
+      - "tests/browser-acceptance/diagnostics.test.ts"
+      - "tests/browser-acceptance/harness.test.ts"
+      - "tests/hosts/host-parity.ts"
+      - "docs/browser-acceptance/README.md"
+      - "docs/browser-acceptance/channel-matrix.md"
+      - "docs/browser-acceptance/runbooks/qa-worker.md"
+    verify:
+      - "npm run typecheck"
+      - "npm run lint:playbooks"
+      - "npm run test:channels"
+      - "npm run test:diagnostics"
+      - "npm run test:browser-harness"
+      - "npm run test:host-parity"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "Any readiness path can pass without targetMatched=true and the route's exact native search-entry landmark."
+      - "A fix requires a guessed URL, selector, broad tab enumeration, copied page text, account identity, or a second/broader read after failure."
+      - "Results landmarks remain mandatory before an autocomplete interaction begins."
+      - "Facebook or Instagram labels remain outside the typed contract or harness allowlist."
+      - "LinkedIn authenticated Feed/navigation can pass without linkedin_native_search_entry."
+      - "The optional receipt diagnostic can contain unbounded or non-enumerated strings."
+      - "A required change falls outside allowed_files."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - assets/host-contract.json
+        - docs/browser-acceptance/README.md
+        - docs/browser-acceptance/channel-matrix.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - fixtures/channels/scenarios.json
+        - fixtures/diagnostics/acceptance-matrix.json
+        - fixtures/diagnostics/surface-cases.json
+        - scripts/browser-acceptance/harness.mjs
+        - skills/_shared/browser-research-contract.md
+        - skills/facebook-metadata-research/SKILL.md
+        - skills/instagram-metadata-research/SKILL.md
+        - skills/linkedin-metadata-research/SKILL.md
+        - src/channels/diagnostics.ts
+        - src/channels/playbooks/facebook.ts
+        - src/channels/playbooks/instagram.ts
+        - src/channels/playbooks/linkedin.ts
+        - src/channels/types.ts
+        - tests/browser-acceptance/diagnostics.test.ts
+        - tests/browser-acceptance/harness.test.ts
+        - tests/channels/fixture-replay.test.ts
+        - tests/channels/playbooks.test.ts
+        - tests/hosts/host-parity.ts
+      commands:
+        - cmd: "npm run typecheck"
+          status: pass
+        - cmd: "npm run lint:playbooks"
+          status: pass
+        - cmd: "npm run test:channels"
+          status: pass
+        - cmd: "npm run test:diagnostics"
+          status: pass
+        - cmd: "npm run test:browser-harness"
+          status: pass
+        - cmd: "npm run test:host-parity"
+          status: pass
+        - cmd: "npm run verify:offline"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      summary: "Implemented one fail-closed semantic adapter contract for Facebook, Instagram, LinkedIn, and existing Pinterest variants. Ready classification now requires targetMatched=true, an exact enumerated ready route, and the route's exact native search-entry landmark. The acceptance harness accepts the QA protocol's top-level diagnostic projection, validates it against per-channel allowlists, preserves only bounded labels, permits entry preflight before results exist, and rejects authenticated screenshot capture. Playbooks and QA guidance allow one evidenced in-origin native Search navigation activation followed by the same bounded projection, with no guessed URL/selector, broader read, or second recovery. Fixtures cover ready, authenticated-shell, and target-unavailable variants, including the prior live failure shapes."
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Adversarially review the adapter package for false-ready classification, unsafe browser reads, stale UI assumptions, and evidence fabrication."
+    inputs:
+      - "T002 approved contract"
+      - "T003 diff and receipt"
+      - "Focused and release verification"
+    constraints:
+      - "Read-only."
+      - "Reject fixture-only semantics that cannot be exercised by the sanitized live harness."
+      - "Reject any readiness result without a proven current native search entry."
+    expected_output:
+      - "approved_for_pin | needs_correction"
+      - "Requirement-to-test mapping"
+      - "False-positive and privacy-boundary analysis"
+      - "Exact correction Worker package if rejected"
+    receipt:
+      result: done
+      decision: approved_for_pin
+      full_outcome_complete: false
+      rationale: "The package is fail-closed at both executable boundaries. The channel classifier accepts semantic readiness only for an exact per-route contract with targetMatched=true and searchEntryPresent=true. The browser harness additionally requires a semantic diagnostic for Facebook, Instagram, LinkedIn, and Pinterest, validates every route and landmark against a per-channel allowlist, and emits only the bounded validated diagnostic. Entry preflight can pass before results exist, while an attempted query without successful interaction/results remains ui_change unless the native surface explicitly reports empty. Authenticated shell, Feed, and unavailable-target variants remain ui_change. Recovery guidance permits one evidenced in-origin native Search navigation activation inside the bounded operation, followed by the same projection, and prohibits guessed URLs/selectors, page text, broader reads, and a second attempt. Authenticated screenshot capture is rejected. No live readiness claim is made; fresh Chrome proof remains required."
+      requirement_to_test:
+        - requirement: "Exact ready route, exact native entry, and targetMatched=true"
+          evidence: "tests/channels/playbooks.test.ts; tests/browser-acceptance/harness.test.ts; fixtures/diagnostics/surface-cases.json"
+        - requirement: "Authenticated shell, Feed, and target-unavailable states fail visibly"
+          evidence: "fixtures/channels/scenarios.json; tests/channels/fixture-replay.test.ts; tests/browser-acceptance/diagnostics.test.ts"
+        - requirement: "Results are phase-aware"
+          evidence: "tests/browser-acceptance/harness.test.ts preflight and post-interaction cases"
+        - requirement: "Diagnostics remain enumerated and sanitized"
+          evidence: "scripts/browser-acceptance/harness.mjs; fixtures/diagnostics/acceptance-matrix.json; tests/browser-acceptance/harness.test.ts"
+        - requirement: "Bounded recovery and authenticated privacy constraints"
+          evidence: "skills/_shared/browser-research-contract.md; docs/browser-acceptance/README.md; docs/browser-acceptance/runbooks/qa-worker.md"
+        - requirement: "Release surface remains intact"
+          evidence: "npm run verify:release -- --allow-missing-live-receipts passed"
+      false_positive_analysis:
+        - "Ready semantic routes cannot pass with targetMatched=false, a missing diagnostic, a non-ready route, a mismatched landmark, or a missing search entry."
+        - "LinkedIn authenticated Feed/navigation remains non-ready even when authentication and navigation are present."
+        - "Native empty is only emitted after a successful bounded interaction; preflight without interaction returns ready, never native_empty."
+        - "The TypeScript classifier is channel-agnostic, but all production browser acceptance is channel-aware in the harness; no other production caller bypasses that harness."
+      privacy_boundary_analysis:
+        - "The host contract projects structural booleans plus enumerated route and landmark labels only."
+        - "The shared skill and QA runbook prohibit full tab lists, URLs, DOM/body/feed text, identities, credentials, cookies, tokens, screenshots, guessed selectors, and broader retry reads."
+        - "The harness rejects forbidden private fields, non-enumerated semantic diagnostics, and authenticated screenshot capture."
+      evidence:
+        - "T002 approved contract"
+        - "T003 receipt"
+        - "current adapter diff"
+        - "npm run typecheck"
+        - "npm run lint:playbooks"
+        - "npm run test:channels"
+        - "npm run test:diagnostics"
+        - "npm run test:browser-harness"
+        - "npm run test:host-parity"
+        - "npm run verify:offline"
+        - "npm run verify:release -- --allow-missing-live-receipts"
+        - "git diff --check"
+      missing_evidence:
+        - "The exact reviewed build must be committed and pinned into the dedicated QA repository."
+        - "Fresh one-time-authorized existing-Chrome evidence must exercise Instagram, Facebook, and LinkedIn; fixture and release verification do not prove current platform UI."
+      worker_package: null
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: "After Judge approval and a product commit, synchronize the dedicated QA repository to that exact adapter build."
+    inputs:
+      - "T004 approval"
+      - "Exact reviewed product commit"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+    constraints:
+      - "Pin only the exact reviewed product commit."
+      - "Edit only QA worker materials and source manifest entries approved by T004."
+      - "Do not stage or commit private notes, receipts, scenarios, screenshots, or run state."
+      - "Verify every declared source and QA hash."
+    expected_output:
+      - "Exact QA source pin"
+      - "Synchronized worker/channel materials"
+      - "Clean committed QA tracked worktree"
+      - "Hash-verification receipt"
+    allowed_files:
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+    verify:
+      - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+      - "Verify every declared sourceSha256 and qaSha256 against exact bytes."
+      - "Verify sourceCommit equals the exact T004-reviewed product commit."
+      - "Verify both tracked worktrees are clean and private QA paths remain ignored."
+    stop_if:
+      - "T004 has not approved the exact product build."
+      - "A required QA edit falls outside allowed_files."
+      - "Any private artifact would be staged."
+      - "Hash verification fails twice."
+    receipt: null
+  - id: T006
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: high
+    objective: "Obtain fresh one-time authorization and supervise the exact Instagram→Facebook→LinkedIn autocomplete-only Chrome replay."
+    inputs:
+      - "T005 exact QA pin"
+      - "Saved synthetic three-channel scenario"
+      - "Current Codex task coordination and Chrome tools"
+    constraints:
+      - "Ask for fresh exact browser authorization immediately before dispatch."
+      - "Use only the existing visible Chrome profile and the saved synthetic brief."
+      - "Preserve exact channel order and manager-owned recovery."
+      - "Never broaden browser reads or repeat accepted/completed work."
+      - "Stop visibly on authentication, challenge, locale mismatch, unsafe request, or protocol contradiction."
+      - "Consume one-time authorization at terminal state."
+    expected_output:
+      - "Sanitized current route and landmark outcomes for all three selected channels"
+      - "Validated bounded autocomplete evidence for hashtag and search-term where native UI supports it"
+      - "No omitted or duplicate channel/action"
+      - "No fabricated recommendations or popularity claims"
+      - "run_complete or truthful bounded run_stopped"
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether implementation, exact QA pinning, and fresh live evidence satisfy the browser-adapter polish oracle."
+    inputs:
+      - "All done receipts"
+      - "Final product and QA commits"
+      - "Focused and release verification"
+      - "Sanitized T006 receipt"
+    constraints:
+      - "Read-only."
+      - "Reject completion if any selected channel still has a locally fixable stale generic landmark failure."
+      - "Reject completion if readiness required unsafe reads or recommendation evidence is absent."
+      - "Treat exact external platform blockers truthfully without weakening the product contract."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Requirement-to-evidence mapping"
+      - "Missing evidence and exact next task if incomplete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "new GoalBuddy control files only"
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

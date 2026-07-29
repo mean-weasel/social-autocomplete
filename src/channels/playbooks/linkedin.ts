@@ -7,12 +7,12 @@ export const linkedinPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated",
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
-  entryInstruction: "Open LinkedIn in the signed-in Chrome session and continue only when a semantic native search-entry control is present.",
+  entryInstruction: "Use the matched LinkedIn target in the signed-in Chrome session. Proceed only on linkedin_search with linkedin_native_search_entry; Feed/navigation or an unavailable target is ui_change.",
   semanticCheckpoints: [
     { id: "linkedin-channel", purpose: "channel", description: "LinkedIn navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "linkedin-auth", purpose: "access", description: "Authenticated LinkedIn navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },
     { id: "linkedin-search", purpose: "search", description: "A semantic native search-entry control is visible; authenticated Feed/navigation alone does not satisfy this checkpoint.", evidenceStatus: "acceptance_gap", required: true, failureCode: "ui_change" },
-    { id: "linkedin-results", purpose: "results", description: "Native category/results region is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
+    { id: "linkedin-results", purpose: "results", description: "A native category/results region is required only after a query interaction begins.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
   ],
   modules: {
     "search-term": moduleProcedure("linkedin", "search-term", {
@@ -38,6 +38,6 @@ export const linkedinPlaybook: ChannelPlaybook = {
     skipSponsored: true,
     engagementIsDescriptiveOnly: true,
   },
-  acceptanceGaps: ["A current authenticated Feed variant exposes navigation without an evidenced native search-entry control."],
+  acceptanceGaps: ["A current authenticated Feed variant exposes navigation without an evidenced native search-entry control; the explicit adapter requires fresh Chrome acceptance."],
   evidenceSources: ["https://www.linkedin.com/help/linkedin/answer/a523136/searching-on-linkedin"],
 };

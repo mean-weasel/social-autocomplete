@@ -7,12 +7,12 @@ export const facebookPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated",
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
-  entryInstruction: "Open Facebook native search in the user-controlled signed-in Chrome session.",
+  entryInstruction: "Use the matched Facebook target in the user-controlled signed-in Chrome session. Proceed only on facebook_search with facebook_native_search_entry; an authenticated shell or unavailable target is ui_change.",
   semanticCheckpoints: [
     { id: "facebook-channel", purpose: "channel", description: "Facebook identity is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "facebook-auth", purpose: "access", description: "The surface is not the Facebook login page.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },
-    { id: "facebook-search", purpose: "search", description: "A native Facebook search field is visible.", evidenceStatus: "official_only", required: true, failureCode: "ui_change" },
-    { id: "facebook-results", purpose: "results", description: "Permission-scoped native result cards are visible after search.", evidenceStatus: "acceptance_gap", required: true, failureCode: "ui_change" },
+    { id: "facebook-search", purpose: "search", description: "The matched target is facebook_search and facebook_native_search_entry is structurally present. Authenticated navigation alone does not pass.", evidenceStatus: "acceptance_gap", required: true, failureCode: "ui_change" },
+    { id: "facebook-results", purpose: "results", description: "Permission-scoped native results are required only after a query interaction begins.", evidenceStatus: "acceptance_gap", required: true, failureCode: "ui_change" },
   ],
   modules: {
     "search-term": moduleProcedure("facebook", "search-term", {
@@ -38,6 +38,6 @@ export const facebookPlaybook: ChannelPlaybook = {
     skipSponsored: true,
     engagementIsDescriptiveOnly: true,
   },
-  acceptanceGaps: ["Authenticated autocomplete and result-card fields require user-controlled Chrome acceptance."],
+  acceptanceGaps: ["The explicit Facebook search-entry adapter, authenticated autocomplete, and result-card fields require fresh user-controlled Chrome acceptance."],
   evidenceSources: ["https://www.facebook.com/help/587836257914341"],
 };

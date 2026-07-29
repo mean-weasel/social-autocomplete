@@ -12,23 +12,37 @@ export type AccessMode = "authenticated" | "public";
 export type PlaybookEvidenceStatus = "confirmed_live" | "official_only" | "acceptance_gap";
 export type SurfaceRouteClass =
   | "generic"
+  | "facebook_search"
+  | "facebook_authenticated_shell"
+  | "facebook_target_unavailable"
+  | "instagram_search"
+  | "instagram_authenticated_shell"
+  | "instagram_target_unavailable"
   | "linkedin_search"
   | "linkedin_authenticated_feed"
+  | "linkedin_target_unavailable"
   | "pinterest_public_search"
   | "pinterest_personal_search"
   | "pinterest_business_hub"
   | "pinterest_root_after_search_redirect";
 export type SurfaceExpectedLandmark =
   | "required_landmarks"
+  | "facebook_native_search_entry"
+  | "instagram_native_search_entry"
   | "linkedin_native_search_entry"
   | "pinterest_search_control";
 export type SurfaceObservedLandmark =
   | "required_landmarks"
+  | "facebook_native_search_entry"
+  | "facebook_authenticated_navigation"
+  | "instagram_native_search_entry"
+  | "instagram_authenticated_navigation"
   | "linkedin_native_search_entry"
   | "linkedin_authenticated_feed_navigation"
   | "pinterest_search_control"
   | "pinterest_business_hub"
   | "pinterest_root"
+  | "target_unavailable"
   | "landmark_missing";
 export type CandidateKind =
   | "native_phrase"
@@ -122,6 +136,7 @@ export interface RouteDecision {
 export interface SurfaceSnapshot {
   accessState: "ready" | "authentication_required" | "challenge";
   localeMatches: boolean;
+  targetMatched?: boolean;
   expectedLandmarksPresent: boolean;
   searchEntryPresent?: boolean;
   interactionAttempted: boolean;

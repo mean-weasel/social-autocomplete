@@ -6,13 +6,49 @@ structural labels, not selectors or copied page text.
 
 | Channel | Allowed browser/access | Search entry checkpoint | Hashtag expectation | Acceptable preflight outcomes |
 | --- | --- | --- | --- | --- |
-| Facebook | Existing visible Chrome; authenticated | Facebook identity, authenticated navigation, native Search control | Supported when exact native evidence is available | `ready`, `authentication_required`, `challenge`, `locale_mismatch`, `ui_change` |
-| Instagram | Existing visible Chrome; authenticated | Instagram identity, Explore/Search controls | Supported when exact native hashtag evidence is available | `ready`, `authentication_required`, `challenge`, `locale_mismatch`, `ui_change` |
+| Facebook | Existing visible Chrome; authenticated | `facebook_search` / `facebook_native_search_entry` with `targetMatched=true` | Supported when exact native evidence is available | `ready` only with the exact entry; authenticated shell or unavailable target is `ui_change` |
+| Instagram | Existing visible Chrome; authenticated | `instagram_search` / `instagram_native_search_entry` with `targetMatched=true` | Supported when exact native hashtag evidence is available | `ready` only with the exact entry; authenticated shell or unavailable target is `ui_change` |
 | LinkedIn | Existing visible Chrome; authenticated only | `linkedin_native_search_entry` | Bounded initial plus one refinement; justified zero when LinkedIn supplies no exact native hashtag suggestion | `ready` only with search entry; otherwise `ui_change`, commonly `linkedin_authenticated_feed` / `linkedin_authenticated_feed_navigation` |
 | X | Existing visible Chrome; authenticated | Authenticated navigation and Search query control | Supported when exact native evidence is available | `ready`, `authentication_required`, `challenge`, `locale_mismatch`, `ui_change` |
 | TikTok | Existing visible Chrome or permitted public Codex in-app Browser | TikTok identity, native Search control, result-type landmarks | Supported; public availability may change | `ready`, `authentication_required`, `challenge`, `locale_mismatch`, `ui_change` |
 | YouTube | Existing visible Chrome or permitted public Codex in-app Browser | YouTube identity, Search control, native result/filter landmarks | Supported when exact hashtag suggestion/result evidence is available | `ready`, `authentication_required`, `challenge`, `locale_mismatch`, `ui_change` |
 | Pinterest | Existing visible Chrome preferred; permitted public Codex in-app Browser for search terms | `pinterest_search_control` on personal/public search route | Always `not_applicable` in v1; do not open a browser for hashtag | Search term may be `ready`; Business Hub/root redirect without Search is `ui_change`, never challenge or native empty |
+
+## Enumerated Facebook diagnostics
+
+Routes:
+
+- `facebook_search`
+- `facebook_authenticated_shell`
+- `facebook_target_unavailable`
+
+Expected landmark:
+
+- `facebook_native_search_entry`
+
+Observed landmarks:
+
+- `facebook_native_search_entry`
+- `facebook_authenticated_navigation`
+- `target_unavailable`
+
+## Enumerated Instagram diagnostics
+
+Routes:
+
+- `instagram_search`
+- `instagram_authenticated_shell`
+- `instagram_target_unavailable`
+
+Expected landmark:
+
+- `instagram_native_search_entry`
+
+Observed landmarks:
+
+- `instagram_native_search_entry`
+- `instagram_authenticated_navigation`
+- `target_unavailable`
 
 ## Enumerated LinkedIn diagnostics
 
@@ -20,6 +56,7 @@ Routes:
 
 - `linkedin_search`
 - `linkedin_authenticated_feed`
+- `linkedin_target_unavailable`
 
 Expected landmark:
 
@@ -29,6 +66,7 @@ Observed landmarks:
 
 - `linkedin_native_search_entry`
 - `linkedin_authenticated_feed_navigation`
+- `target_unavailable`
 
 ## Enumerated Pinterest diagnostics
 
@@ -64,3 +102,10 @@ Observed landmarks:
 
 Autocomplete order and visible engagement are descriptive evidence only. They
 must never be represented as popularity, performance, or future-reach proof.
+
+For Facebook, Instagram, or LinkedIn, a matched authenticated shell may use
+exactly one bounded recovery only when the sanitized structural projection
+evidences an in-origin native Search navigation control. Activate that control
+once and repeat the same projection. Do not guess a URL or selector, broaden
+the read, inspect page text, or try a second recovery. Results landmarks are
+required after query interaction begins, not during entry preflight.

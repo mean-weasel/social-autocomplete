@@ -56,6 +56,7 @@
           "resultsLandmarkPresent"
         ],
         "sanitizedStatus": true,
+        "routeClass": true,
         "expectedLandmark": true,
         "observedLandmark": true
       }

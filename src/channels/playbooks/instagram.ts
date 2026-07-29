@@ -7,12 +7,12 @@ export const instagramPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated",
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
-  entryInstruction: "Open Instagram Search & Explore in the user-controlled signed-in Chrome session.",
+  entryInstruction: "Use the matched Instagram target in the user-controlled signed-in Chrome session. Proceed only on instagram_search with instagram_native_search_entry; an authenticated shell or unavailable target is ui_change.",
   semanticCheckpoints: [
     { id: "instagram-channel", purpose: "channel", description: "Instagram identity is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "instagram-auth", purpose: "access", description: "The surface is not the Instagram login page.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },
-    { id: "instagram-search", purpose: "search", description: "Search & Explore search is visible.", evidenceStatus: "official_only", required: true, failureCode: "ui_change" },
-    { id: "instagram-results", purpose: "results", description: "Native account, hashtag, audio, tag, place, or content results are visible.", evidenceStatus: "acceptance_gap", required: true, failureCode: "ui_change" },
+    { id: "instagram-search", purpose: "search", description: "The matched target is instagram_search and instagram_native_search_entry is structurally present. Authenticated navigation alone does not pass.", evidenceStatus: "acceptance_gap", required: true, failureCode: "ui_change" },
+    { id: "instagram-results", purpose: "results", description: "Native account, hashtag, audio, tag, place, or content results are required only after a query interaction begins.", evidenceStatus: "acceptance_gap", required: true, failureCode: "ui_change" },
   ],
   modules: {
     "search-term": moduleProcedure("instagram", "search-term", {
@@ -38,7 +38,7 @@ export const instagramPlaybook: ChannelPlaybook = {
     skipSponsored: true,
     engagementIsDescriptiveOnly: true,
   },
-  acceptanceGaps: ["Authenticated autocomplete, hashtag restrictions, and result-card fields require user-controlled Chrome acceptance."],
+  acceptanceGaps: ["The explicit Instagram search-entry adapter, authenticated autocomplete, hashtag restrictions, and result-card fields require fresh user-controlled Chrome acceptance."],
   evidenceSources: [
     "https://www.facebook.com/help/instagram/search/?query=hashtags",
     "https://www.facebook.com/help/487224561296752",

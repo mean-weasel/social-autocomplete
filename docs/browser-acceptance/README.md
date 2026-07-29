@@ -20,10 +20,10 @@ continuing. Never treat an ambient browser window as the user's selection.
 Tracked receipts contain only channel/module, host/browser, locale, semantic
 checkpoint states, bounded interaction status, and the screenshot policy. They
 must never contain credentials, cookies, account identifiers, private creative
-assets, URLs containing queries, raw DOM, or screenshot paths. If a screenshot
-is needed for authentication/challenge or UI change, keep it in private
-`.social-metadata/acceptance/screenshots/`; only the boolean policy result is
-recorded.
+assets, URLs containing queries, raw DOM, screenshots, or screenshot paths.
+Authenticated acceptance prohibits screenshot capture, including for
+authentication, challenge, or UI-change outcomes; record the structural
+outcome instead.
 
 Authenticated acceptance must attach to the user's existing Chrome profile. A
 temporary Playwright launch, profile-less Chromium instance, downloaded test
@@ -47,6 +47,7 @@ minimal sanitized projection:
 - structural booleans for target match, authentication required, challenge
   present, locale match, search landmark present, and results landmark present;
 - a sanitized status code;
+- an enumerated route class;
 - the expected semantic landmark; and
 - the observed semantic landmark.
 
@@ -56,22 +57,46 @@ page text. If no target matches, return false booleans and a sanitized
 If a required landmark is missing, return `ui_change`; never broaden the read
 or substitute body text, feed content, or a DOM snapshot.
 
-LinkedIn and Pinterest entry diagnostics use only these enumerated structural
-values:
+Facebook, Instagram, LinkedIn, and Pinterest entry diagnostics use only these
+enumerated structural values:
 
-- LinkedIn routes: `linkedin_search`, `linkedin_authenticated_feed`; expected
-  landmark: `linkedin_native_search_entry`; observed landmarks:
-  `linkedin_native_search_entry` or `linkedin_authenticated_feed_navigation`.
+- Facebook routes: `facebook_search`, `facebook_authenticated_shell`,
+  `facebook_target_unavailable`; expected landmark:
+  `facebook_native_search_entry`; observed landmarks:
+  `facebook_native_search_entry`, `facebook_authenticated_navigation`, or
+  `target_unavailable`.
+- Instagram routes: `instagram_search`, `instagram_authenticated_shell`,
+  `instagram_target_unavailable`; expected landmark:
+  `instagram_native_search_entry`; observed landmarks:
+  `instagram_native_search_entry`, `instagram_authenticated_navigation`, or
+  `target_unavailable`.
+
+- LinkedIn routes: `linkedin_search`, `linkedin_authenticated_feed`,
+  `linkedin_target_unavailable`; expected landmark:
+  `linkedin_native_search_entry`; observed landmarks:
+  `linkedin_native_search_entry`, `linkedin_authenticated_feed_navigation`, or
+  `target_unavailable`.
 - Pinterest routes: `pinterest_public_search`, `pinterest_personal_search`,
   `pinterest_business_hub`, `pinterest_root_after_search_redirect`; expected
   landmark: `pinterest_search_control`; observed landmarks:
   `pinterest_search_control`, `pinterest_business_hub`, or `pinterest_root`.
 
-LinkedIn passes entry acceptance only when the native search entry is present.
-Authenticated Feed/navigation without it is `ui_change`. Pinterest personal or
-public search may pass when Search is present. Business Hub or a root route
-after a search redirect without Search is `ui_change`, never challenge or
-native empty. These labels describe semantic structure and are not selectors.
+Each semantic channel passes entry acceptance only when `targetMatched=true`
+and its ready route's exact native search entry is present. Authenticated
+navigation without the entry and unavailable targets are `ui_change`.
+Pinterest personal or public search may pass when Search is present. Business
+Hub or a root route after a search redirect without Search is `ui_change`,
+never challenge or native empty. These labels describe semantic structure and
+are not selectors.
+
+When a target is matched and authenticated but its search entry is absent,
+exactly one bounded recovery may activate an in-origin native Search navigation
+control that was evidenced by the same structural projection. Repeat the exact
+same projection after that one activation. Never guess a URL or selector,
+inspect page text, broaden the target read, or attempt a second recovery.
+Results landmarks are not required during preflight before a query interaction
+begins; once an interaction begins, a missing results landmark is `ui_change`
+unless the native surface explicitly reports an empty state.
 
 If the session is signed out, acceptance stops with
 `authentication_required`. The user signs in manually in that same browser and

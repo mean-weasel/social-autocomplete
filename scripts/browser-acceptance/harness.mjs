@@ -2,6 +2,40 @@ import { createHash } from "node:crypto";
 
 const forbiddenKeys = /credential|cookie|token|password|account|username|email|raw.?dom|screenshot.?path|creative.?asset|private.?asset/i;
 
+const semanticDiagnostics = {
+  facebook: {
+    routes: {
+      facebook_search: { expected: "facebook_native_search_entry", observed: "facebook_native_search_entry", ready: true },
+      facebook_authenticated_shell: { expected: "facebook_native_search_entry", observed: "facebook_authenticated_navigation", ready: false },
+      facebook_target_unavailable: { expected: "facebook_native_search_entry", observed: "target_unavailable", ready: false },
+    },
+  },
+  instagram: {
+    routes: {
+      instagram_search: { expected: "instagram_native_search_entry", observed: "instagram_native_search_entry", ready: true },
+      instagram_authenticated_shell: { expected: "instagram_native_search_entry", observed: "instagram_authenticated_navigation", ready: false },
+      instagram_target_unavailable: { expected: "instagram_native_search_entry", observed: "target_unavailable", ready: false },
+    },
+  },
+  linkedin: {
+    routes: {
+      linkedin_search: { expected: "linkedin_native_search_entry", observed: "linkedin_native_search_entry", ready: true },
+      linkedin_authenticated_feed: { expected: "linkedin_native_search_entry", observed: "linkedin_authenticated_feed_navigation", ready: false },
+      linkedin_target_unavailable: { expected: "linkedin_native_search_entry", observed: "target_unavailable", ready: false },
+    },
+  },
+  pinterest: {
+    routes: {
+      pinterest_public_search: { expected: "pinterest_search_control", observed: "pinterest_search_control", ready: true },
+      pinterest_personal_search: { expected: "pinterest_search_control", observed: "pinterest_search_control", ready: true },
+      pinterest_business_hub: { expected: "pinterest_search_control", observed: "pinterest_business_hub", ready: false },
+      pinterest_root_after_search_redirect: { expected: "pinterest_search_control", observed: "pinterest_root", ready: false },
+    },
+  },
+};
+
+const channelsRequiringSemanticDiagnostics = new Set(Object.keys(semanticDiagnostics));
+
 export function assertSanitized(value, path = "$") {
   if (Array.isArray(value)) {
     value.forEach((item, index) => assertSanitized(item, `${path}[${index}]`));
@@ -12,6 +46,35 @@ export function assertSanitized(value, path = "$") {
     if (forbiddenKeys.test(key)) throw new Error(`Forbidden private field at ${path}.${key}`);
     assertSanitized(child, `${path}.${key}`);
   }
+}
+
+function semanticDiagnostic(input) {
+  const supplied = input.diagnostic ?? (
+    input.routeClass || input.expectedLandmark || input.observedLandmark
+      ? {
+          routeClass: input.routeClass,
+          expectedLandmark: input.expectedLandmark,
+          observedLandmark: input.observedLandmark,
+        }
+      : null
+  );
+  if (!supplied) return null;
+  const channelContract = semanticDiagnostics[input.channel];
+  const routeContract = channelContract?.routes?.[supplied.routeClass];
+  if (
+    !routeContract ||
+    supplied.expectedLandmark !== routeContract.expected ||
+    supplied.observedLandmark !== routeContract.observed
+  ) {
+    throw new Error("Invalid semantic diagnostic.");
+  }
+  return {
+    targetMatched: input.targetMatched === true,
+    routeClass: supplied.routeClass,
+    expectedLandmark: supplied.expectedLandmark,
+    observedLandmark: supplied.observedLandmark,
+    ready: input.targetMatched === true && input.searchLandmark === true && routeContract.ready,
+  };
 }
 
 export function classifyChecklist(input) {
@@ -31,7 +94,14 @@ export function classifyChecklist(input) {
     return { status: "interrupted", reasonCode: "challenge" };
   }
   if (!input.localeMatches) return { status: "interrupted", reasonCode: "locale_mismatch" };
-  if (!input.searchLandmark || !input.resultsLandmark || (input.interactionAttempted && !input.interactionSucceeded)) {
+  const diagnostic = semanticDiagnostic(input);
+  if (
+    !input.searchLandmark ||
+    (channelsRequiringSemanticDiagnostics.has(input.channel) && !diagnostic) ||
+    (diagnostic && !diagnostic.ready) ||
+    (input.interactionAttempted && !input.interactionSucceeded) ||
+    (input.interactionAttempted && !input.resultsLandmark && !input.explicitNativeEmpty)
+  ) {
     return { status: "failed", reasonCode: "ui_change" };
   }
   if (input.explicitNativeEmpty && input.interactionAttempted && input.interactionSucceeded) {
@@ -42,14 +112,22 @@ export function classifyChecklist(input) {
 
 export function makeReceipt(input) {
   assertSanitized(input);
+  if (input.accessClass === "authenticated" && input.screenshotCaptured === true) {
+    throw new Error("Authenticated browser screenshots are prohibited.");
+  }
+  const diagnostic = semanticDiagnostic(input);
   const classification = classifyChecklist(input);
   const capturedAt = input.capturedAt ?? new Date().toISOString();
   const screenshotDefault =
-    classification.reasonCode === "authentication_required" ||
-    classification.reasonCode === "challenge" ||
-    classification.reasonCode === "ui_change";
+    input.accessClass !== "authenticated" && (
+      classification.reasonCode === "authentication_required" ||
+      classification.reasonCode === "challenge" ||
+      classification.reasonCode === "ui_change"
+    );
   const policyReason =
-    classification.reasonCode === "ui_change"
+    input.accessClass === "authenticated"
+      ? "authenticated_capture_prohibited"
+      : classification.reasonCode === "ui_change"
       ? "ui_change"
       : classification.reasonCode === "authentication_required" || classification.reasonCode === "challenge"
         ? "authentication_or_challenge"
@@ -80,6 +158,16 @@ export function makeReceipt(input) {
       captured: input.screenshotCaptured ?? screenshotDefault,
       policyReason,
     },
+    ...(diagnostic
+      ? {
+          diagnostic: {
+            targetMatched: diagnostic.targetMatched,
+            routeClass: diagnostic.routeClass,
+            expectedLandmark: diagnostic.expectedLandmark,
+            observedLandmark: diagnostic.observedLandmark,
+          },
+        }
+      : {}),
   };
   assertSanitized(receiptBase);
   const receiptId = `acceptance_${createHash("sha256").update(JSON.stringify(receiptBase)).digest("hex").slice(0, 24)}`;

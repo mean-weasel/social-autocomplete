@@ -1,0 +1,66 @@
+{
+  "goalbuddy_receipt_v1": {
+    "result": "done",
+    "task_id": "T004",
+    "board_path": "/Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-browser-adapter-polish/state.yaml",
+    "decision": "approved_for_pin",
+    "full_outcome_complete": false,
+    "rationale": "The package is fail-closed at both executable boundaries. The channel classifier accepts semantic readiness only for an exact per-route contract with targetMatched=true and searchEntryPresent=true. The browser harness additionally requires a semantic diagnostic for Facebook, Instagram, LinkedIn, and Pinterest, validates every route and landmark against a per-channel allowlist, and emits only the bounded validated diagnostic. Entry preflight can pass before results exist, while an attempted query without successful interaction/results remains ui_change unless the native surface explicitly reports empty. Authenticated shell, Feed, and unavailable-target variants remain ui_change. Recovery guidance permits one evidenced in-origin native Search navigation activation inside the bounded operation, followed by the same projection, and prohibits guessed URLs/selectors, page text, broader reads, and a second attempt. Authenticated screenshot capture is rejected. No live readiness claim is made; fresh Chrome proof remains required.",
+    "requirement_to_test": [
+      {
+        "requirement": "Exact ready route, exact native entry, and targetMatched=true",
+        "evidence": "tests/channels/playbooks.test.ts; tests/browser-acceptance/harness.test.ts; fixtures/diagnostics/surface-cases.json"
+      },
+      {
+        "requirement": "Authenticated shell, Feed, and target-unavailable states fail visibly",
+        "evidence": "fixtures/channels/scenarios.json; tests/channels/fixture-replay.test.ts; tests/browser-acceptance/diagnostics.test.ts"
+      },
+      {
+        "requirement": "Results are phase-aware",
+        "evidence": "tests/browser-acceptance/harness.test.ts preflight and post-interaction cases"
+      },
+      {
+        "requirement": "Diagnostics remain enumerated and sanitized",
+        "evidence": "scripts/browser-acceptance/harness.mjs; fixtures/diagnostics/acceptance-matrix.json; tests/browser-acceptance/harness.test.ts"
+      },
+      {
+        "requirement": "Bounded recovery and authenticated privacy constraints",
+        "evidence": "skills/_shared/browser-research-contract.md; docs/browser-acceptance/README.md; docs/browser-acceptance/runbooks/qa-worker.md"
+      },
+      {
+        "requirement": "Release surface remains intact",
+        "evidence": "npm run verify:release -- --allow-missing-live-receipts passed"
+      }
+    ],
+    "false_positive_analysis": [
+      "Ready semantic routes cannot pass with targetMatched=false, a missing diagnostic, a non-ready route, a mismatched landmark, or a missing search entry.",
+      "LinkedIn authenticated Feed/navigation remains non-ready even when authentication and navigation are present.",
+      "Native empty is only emitted after a successful bounded interaction; preflight without interaction returns ready, never native_empty.",
+      "The TypeScript classifier is channel-agnostic, but all production browser acceptance is channel-aware in the harness; no other production caller bypasses that harness."
+    ],
+    "privacy_boundary_analysis": [
+      "The host contract projects structural booleans plus enumerated route and landmark labels only.",
+      "The shared skill and QA runbook prohibit full tab lists, URLs, DOM/body/feed text, identities, credentials, cookies, tokens, screenshots, guessed selectors, and broader retry reads.",
+      "The harness rejects forbidden private fields, non-enumerated semantic diagnostics, and authenticated screenshot capture."
+    ],
+    "evidence": [
+      "T002 approved contract",
+      "T003 receipt",
+      "current adapter diff",
+      "npm run typecheck",
+      "npm run lint:playbooks",
+      "npm run test:channels",
+      "npm run test:diagnostics",
+      "npm run test:browser-harness",
+      "npm run test:host-parity",
+      "npm run verify:offline",
+      "npm run verify:release -- --allow-missing-live-receipts",
+      "git diff --check"
+    ],
+    "missing_evidence": [
+      "The exact reviewed build must be committed and pinned into the dedicated QA repository.",
+      "Fresh one-time-authorized existing-Chrome evidence must exercise Instagram, Facebook, and LinkedIn; fixture and release verification do not prove current platform UI."
+    ],
+    "worker_package": null
+  }
+}

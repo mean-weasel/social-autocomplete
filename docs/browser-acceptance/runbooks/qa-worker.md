@@ -1,6 +1,6 @@
 # Local Codex QA worker runbook
 
-Runbook version: `1.4`
+Runbook version: `1.5`
 
 Use this runbook from a fresh Codex task rooted in the dedicated QA repository.
 It tests an installed Social Metadata Research plugin without modifying product
@@ -204,7 +204,7 @@ unselected channel.
 
   ```json
   {
-    "targetMatch": true,
+    "targetMatched": true,
     "authenticationRequired": false,
     "challengePresent": false,
     "localeMatch": true,
@@ -224,8 +224,18 @@ unselected channel.
 - [ ] Resume only after the user confirms readiness; repeat the same bounded
   structural check.
 - [ ] If a challenge is visible, record `challenge` and wait for the user.
+- [ ] If the target is matched and authenticated but its search entry is
+  absent, allow exactly one recovery only when the same structural projection
+  evidences an in-origin native Search navigation control. Activate that
+  control once and repeat the exact same bounded projection.
+- [ ] Never guess a URL or selector, inspect page text, broaden the target
+  read, or attempt a second recovery. If the control is not evidenced or the
+  repeated projection still lacks the exact entry, record `ui_change`.
 - [ ] If the expected search landmark is absent, record `ui_change` with
   expected and observed semantic landmarks.
+- [ ] Do not require a results landmark before query interaction begins.
+  After interaction begins, missing results is `ui_change` unless the native
+  surface explicitly reports an empty state.
 - [ ] Return the channel outcome before advancing.
 
 Expected result: every selected channel is represented by `ready`,

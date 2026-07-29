@@ -68,62 +68,63 @@ test("surface diagnostics keep native empty distinct from authentication and UI 
   assert.equal(classifySurface({ ...base, localeMatches: false }).exitCode, 6);
 });
 
-test("LinkedIn and Pinterest require an evidenced semantic search entry", () => {
+test("semantic channel routes require a matched target and exact native search entry", () => {
   const base = {
     accessState: "ready" as const,
     localeMatches: true,
+    targetMatched: true,
     expectedLandmarksPresent: true,
     searchEntryPresent: true,
     interactionAttempted: false,
     interactionSucceeded: false,
     explicitNativeEmpty: false,
   };
-  assert.equal(classifySurface({
-    ...base,
-    diagnostic: {
-      routeClass: "linkedin_search",
-      expectedLandmark: "linkedin_native_search_entry",
-      observedLandmark: "linkedin_native_search_entry",
-    },
-  }).state, "ready");
-  for (const routeClass of ["pinterest_public_search", "pinterest_personal_search"] as const) {
+  const readyRoutes = [
+    ["facebook_search", "facebook_native_search_entry", "facebook_native_search_entry"],
+    ["instagram_search", "instagram_native_search_entry", "instagram_native_search_entry"],
+    ["linkedin_search", "linkedin_native_search_entry", "linkedin_native_search_entry"],
+    ["pinterest_public_search", "pinterest_search_control", "pinterest_search_control"],
+    ["pinterest_personal_search", "pinterest_search_control", "pinterest_search_control"],
+  ] as const;
+  for (const [routeClass, expectedLandmark, observedLandmark] of readyRoutes) {
     assert.equal(classifySurface({
       ...base,
       diagnostic: {
         routeClass,
-        expectedLandmark: "pinterest_search_control",
-        observedLandmark: "pinterest_search_control",
+        expectedLandmark,
+        observedLandmark,
       },
     }).state, "ready");
-  }
-  assert.deepEqual(classifySurface({
-    ...base,
-    searchEntryPresent: false,
-    explicitNativeEmpty: true,
-    diagnostic: {
-      routeClass: "linkedin_authenticated_feed",
-      expectedLandmark: "linkedin_native_search_entry",
-      observedLandmark: "linkedin_authenticated_feed_navigation",
-    },
-  }), {
-    state: "failed",
-    reasonCode: "ui_change",
-    exitCode: 5,
-    diagnostic: {
-      routeClass: "linkedin_authenticated_feed",
-      expectedLandmark: "linkedin_native_search_entry",
-      observedLandmark: "linkedin_authenticated_feed_navigation",
-    },
-  });
-  for (const routeClass of ["pinterest_business_hub", "pinterest_root_after_search_redirect"] as const) {
     assert.equal(classifySurface({
       ...base,
+      targetMatched: false,
+      diagnostic: {
+        routeClass,
+        expectedLandmark,
+        observedLandmark,
+      },
+    }).reasonCode, "ui_change");
+  }
+  const blockedRoutes = [
+    ["facebook_authenticated_shell", "facebook_native_search_entry", "facebook_authenticated_navigation"],
+    ["facebook_target_unavailable", "facebook_native_search_entry", "target_unavailable"],
+    ["instagram_authenticated_shell", "instagram_native_search_entry", "instagram_authenticated_navigation"],
+    ["instagram_target_unavailable", "instagram_native_search_entry", "target_unavailable"],
+    ["linkedin_authenticated_feed", "linkedin_native_search_entry", "linkedin_authenticated_feed_navigation"],
+    ["linkedin_target_unavailable", "linkedin_native_search_entry", "target_unavailable"],
+    ["pinterest_business_hub", "pinterest_search_control", "pinterest_business_hub"],
+    ["pinterest_root_after_search_redirect", "pinterest_search_control", "pinterest_root"],
+  ] as const;
+  for (const [routeClass, expectedLandmark, observedLandmark] of blockedRoutes) {
+    assert.equal(classifySurface({
+      ...base,
+      targetMatched: !routeClass.endsWith("target_unavailable"),
       searchEntryPresent: false,
       explicitNativeEmpty: true,
       diagnostic: {
         routeClass,
-        expectedLandmark: "pinterest_search_control",
-        observedLandmark: routeClass === "pinterest_business_hub" ? "pinterest_business_hub" : "pinterest_root",
+        expectedLandmark,
+        observedLandmark,
       },
     }).reasonCode, "ui_change");
   }

@@ -1,5 +1,8 @@
 import type {
   SurfaceClassification,
+  SurfaceExpectedLandmark,
+  SurfaceObservedLandmark,
+  SurfaceRouteClass,
   SurfaceSnapshot,
 } from "./types.js";
 
@@ -12,22 +15,93 @@ function result(
     : classification;
 }
 
+interface SemanticSearchContract {
+  expectedLandmark: SurfaceExpectedLandmark;
+  observedLandmark: SurfaceObservedLandmark;
+  readyRoute: boolean;
+}
+
+const semanticSearchContracts: Partial<Record<SurfaceRouteClass, SemanticSearchContract>> = {
+  facebook_search: {
+    expectedLandmark: "facebook_native_search_entry",
+    observedLandmark: "facebook_native_search_entry",
+    readyRoute: true,
+  },
+  facebook_authenticated_shell: {
+    expectedLandmark: "facebook_native_search_entry",
+    observedLandmark: "facebook_authenticated_navigation",
+    readyRoute: false,
+  },
+  facebook_target_unavailable: {
+    expectedLandmark: "facebook_native_search_entry",
+    observedLandmark: "target_unavailable",
+    readyRoute: false,
+  },
+  instagram_search: {
+    expectedLandmark: "instagram_native_search_entry",
+    observedLandmark: "instagram_native_search_entry",
+    readyRoute: true,
+  },
+  instagram_authenticated_shell: {
+    expectedLandmark: "instagram_native_search_entry",
+    observedLandmark: "instagram_authenticated_navigation",
+    readyRoute: false,
+  },
+  instagram_target_unavailable: {
+    expectedLandmark: "instagram_native_search_entry",
+    observedLandmark: "target_unavailable",
+    readyRoute: false,
+  },
+  linkedin_search: {
+    expectedLandmark: "linkedin_native_search_entry",
+    observedLandmark: "linkedin_native_search_entry",
+    readyRoute: true,
+  },
+  linkedin_authenticated_feed: {
+    expectedLandmark: "linkedin_native_search_entry",
+    observedLandmark: "linkedin_authenticated_feed_navigation",
+    readyRoute: false,
+  },
+  linkedin_target_unavailable: {
+    expectedLandmark: "linkedin_native_search_entry",
+    observedLandmark: "target_unavailable",
+    readyRoute: false,
+  },
+  pinterest_public_search: {
+    expectedLandmark: "pinterest_search_control",
+    observedLandmark: "pinterest_search_control",
+    readyRoute: true,
+  },
+  pinterest_personal_search: {
+    expectedLandmark: "pinterest_search_control",
+    observedLandmark: "pinterest_search_control",
+    readyRoute: true,
+  },
+  pinterest_business_hub: {
+    expectedLandmark: "pinterest_search_control",
+    observedLandmark: "pinterest_business_hub",
+    readyRoute: false,
+  },
+  pinterest_root_after_search_redirect: {
+    expectedLandmark: "pinterest_search_control",
+    observedLandmark: "pinterest_root",
+    readyRoute: false,
+  },
+};
+
 function semanticSearchEntryMissing(snapshot: SurfaceSnapshot): boolean {
   const diagnostic = snapshot.diagnostic;
   if (!diagnostic || diagnostic.routeClass === "generic") return false;
 
-  const isLinkedIn = diagnostic.routeClass.startsWith("linkedin_");
-  const expectedLandmark = isLinkedIn
-    ? "linkedin_native_search_entry"
-    : "pinterest_search_control";
-  const observedLandmark = isLinkedIn
-    ? "linkedin_native_search_entry"
-    : "pinterest_search_control";
+  const contract = semanticSearchContracts[diagnostic.routeClass];
+  if (!contract) return true;
 
   return (
+    snapshot.targetMatched !== true ||
     snapshot.searchEntryPresent !== true ||
-    diagnostic.expectedLandmark !== expectedLandmark ||
-    diagnostic.observedLandmark !== observedLandmark
+    !contract.readyRoute ||
+    diagnostic.expectedLandmark !== contract.expectedLandmark ||
+    diagnostic.observedLandmark !== contract.observedLandmark
   );
 }
 

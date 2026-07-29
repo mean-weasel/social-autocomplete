@@ -22,10 +22,20 @@
     "claudeRequirement": "direct_anthropic_login_and_user_controlled_chrome"
   },
   "diagnosticEnums": {
+    "facebook": {
+      "routes": ["facebook_search", "facebook_authenticated_shell", "facebook_target_unavailable"],
+      "expectedLandmark": "facebook_native_search_entry",
+      "observedLandmarks": ["facebook_native_search_entry", "facebook_authenticated_navigation", "target_unavailable"]
+    },
+    "instagram": {
+      "routes": ["instagram_search", "instagram_authenticated_shell", "instagram_target_unavailable"],
+      "expectedLandmark": "instagram_native_search_entry",
+      "observedLandmarks": ["instagram_native_search_entry", "instagram_authenticated_navigation", "target_unavailable"]
+    },
     "linkedin": {
-      "routes": ["linkedin_search", "linkedin_authenticated_feed"],
+      "routes": ["linkedin_search", "linkedin_authenticated_feed", "linkedin_target_unavailable"],
       "expectedLandmark": "linkedin_native_search_entry",
-      "observedLandmarks": ["linkedin_native_search_entry", "linkedin_authenticated_feed_navigation"]
+      "observedLandmarks": ["linkedin_native_search_entry", "linkedin_authenticated_feed_navigation", "target_unavailable"]
     },
     "pinterest": {
       "routes": ["pinterest_public_search", "pinterest_personal_search", "pinterest_business_hub", "pinterest_root_after_search_redirect"],
