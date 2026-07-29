@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T011
+active_task: T014
 
 tasks:
   - id: T001
@@ -700,7 +700,7 @@ tasks:
   - id: T011
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Implement the two-phase hashed browser-action start acknowledgement and explicit 60000 ms bounded-operation timeout across the durable reducer, schema, manager/worker protocol, prompts, runbooks, and deterministic tests."
     inputs:
@@ -735,6 +735,148 @@ tasks:
     stop_if:
       - "Any approved stop_if from T010 is reached."
       - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      implementation_commit: "4c6aa70e374adc9561833fccdc509ed3d5a2bb05"
+      changed_files:
+        - "scripts/browser-acceptance/qa-recovery.mjs"
+        - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+        - "docs/browser-acceptance/protocol/manager-worker.md"
+        - "docs/browser-acceptance/prompts/qa-manager-starter.md"
+        - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+        - "docs/browser-acceptance/runbooks/qa-manager.md"
+        - "docs/browser-acceptance/runbooks/qa-worker.md"
+        - "docs/browser-acceptance/README.md"
+        - "tests/browser-acceptance/qa-recovery.test.mjs"
+        - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      commands:
+        - cmd: "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+          status: pass
+        - cmd: "npm run verify:offline"
+          status: pass
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      summary: "Implemented a two-phase browser-action start. The reducer now recomputes the canonical action descriptor hash, enforces the exact action label and 60000 ms timeout, persists start_persisted, and requires manager authorize_browser_action_start before one QA_CHECKPOINT_ACK permits Chrome. Task loss before acknowledgement clears the binding and intent for safe re-verification; any state at started remains ambiguous and non-replayable."
+      evidence:
+        - "scripts/browser-acceptance/qa-recovery.mjs"
+        - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+        - "docs/browser-acceptance/protocol/manager-worker.md"
+        - "docs/browser-acceptance/prompts/qa-manager-starter.md"
+        - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+        - "docs/browser-acceptance/runbooks/qa-manager.md"
+        - "docs/browser-acceptance/runbooks/qa-worker.md"
+        - "tests/browser-acceptance/qa-recovery.test.mjs"
+        - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      verification:
+        - cmd: "node --test tests/browser-acceptance/qa-recovery.test.mjs tests/browser-acceptance/qa-manager-prompt.test.mjs"
+          result: pass
+          detail: "33/33"
+        - cmd: "npm run verify:offline"
+          result: pass
+        - cmd: "npm run verify:release -- --allow-missing-live-receipts"
+          result: pass
+        - cmd: "git diff --check"
+          result: pass
+  - id: T012
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Adversarially review the two-phase action-start implementation for pre-ack browser execution, hash substitution, timeout drift, and unsafe replay."
+    inputs:
+      - "T010 approved checkpoint contract"
+      - "T011 implementation commit 4c6aa70e374adc9561833fccdc509ed3d5a2bb05"
+    constraints:
+      - "Read-only."
+      - "Reject any path that can call Chrome before exact acknowledgement."
+      - "Reject any recovery path that can replay an acknowledged action."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete: false"
+      - "Exact QA pin prerequisite"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The reducer validates channel, browser, action label, canonical descriptor hash, and exactly 60000 ms before start_persisted. Completion is impossible from start_persisted. Manager authorization moves the checkpoint conservatively to started before the one acknowledgement send, so uncertain delivery cannot be retried. A task boundary before acknowledgement clears the verified binding and descriptor; a boundary after acknowledgement remains ambiguous and terminal. Tests cover missing, incorrect, and mismatched hashes, timeout drift, pre-ack completion rejection, recovery invalidation, and post-ack no-replay."
+      missing_evidence:
+        - "The exact 4c6aa70 build must be pinned into the dedicated QA repository."
+        - "A fresh one-time-authorized Instagram→Facebook→LinkedIn replay must prove the acknowledgement gate in live execution."
+      next_task: T013
+  - id: T013
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Pin the approved two-phase action-start build into the dedicated QA repository and prepare the next fresh replay without browser access."
+    inputs:
+      - "T012 approval"
+      - "Product commit 4c6aa70e374adc9561833fccdc509ed3d5a2bb05"
+      - "Dedicated QA repository /Users/neonwatty/Desktop/social-autocomplete-qa"
+    constraints:
+      - "Do not operate a browser."
+      - "Preserve private QA artifacts as ignored and uncommitted."
+      - "Pin an immutable clean source checkout, not the mutable product worktree."
+      - "Verify every declared source and copied-file SHA-256."
+    expected_output:
+      - "Clean immutable source checkout at the exact commit"
+      - "QA source.json and copied runbooks aligned to the approved build"
+      - "Committed QA pin"
+      - "Fresh approval prerequisite stated explicitly"
+    allowed_files:
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+    receipt:
+      result: done
+      source_commit: "4c6aa70e374adc9561833fccdc509ed3d5a2bb05"
+      qa_commit: "cebc957eab9ae1f39c6bbf6d57da5c1ed8109c55"
+      changed_files:
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+      commands:
+        - cmd: "Verify every sourceSha256 and qaSha256 declared by runbooks/source.json"
+          status: pass
+        - cmd: "git -C /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-4c6aa70 status --short"
+          status: pass
+        - cmd: "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+          status: pass
+        - cmd: "git -C /Users/neonwatty/Desktop/social-autocomplete-qa status --short"
+          status: pass
+      summary: "Created a clean immutable checkout at the exact approved implementation commit, updated the QA-local worker runbook to version 1.7 while preserving only its documented path adaptations, refreshed all source and QA SHA-256 declarations, committed the QA pin, and pointed the local marketplace at the immutable checkout. No browser was accessed."
+      evidence:
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-4c6aa70"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+        - "/Users/neonwatty/.codex/config.toml"
+      verification:
+        - "Immutable source checkout HEAD is exactly 4c6aa70e374adc9561833fccdc509ed3d5a2bb05 and clean."
+        - "All 4 worker-file source/QA hashes and 11 manager-source hashes match source.json."
+        - "QA tracked worktree is clean at cebc957eab9ae1f39c6bbf6d57da5c1ed8109c55."
+        - "Private notes, receipts, and .social-metadata remain ignored and uncommitted."
+        - "Local marketplace source resolves to the immutable 4c6aa70 checkout."
+  - id: T014
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: high
+    objective: "Obtain a fresh exact one-time authorization and supervise the pinned Instagram→Facebook→LinkedIn replay through the acknowledged two-phase browser-action gate."
+    inputs:
+      - "T013 exact QA pin"
+      - "Unapproved private three-channel scenario"
+      - "Worker runbook 1.7 and manager runbook 1.6"
+    constraints:
+      - "Do not begin browser work without a new exact approval."
+      - "Use only existing visible Chrome."
+      - "Require browser_binding_verified, canonical hashed browser_action_started, and matching QA_CHECKPOINT_ACK in that order for each channel."
+      - "Never resend a start acknowledgement or retry an acknowledged action."
+      - "Consume the one-time authorization at terminal state."
+    expected_output:
+      - "Fresh sanitized Instagram, Facebook, and LinkedIn outcomes"
+      - "No browser call before exact manager acknowledgement"
+      - "Bounded current native evidence or truthful external outcome"
+      - "One terminal run result"
     receipt: null
   - id: T999
     type: judge
