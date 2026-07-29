@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-browser-adapter-polish"
   kind: specific
   tranche: "Map, implement, and prove current authenticated Chrome search-entry adapters for Instagram, Facebook, and LinkedIn."
-  status: active
+  status: blocked
   oracle:
     signal: "Fresh sanitized Chrome receipts plus fixtures and release verification prove current native search-entry recognition and bounded autocomplete evidence without weakening privacy or evidence rules."
     cadence: "after the implementation package and at final live audit"
@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T006
+active_task: null
 
 tasks:
   - id: T001
@@ -441,7 +441,7 @@ tasks:
   - id: T006
     type: pm
     assignee: PM
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: "Obtain fresh one-time authorization and supervise the exact Instagram→Facebook→LinkedIn autocomplete-only Chrome replay."
     inputs:
@@ -461,11 +461,24 @@ tasks:
       - "No omitted or duplicate channel/action"
       - "No fabricated recommendations or popularity claims"
       - "run_complete or truthful bounded run_stopped"
-    receipt: null
+    receipt:
+      result: blocked
+      blocked_reason: "The first authorized run stopped before installation or browser access because the movable product checkout had advanced through GoalBuddy-only commits beyond the exact QA source pin. The terminal transition consumed that run's one-time authorization. The QA source pin is now corrected to an ignored immutable worktree at the exact reviewed commit, all declared hashes pass, and fresh authorization is required for a new run."
+      waiting_for_user_approval: true
+      required_reply: "APPROVE QA BROWSER RUN"
+      resume_supported: true
+      evidence:
+        - "Stopped run qa_20260729T215200Z: worker_dispatch_invalid"
+        - "No plugin installation or browser action occurred"
+        - "Immutable source checkout /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-bf4b27f"
+        - "Immutable source HEAD bf4b27f4f0212cff5ade9f34bbb899953828bb91"
+        - "Corrected QA pin b4438f292052baa71c1f032ffb13c2711a92c843"
+        - "All declared sourceSha256 and qaSha256 values verified"
+      summary: "Corrected the deterministic pin failure without touching browser state. The saved scenario is reset to unapproved and browserAccessAuthorized=false until a fresh exact reply is received."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: blocked
     reasoning_hint: high
     objective: "Audit whether implementation, exact QA pinning, and fresh live evidence satisfy the browser-adapter polish oracle."
     inputs:
@@ -483,7 +496,11 @@ tasks:
       - "full_outcome_complete: true | false"
       - "Requirement-to-evidence mapping"
       - "Missing evidence and exact next task if incomplete"
-    receipt: null
+    receipt:
+      result: blocked
+      blocked_reason: "The final audit depends on the fresh T006 authorized Chrome receipt and cannot run before browser authorization and live execution."
+      resume_supported: true
+      summary: "Final audit is deferred without weakening the oracle; it resumes after T006 live evidence is recorded."
 checks:
   dirty_fingerprint: "T005 receipt and board transition only"
   last_verification:

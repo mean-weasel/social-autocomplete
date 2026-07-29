@@ -1,0 +1,20 @@
+{
+  "goalbuddy_receipt_v1": {
+    "result": "blocked",
+    "task_id": "T006",
+    "board_path": "/Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-browser-adapter-polish/state.yaml",
+    "blocked_reason": "The first authorized run stopped before installation or browser access because the movable product checkout had advanced through GoalBuddy-only commits beyond the exact QA source pin. The terminal transition consumed that run's one-time authorization. The QA source pin is now corrected to an ignored immutable worktree at the exact reviewed commit, all declared hashes pass, and fresh authorization is required for a new run.",
+    "waiting_for_user_approval": true,
+    "required_reply": "APPROVE QA BROWSER RUN",
+    "resume_supported": true,
+    "evidence": [
+      "Stopped run qa_20260729T215200Z: worker_dispatch_invalid",
+      "No plugin installation or browser action occurred",
+      "Immutable source checkout /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-bf4b27f",
+      "Immutable source HEAD bf4b27f4f0212cff5ade9f34bbb899953828bb91",
+      "Corrected QA pin b4438f292052baa71c1f032ffb13c2711a92c843",
+      "All declared sourceSha256 and qaSha256 values verified"
+    ],
+    "summary": "Corrected the deterministic pin failure without touching browser state. The saved scenario is reset to unapproved and browserAccessAuthorized=false until a fresh exact reply is received."
+  }
+}
