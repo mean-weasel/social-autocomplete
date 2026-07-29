@@ -13,11 +13,10 @@ The manager does not operate the browser. The worker follows the
 [manager/worker protocol](manager-worker-protocol.md), and the
 [channel matrix](channel-matrix.md) completely before beginning.
 
-A fresh manager task may be bootstrapped from the versioned
-[launch-prompt template](templates/qa-manager-launch-prompt.md). Render it with
-`npm run --silent qa:manager:prompt -- --qa-repository <absolute-path>` so the
-prompt records the current product path, QA path, mode, and expected product
-commit without an npm banner.
+A fresh manager task starts by following the versioned
+[launch prompt](templates/qa-manager-launch-prompt.md) directly. The prompt
+resolves the current product root and commit, reads or establishes the ignored
+project-local manager configuration, and asks which manager mode to use.
 
 ## Modes
 
@@ -30,6 +29,13 @@ development repository and must be ignored by Git. Committed files under
 `docs/browser-acceptance/scenarios/examples/` are synthetic, unapproved
 templates and never authorize browser access. Manager run records belong under
 `.social-metadata/qa/manager-runs/`.
+
+The remembered QA worker repository belongs in
+`.social-metadata/qa/manager-config.json` and must conform to
+`docs/browser-acceptance/schemas/qa-manager-config.schema.json`. If it is
+missing, invalid, or no longer resolves to the expected QA workspace, ask the
+user to choose and confirm the absolute QA repository path before continuing.
+The user may amend the saved path at any time.
 
 ## Phase -1 — interview and scenario authoring
 

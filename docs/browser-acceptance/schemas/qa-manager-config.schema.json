@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/qa-manager-config.schema.json",
+  "title": "Social metadata QA manager project-local configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "qaRepository"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "qa-manager-config/v1"
+    },
+    "qaRepository": {
+      "type": "string",
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    }
+  }
+}

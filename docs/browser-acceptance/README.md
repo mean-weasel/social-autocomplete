@@ -105,8 +105,10 @@ Use these version-controlled materials for repeatable local Codex QA:
 - [QA run-note template](templates/qa-run-note.md) — human-readable run record.
 - [QA receipt template](templates/qa-receipt.v1.json) — sanitized
   machine-readable handoff.
-- [QA manager launch prompt](templates/qa-manager-launch-prompt.md) — versioned
-  bootstrap template for starting a fresh product-repository manager task.
+- [QA manager launch prompt](templates/qa-manager-launch-prompt.md) — versioned,
+  directly executable bootstrap for a fresh product-repository manager task.
+- [QA manager configuration schema](schemas/qa-manager-config.schema.json) —
+  project-local remembered QA worker repository contract.
 - [Scenario schema](schemas/qa-scenario.schema.json) and
   [oracle schema](schemas/qa-oracle.schema.json) — machine-readable contracts
   for interview output and independent expectations.
@@ -126,16 +128,17 @@ Approved private scenarios live under
 Worker run notes, receipts, screenshots, and browser run state live in the QA
 repository and remain ignored by Git.
 
-Render the manager prompt with current paths and product commit:
+Open a fresh Codex task rooted in this repository and say:
 
-```sh
-npm run --silent qa:manager:prompt -- \
-  --qa-repository /Users/neonwatty/Desktop/social-autocomplete-qa \
-  --mode configure_and_run
+```text
+Follow docs/browser-acceptance/templates/qa-manager-launch-prompt.md.
 ```
 
-The silent renderer writes only the completed prompt to stdout. Paste it into
-a fresh Codex task rooted in this development repository.
+The prompt resolves the current product root and commit itself. It reads the
+remembered QA worker repository from
+`.social-metadata/qa/manager-config.json`, asks the user to choose and confirm
+one when missing, and allows the saved choice to be amended. It also asks for
+the manager mode, with `configure_and_run` as the recommended default.
 
 Validate a scenario and oracle before dispatch:
 
