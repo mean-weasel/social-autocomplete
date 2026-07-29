@@ -1,0 +1,62 @@
+schemaVersion: qa-scenario/v1
+scenarioId: chrome_all_channels_autocomplete
+title: Chrome all-channel autocomplete research
+scope: research
+interactionSource: synthetic_manager
+browser: chrome
+channels:
+  - facebook
+  - instagram
+  - linkedin
+  - x
+  - tiktok
+  - youtube
+  - pinterest
+creativeBrief:
+  summary: A fictional local-first note-taking app launching collaborative project spaces.
+  synthetic: true
+locale:
+  uiLocale: en-US
+  region: US
+  timezone: America/Phoenix
+modules:
+  - hashtag
+  - search-term
+evidenceTier: autocomplete_only
+mode: automatic
+authentication:
+  byChannel:
+    facebook:
+      expectedState: already_signed_in
+    instagram:
+      expectedState: already_signed_in
+    linkedin:
+      expectedState: already_signed_in
+    x:
+      expectedState: already_signed_in
+    tiktok:
+      expectedState: already_signed_in
+    youtube:
+      expectedState: already_signed_in
+    pinterest:
+      expectedState: already_signed_in
+  ifRequired: stop
+  ifChallenge: stop
+interruptionPolicy:
+  unexpectedRequest: stop
+  authenticationRequired: stop
+  challenge: stop
+  localeMismatch: stop
+  uiChange: record_and_continue
+bounds:
+  maxPrefixesPerModule: 3
+  maxSuggestionsPerPrefix: 10
+  maxResultsPerCandidate: 3
+  maxRefinementRounds: 1
+authorization:
+  status: unapproved
+  purpose: qa_only
+  reusable: false
+  requireHumanBeforeBrowserAccess: true
+  browserAccessAuthorized: false
+  credentialsAuthorized: false

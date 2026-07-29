@@ -95,14 +95,38 @@ Use these version-controlled materials for repeatable local Codex QA:
 
 - [QA agent runbook](qa-agent-runbook.md) — phased, step-by-step execution
   procedure and stop conditions.
+- [QA manager runbook](qa-manager-runbook.md) — interviews the user, writes an
+  approved scenario, starts a fresh worker task, and supplies only
+  predetermined answers.
+- [Manager/worker protocol](manager-worker-protocol.md) — stable request,
+  response, result, and stop envelopes for scenario-driven QA.
 - [Channel matrix](channel-matrix.md) — channel/module checkpoints and allowed
   outcomes.
 - [QA run-note template](templates/qa-run-note.md) — human-readable run record.
 - [QA receipt template](templates/qa-receipt.v1.json) — sanitized
   machine-readable handoff.
+- [Scenario schema](schemas/qa-scenario.schema.json) and
+  [oracle schema](schemas/qa-oracle.schema.json) — machine-readable contracts
+  for interview output and independent expectations.
+- [Example scenario](scenarios/examples/chrome-all-channels-autocomplete.yaml)
+  and [its independent oracle](oracles/chrome-all-channels-autocomplete.yaml) —
+  committed synthetic starting points that must be copied and approved before
+  use.
 
 The development repository owns the canonical protocol. A separate QA
 repository should contain a pinned copy plus the source commit and checksum
 used for the run. Private run notes, receipts, screenshots, and
 `.social-metadata/` state remain outside the product repository and ignored by
 Git.
+
+Validate a scenario and oracle before dispatch:
+
+```sh
+npm run qa:scenario:validate -- \
+  --scenario docs/browser-acceptance/scenarios/examples/chrome-all-channels-autocomplete.yaml \
+  --oracle docs/browser-acceptance/oracles/chrome-all-channels-autocomplete.yaml
+```
+
+Add `--require-approved` only for a private scenario that has completed the
+manager interview and explicit user approval. Committed examples are
+intentionally unapproved and cannot authorize browser access.

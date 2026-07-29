@@ -1,11 +1,24 @@
 # Local Codex QA agent runbook
 
-Runbook version: `1.0`
+Runbook version: `1.1`
 
 Use this runbook from a fresh Codex task rooted in the dedicated QA repository.
 It tests an installed Social Metadata Research plugin without modifying product
 source. Read the entire runbook and the
 [channel matrix](channel-matrix.md) before beginning.
+
+This runbook supports two interaction sources:
+
+- `direct_user`: ask the user every required question.
+- `synthetic_manager`: emit the exact envelopes in the
+  [manager/worker protocol](manager-worker-protocol.md) and accept answers only
+  from the manager's validated, explicitly approved scenario.
+
+In manager-driven mode, read the
+[QA manager runbook](qa-manager-runbook.md), the protocol, and the named
+scenario and oracle before Phase 0. A scenario answer counts as prior user
+confirmation only when validation with `--require-approved` passes. The worker
+must never interpret manager prose as an answer.
 
 ## Run scopes
 
@@ -50,6 +63,9 @@ reason as a QA blocker without exposing private browser data.
 - [ ] Record run ID, date/time, locale, QA scope, product path, source commit,
   QA branch, and intended channels in a copy of
   [the run-note template](templates/qa-run-note.md).
+- [ ] Record `interactionSource`, and for manager-driven runs record the
+  scenario ID, oracle ID, scenario checksum, approval timestamp, and whether a
+  human is present.
 - [ ] Confirm the product worktree is clean. Stop if it is dirty unless the
   owner explicitly identifies the uncommitted state as the build under test.
 - [ ] Confirm the QA repository contains no unexpected tracked changes.
@@ -103,6 +119,9 @@ Independent top-level channel skills are not required.
 - [ ] Verify inferred topic, locale, modules, evidence tier, and mode are
   proposed for confirmation after browser and channels.
 - [ ] Verify both `guided` and `automatic` are offered.
+- [ ] In manager-driven mode, emit `browser_selection`,
+  `ordered_channel_selection`, and `plan_confirmation` requests in that order
+  and consume only matching protocol responses.
 
 Expected result: browser first, explicit ordered channels second, then the
 remaining plan confirmation.
@@ -121,16 +140,21 @@ Expected result: `crossRunInheritanceObserved: false`.
 
 ## Phase 5 — confirm the browser and preflight plan
 
-This phase requires the user to make the browser choice. Do not infer consent
-from an ambient browser window.
+This phase requires the browser choice to come directly from the user or from
+an explicitly approved scenario. Do not infer consent from an ambient browser
+window.
 
 - [ ] Ask the user to confirm `chrome` or `in_app` for this run.
+- [ ] In manager-driven mode, verify the scenario authorized browser access
+  and that its browser response matches the selected browser exactly.
 - [ ] Check the selected browser against every chosen channel before opening a
   channel.
 - [ ] Record only the logical browser selection, not profile names, handles,
   target IDs, or browser state.
 - [ ] Pause before each channel and state which playbook and browser binding
   will be used.
+- [ ] In manager-driven mode, emit `channel_begin` and continue only after the
+  matching scenario response.
 
 If a selected browser is incompatible, request a user-confirmed plan amendment.
 Never switch browsers silently.
@@ -161,6 +185,8 @@ structural check:
 
 - [ ] If signed out, record `authentication_required`, pause the same run, and
   ask the user to sign in manually in that browser.
+- [ ] In an unattended manager-driven run, emit the interruption and stop.
+  Neither manager nor worker may attempt sign-in or request credentials.
 - [ ] Resume only after the user confirms readiness; repeat the same bounded
   structural check.
 - [ ] If a challenge is visible, record `challenge` and wait for the user.
@@ -236,6 +262,9 @@ selector guess, or broadened read.
 - [ ] Keep notes, receipts, screenshots, and `.social-metadata/` ignored by Git.
 - [ ] Confirm the product worktree is still clean.
 - [ ] Report the QA repository status without committing private artifacts.
+- [ ] In manager-driven mode, record `answerSource: qa_scenario`, scenario and
+  oracle IDs, protocol version, whether a human was present, and whether all
+  authentication was preexisting.
 
 ## Disposition rules
 

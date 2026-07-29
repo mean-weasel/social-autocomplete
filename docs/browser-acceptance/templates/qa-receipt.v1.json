@@ -3,8 +3,20 @@
   "kind": "local_codex_acceptance",
   "runId": "replace-me",
   "capturedAt": "1970-01-01T00:00:00.000Z",
-  "runbookVersion": "1.0",
+  "runbookVersion": "1.1",
   "scope": "setup",
+  "automation": {
+    "managerDriven": false,
+    "protocolVersion": null,
+    "scenarioId": null,
+    "scenarioSha256": null,
+    "oracleId": null,
+    "answerSource": "direct_user",
+    "humanPresentDuringRun": true,
+    "preexistingAuthenticationOnly": true,
+    "approvedAt": null,
+    "unexpectedRequestObserved": false
+  },
   "source": {
     "path": "replace-me",
     "commit": "replace-me",

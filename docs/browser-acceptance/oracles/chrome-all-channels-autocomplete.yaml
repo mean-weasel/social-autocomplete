@@ -1,0 +1,74 @@
+schemaVersion: qa-oracle/v1
+oracleId: chrome_all_channels_autocomplete_v1
+scenarioId: chrome_all_channels_autocomplete
+protocolVersion: qa-manager-worker/v1
+startupRequestOrder:
+  - browser_selection
+  - ordered_channel_selection
+  - plan_confirmation
+invariants:
+  exactlyOneTopLevelOrchestrator: true
+  linkedPlaybooks:
+    - facebook
+    - instagram
+    - linkedin
+    - x
+    - tiktok
+    - youtube
+    - pinterest
+  noPlanBeforeBrowserAndChannels: true
+  newRunInheritance: false
+  answerSource: qa_scenario
+  credentialHandling: false
+  temporaryBrowser: false
+  publishing: false
+channelOutcomes:
+  facebook:
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+  instagram:
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+  linkedin:
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+  x:
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+  tiktok:
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+  youtube:
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+  pinterest:
+    - ready
+    - authentication_required
+    - challenge
+    - locale_mismatch
+    - ui_change
+    - not_applicable
+terminalInterruptions:
+  - authentication_required
+  - challenge
+  - unsafe_request
+  - unexpected_request
+  - oracle_contradiction

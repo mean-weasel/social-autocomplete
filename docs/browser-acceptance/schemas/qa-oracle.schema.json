@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/qa-oracle.schema.json",
+  "title": "Social metadata manager QA oracle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "oracleId",
+    "scenarioId",
+    "protocolVersion",
+    "startupRequestOrder",
+    "invariants",
+    "channelOutcomes",
+    "terminalInterruptions"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "qa-oracle/v1" },
+    "oracleId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{2,63}$"
+    },
+    "scenarioId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{2,63}$"
+    },
+    "protocolVersion": { "const": "qa-manager-worker/v1" },
+    "startupRequestOrder": {
+      "const": [
+        "browser_selection",
+        "ordered_channel_selection",
+        "plan_confirmation"
+      ]
+    },
+    "invariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exactlyOneTopLevelOrchestrator",
+        "linkedPlaybooks",
+        "noPlanBeforeBrowserAndChannels",
+        "newRunInheritance",
+        "answerSource",
+        "credentialHandling",
+        "temporaryBrowser",
+        "publishing"
+      ],
+      "properties": {
+        "exactlyOneTopLevelOrchestrator": { "const": true },
+        "linkedPlaybooks": {
+          "const": [
+            "facebook",
+            "instagram",
+            "linkedin",
+            "x",
+            "tiktok",
+            "youtube",
+            "pinterest"
+          ]
+        },
+        "noPlanBeforeBrowserAndChannels": { "const": true },
+        "newRunInheritance": { "const": false },
+        "answerSource": { "const": "qa_scenario" },
+        "credentialHandling": { "const": false },
+        "temporaryBrowser": { "const": false },
+        "publishing": { "const": false }
+      }
+    },
+    "channelOutcomes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "enum": [
+            "ready",
+            "authentication_required",
+            "challenge",
+            "locale_mismatch",
+            "ui_change",
+            "not_applicable"
+          ]
+        }
+      }
+    },
+    "terminalInterruptions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "authentication_required",
+          "challenge",
+          "unsafe_request",
+          "unexpected_request",
+          "oracle_contradiction"
+        ]
+      },
+      "allOf": [
+        { "contains": { "const": "authentication_required" } },
+        { "contains": { "const": "challenge" } },
+        { "contains": { "const": "unsafe_request" } },
+        { "contains": { "const": "unexpected_request" } }
+      ]
+    }
+  }
+}
