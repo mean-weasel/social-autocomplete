@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-browser-adapter-polish"
   kind: specific
   tranche: "Map, implement, and prove current authenticated Chrome search-entry adapters for Instagram, Facebook, and LinkedIn."
-  status: active
+  status: blocked
   oracle:
     signal: "Fresh sanitized Chrome receipts plus fixtures and release verification prove current native search-entry recognition and bounded autocomplete evidence without weakening privacy or evidence rules."
     cadence: "after the implementation package and at final live audit"
@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T006
+active_task: null
 
 tasks:
   - id: T001
@@ -441,7 +441,7 @@ tasks:
   - id: T006
     type: pm
     assignee: PM
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: "Obtain fresh one-time authorization and supervise the exact Instagram→Facebook→LinkedIn autocomplete-only Chrome replay."
     inputs:
@@ -461,11 +461,24 @@ tasks:
       - "No omitted or duplicate channel/action"
       - "No fabricated recommendations or popularity claims"
       - "run_complete or truthful bounded run_stopped"
-    receipt: null
+    receipt:
+      result: blocked
+      blocked_reason: "Run qa_20260729T220527Z stopped before protocol startup or browser access because the installed cache carried the newer manager worktree Git revision even though its packaged bytes matched the reviewed build. The one-time authorization was consumed at terminal state. The local marketplace now points directly at the immutable reviewed checkout and the installed cache HEAD is exactly bf4b27f4f0212cff5ade9f34bbb899953828bb91."
+      waiting_for_user_approval: true
+      required_reply: "APPROVE QA BROWSER RUN"
+      resume_supported: false
+      evidence:
+        - "Stopped run qa_20260729T220527Z: worker_dispatch_invalid / installed_source_revision_mismatch"
+        - "No protocol request or browser action occurred"
+        - "Authorization consumed and terminal emitted"
+        - "Marketplace source /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-bf4b27f"
+        - "Installed cache HEAD bf4b27f4f0212cff5ade9f34bbb899953828bb91"
+        - "Immutable source checkout remains clean at bf4b27f4f0212cff5ade9f34bbb899953828bb91"
+      summary: "The ambiguous package-equivalence shortcut has been removed from the local setup. A new run will install and verify the exact immutable Git revision before any browser work, but it needs a fresh one-time authorization."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: blocked
     reasoning_hint: high
     objective: "Audit whether implementation, exact QA pinning, and fresh live evidence satisfy the browser-adapter polish oracle."
     inputs:
@@ -483,7 +496,11 @@ tasks:
       - "full_outcome_complete: true | false"
       - "Requirement-to-evidence mapping"
       - "Missing evidence and exact next task if incomplete"
-    receipt: null
+    receipt:
+      result: blocked
+      blocked_reason: "The final audit depends on a fresh authorized T006 Chrome receipt. The latest run stopped safely before browser access and cannot be resumed because its one-time authorization was consumed."
+      resume_supported: true
+      summary: "Final audit resumes only after T006 completes a fresh exact-pinned live run."
 checks:
   dirty_fingerprint: "T005 receipt and board transition only"
   last_verification:
