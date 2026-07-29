@@ -114,10 +114,15 @@ Use these version-controlled materials for repeatable local Codex QA:
   use.
 
 The development repository owns the canonical protocol. A separate QA
-repository should contain a pinned copy plus the source commit and checksum
-used for the run. Private run notes, receipts, screenshots, and
-`.social-metadata/` state remain outside the product repository and ignored by
-Git.
+repository contains only the pinned worker runbook, worker templates, source
+commit/checksums, isolated run state, and QA artifacts. Run the manager and its
+configuration interview from this development repository. It dispatches a
+fresh worker task rooted in the QA repository.
+
+Approved private scenarios live under
+`.social-metadata/qa/scenarios/` in this repository and are ignored by Git.
+Worker run notes, receipts, screenshots, and browser run state live in the QA
+repository and remain ignored by Git.
 
 Validate a scenario and oracle before dispatch:
 

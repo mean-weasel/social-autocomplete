@@ -2,7 +2,8 @@
 
 Protocol version: `qa-manager-worker/v1`
 
-This protocol lets one Codex manager task drive a fresh QA worker task from a
+This protocol lets one Codex manager task rooted in the product repository
+drive a fresh QA worker task rooted in the dedicated QA repository from a
 validated, user-approved scenario. It is deliberately small, visible, and
 fail-closed. It is not a browser automation protocol and carries no browser
 content.

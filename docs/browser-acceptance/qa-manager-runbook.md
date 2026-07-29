@@ -1,11 +1,12 @@
 # QA manager runbook
 
-Runbook version: `1.0`
+Runbook version: `1.1`
 
-Use this from a Codex manager task rooted in the dedicated QA repository. The
-manager interviews the user, writes or edits a private scenario, validates it
-against an independently maintained oracle, starts a fresh QA worker task, and
-answers only the worker's stable protocol requests.
+Use this from a Codex manager task rooted in the Social Metadata Research
+development repository. The manager interviews the user, writes or edits a
+private scenario, validates it against an independently maintained oracle,
+starts a fresh worker task rooted in the dedicated QA repository, and answers
+only the worker's stable protocol requests.
 
 The manager does not operate the browser. The worker follows the
 [QA agent runbook](qa-agent-runbook.md). Read that runbook, the
@@ -18,9 +19,11 @@ The manager does not operate the browser. The worker follows the
 - `run`: validate an already approved scenario and dispatch a fresh worker.
 - `configure_and_run`: complete both flows in order.
 
-Private scenarios belong under `scenarios/private/` in the QA repository and
-must be ignored by Git. Committed files under `scenarios/examples/` are
-synthetic, unapproved templates and never authorize browser access.
+Private scenarios belong under `.social-metadata/qa/scenarios/` in this
+development repository and must be ignored by Git. Committed files under
+`docs/browser-acceptance/scenarios/examples/` are synthetic, unapproved
+templates and never authorize browser access. Manager run records belong under
+`.social-metadata/qa/manager-runs/`.
 
 ## Phase -1 — interview and scenario authoring
 
@@ -46,16 +49,17 @@ Never ask for login credentials, account names, handles, cookies, tokens,
 one-time codes, profile paths, or saved browser state. Authentication
 configuration expresses readiness expectations only.
 
-Copy the closest committed example into `scenarios/private/`, change its ID,
-and normalize the answers. Keep the canonical oracle separate; user scenario
-answers must not rewrite expected product behavior.
+Copy the closest committed example into `.social-metadata/qa/scenarios/`,
+change its ID, and normalize the answers. Keep the canonical oracle under
+`docs/browser-acceptance/oracles/` separate; user scenario answers must not
+rewrite expected product behavior.
 
 Run validation without approval first:
 
 ```sh
 npm run qa:scenario:validate -- \
-  --scenario scenarios/private/<scenario>.yaml \
-  --oracle runbooks/oracles/<oracle>.yaml
+  --scenario .social-metadata/qa/scenarios/<scenario>.yaml \
+  --oracle docs/browser-acceptance/oracles/<oracle>.yaml
 ```
 
 Show the normalized scenario to the user with sensitive creative detail
@@ -73,6 +77,7 @@ Then validate with `--require-approved`. Do not dispatch on validation failure.
 
 - [ ] Verify the product source revision and QA runbook checksums.
 - [ ] Verify the product worktree is clean or explicitly approved as the build.
+- [ ] Verify the dedicated QA repository path and its pinned worker runbook.
 - [ ] Verify the scenario and oracle IDs match.
 - [ ] Compute and record the scenario checksum.
 - [ ] Verify approval has not expired.
@@ -82,19 +87,21 @@ Then validate with `--require-approved`. Do not dispatch on validation failure.
 
 ## Phase 1 — start the worker
 
-Create a genuinely fresh Codex task rooted in the QA repository. Prompt it to:
+Create a genuinely fresh Codex task rooted in the dedicated QA repository.
+Pass the absolute approved-scenario path, canonical oracle path, their
+checksums, and the exact product commit. Prompt it to:
 
 1. read `AGENTS.md`;
 2. read the pinned QA worker runbook and channel matrix completely;
-3. read the manager/worker protocol;
+3. read the manager/worker protocol from the exact product commit;
 4. validate the named scenario and oracle with `--require-approved`;
 5. run the selected scope without editing product source;
 6. emit only stable protocol envelopes for manager interaction;
-7. write ignored, sanitized QA artifacts; and
+7. write ignored, sanitized QA artifacts only in the QA repository; and
 8. stop on the protocol's safety conditions.
 
-Record the worker task ID in the private run note. Do not reuse a task that
-loaded an older plugin version.
+Record the worker task ID under `.social-metadata/qa/manager-runs/`. Do not
+reuse a task that loaded an older plugin version.
 
 ## Phase 2 — answer worker requests
 

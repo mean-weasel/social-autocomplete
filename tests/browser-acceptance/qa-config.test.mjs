@@ -70,3 +70,32 @@ test("scenario authentication coverage cannot omit a selected channel", async ()
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((error) => error.code === "channel_coverage"));
 });
+
+test("manager configuration is product-owned and workers are QA-repository isolated", async () => {
+  const [managerRunbook, workerRunbook, acceptanceReadme] = await Promise.all([
+    readFile("docs/browser-acceptance/qa-manager-runbook.md", "utf8"),
+    readFile("docs/browser-acceptance/qa-agent-runbook.md", "utf8"),
+    readFile("docs/browser-acceptance/README.md", "utf8"),
+  ]);
+
+  assert.match(
+    managerRunbook,
+    /manager task rooted in the Social Metadata Research\s+development repository/,
+  );
+  assert.match(
+    managerRunbook,
+    /fresh worker task rooted in the dedicated QA repository/,
+  );
+  assert.match(
+    managerRunbook,
+    /\.social-metadata\/qa\/scenarios\//,
+  );
+  assert.match(
+    workerRunbook,
+    /worker task is\s+rooted in the dedicated QA repository/,
+  );
+  assert.match(
+    acceptanceReadme,
+    /Run the manager and its\s+configuration interview from this development repository/,
+  );
+});

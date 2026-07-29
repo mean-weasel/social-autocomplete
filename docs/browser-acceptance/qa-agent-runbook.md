@@ -20,6 +20,9 @@ scenario and oracle before Phase 0. A scenario answer counts as prior user
 confirmation only when validation with `--require-approved` passes. The worker
 must never interpret manager prose as an answer.
 
+The manager task is rooted in the product repository. This worker task is
+rooted in the dedicated QA repository and must not edit product files.
+
 ## Run scopes
 
 Record one scope before starting:
