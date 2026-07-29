@@ -1,0 +1,10 @@
+{
+  "goalbuddy_receipt_v1": {
+    "result": "blocked",
+    "task_id": "T999",
+    "board_path": "/Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-browser-adapter-polish/state.yaml",
+    "blocked_reason": "The final audit depends on the fresh T006 authorized Chrome receipt and cannot run before browser authorization and live execution.",
+    "resume_supported": true,
+    "summary": "Final audit is deferred without weakening the oracle; it resumes after T006 live evidence is recorded."
+  }
+}

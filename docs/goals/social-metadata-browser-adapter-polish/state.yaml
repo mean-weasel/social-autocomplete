@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-browser-adapter-polish"
   kind: specific
   tranche: "Map, implement, and prove current authenticated Chrome search-entry adapters for Instagram, Facebook, and LinkedIn."
-  status: active
+  status: blocked
   oracle:
     signal: "Fresh sanitized Chrome receipts plus fixtures and release verification prove current native search-entry recognition and bounded autocomplete evidence without weakening privacy or evidence rules."
     cadence: "after the implementation package and at final live audit"
@@ -66,7 +66,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-browser-adapter-polish/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-browser-adapter-polish"
 
-active_task: T006
+active_task: null
 
 tasks:
   - id: T001
@@ -441,7 +441,7 @@ tasks:
   - id: T006
     type: pm
     assignee: PM
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: "Obtain fresh one-time authorization and supervise the exact Instagram→Facebook→LinkedIn autocomplete-only Chrome replay."
     inputs:
@@ -461,11 +461,24 @@ tasks:
       - "No omitted or duplicate channel/action"
       - "No fabricated recommendations or popularity claims"
       - "run_complete or truthful bounded run_stopped"
-    receipt: null
+    receipt:
+      result: blocked
+      blocked_reason: "The exact product build, QA pin, clean repositories, validated private scenario, and independent capability oracle are ready. Fresh one-time human authorization is the only remaining prerequisite before existing-Chrome browser access."
+      waiting_for_user_approval: true
+      required_reply: "APPROVE QA BROWSER RUN"
+      resume_supported: true
+      evidence:
+        - "Product build bf4b27f4f0212cff5ade9f34bbb899953828bb91"
+        - "QA pin ad8d0cdf53148f004f8ffa229534cefd9d145d4f"
+        - "Scenario chrome_instagram_facebook_linkedin_autocomplete"
+        - "Scenario SHA-256 cca825c9603208bf25041b713eb552f43cc7ddd91b42c91c891917ca8bbea254"
+        - "Oracle chrome_authenticated_research_v2"
+        - "Oracle SHA-256 12f60d111ee3ac00bae102f5cecf25069c0a5af369cc08a8b2f69eaca1ac8cfa"
+      summary: "Prepared the exact Instagram → Facebook → LinkedIn automatic autocomplete-only replay without opening a browser. The saved scenario remains unapproved and browserAccessAuthorized=false until the exact required reply is received."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: blocked
     reasoning_hint: high
     objective: "Audit whether implementation, exact QA pinning, and fresh live evidence satisfy the browser-adapter polish oracle."
     inputs:
@@ -483,8 +496,11 @@ tasks:
       - "full_outcome_complete: true | false"
       - "Requirement-to-evidence mapping"
       - "Missing evidence and exact next task if incomplete"
-    receipt: null
-
+    receipt:
+      result: blocked
+      blocked_reason: "The final audit depends on the fresh T006 authorized Chrome receipt and cannot run before browser authorization and live execution."
+      resume_supported: true
+      summary: "Final audit is deferred without weakening the oracle; it resumes after T006 live evidence is recorded."
 checks:
   dirty_fingerprint: "T005 receipt and board transition only"
   last_verification:
