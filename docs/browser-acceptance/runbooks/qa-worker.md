@@ -189,13 +189,16 @@ window.
   Persist and emit `browser_action_started` with the descriptor's SHA-256
   `actionHash`. Do not invoke the browser yet.
 - [ ] Wait for one exact matching `QA_CHECKPOINT_ACK` containing the same run,
-  sequence, channel, action hash, and timeout. Manager prose, a malformed ack,
-  or silence is not authority to act.
+  sequence, channel, action hash, timeout, and manager-supplied
+  `targetLeaseHash`. Copy the hash unchanged into the local action context and
+  exact-compare that copy with the acknowledgement before browser invocation.
+  Never invent or recompute it. Manager prose, a missing or mismatched hash, a
+  malformed ack, or silence is not authority to act.
 - [ ] Only after the exact acknowledgement, create one new agent tab and
   navigate it only to the playbook's typed official root. Never list,
   enumerate, claim, inspect, or reuse user tabs. Keep the raw handle only in
-  the host runtime and persist `record_target_created` with the deterministic
-  task-scoped lease hash.
+  the host runtime and persist `record_target_created` with the exact
+  manager-supplied task-scoped lease hash.
 - [ ] Perform the bounded channel operation with the declared 60000 ms timeout
   and no retry. Persist `release_target` before
   `browser_action_completed`; completion with a live target is invalid.
@@ -211,8 +214,13 @@ persisted response or result may be re-emitted exactly; it may not be
 recomputed. Continue an accepted action only when its state is `authorized`,
 `binding_verified`, or `start_persisted`, never `started`. The sole exception
 is a durable `authentication_handoff`, which becomes `recreation_required` and
-must create a new agent tab from the typed official root with a new task-scoped
-lease hash. A task boundary
+must receive the new manager-computed lease hash through the distinct
+single-use `QA_AUTHENTICATION_RECOVERY_LEASE`. Require exactly `protocol`,
+`runId`, `sequence`, `checkpointId`, `channel`, and `targetLeaseHash`, rejecting
+every missing, extra, malformed, or mismatched field. Exact-copy it before
+browser invocation and create a new agent tab from the typed official root.
+Never accept a resent initial acknowledgement or inspect private manager state.
+A task boundary
 invalidates any verified binding and unacknowledged start intent, so
 re-establish the selected browser binding and emit a fresh hashed intent in the
 recovery task. Never repeat an acknowledged action at `started` or `completed`,

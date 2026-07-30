@@ -85,15 +85,35 @@ state file or reuse its run-bound authorization. Do not reconstruct recovery
 state from chat or hand-edit it.
 For `browser_action_started`, require the exact channel, browser, action,
 SHA-256 `actionHash`, and `timeoutMs:60000`. Persist `start_browser_action`,
-then persist `authorize_browser_action_start` before sending one exact
-`QA_CHECKPOINT_ACK`. Never acknowledge a malformed start intent, and never use
-prose as the acknowledgement.
+then persist `authorize_browser_action_start`, which computes the canonical
+task-scoped target lease hash from durable state and the private active-task
+identity, before sending one exact `QA_CHECKPOINT_ACK` containing
+`targetLeaseHash`. Run `qa-recovery.mjs issue-ack --state <run-state>` and send
+only its stdout envelope; this atomically persists the acknowledgement's
+single-use `issued` state before output. It enters the same state-path-scoped
+exclusive mutation boundary used by every reducer `apply` and both issuance
+commands before reading state. Issuance either commits before a conflicting
+terminal/recovery transition or observes it and emits nothing; a stale read
+can never erase terminal state or restore consumed authorization. Contenders
+may wait for verified release but never delete, expire, steal, or replay
+through a crash-stale or uncertain claim.
+Reject second issuance, post-terminal
+issuance, and regeneration after manager recovery. Never expose the task identity,
+acknowledge a malformed start intent, or use prose as the acknowledgement.
 After acknowledgement require one plugin-owned new-agent-tab creation at the
-channel's typed official root, a deterministic task-scoped lease hash, and
-target release before browser-action completion. Reject user-tab enumeration,
+channel's typed official root, the worker's unchanged copy of the
+manager-supplied lease hash, and target release before browser-action
+completion. A missing or mismatched hash must stop before browser invocation.
+Reject user-tab enumeration,
 claiming, inspection, reuse, and raw handle persistence. Treat
 `authentication_handoff` as the sole unreleased state; across a task boundary
-require recreation from the typed official root rather than rediscovery.
+require recreation from the typed official root rather than rediscovery. Issue
+the new hash only with
+`qa-recovery.mjs issue-auth-recovery --state <run-state>`, sending only its
+distinct single-use sanitized `QA_AUTHENTICATION_RECOVERY_LEASE` stdout after
+the issued state is atomically persisted; never resend the initial
+acknowledgement. The same exclusive-claim and non-replayable crash ambiguity
+rules and shared saved-state mutation boundary apply.
 Only the manager may create tasks. A bootstrap worker emits
 `worker_handoff`; the manager persists a post-install continuation lease
 before creating the genuinely fresh execution task.

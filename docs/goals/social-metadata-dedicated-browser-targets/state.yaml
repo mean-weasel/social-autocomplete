@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: T019
+active_task: T030
 
 tasks:
   - id: T001
@@ -1412,7 +1412,7 @@ tasks:
   - id: T019
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Obtain a new exact one-time authorization and supervise the pinned Instagram→Facebook→LinkedIn Chrome replay through a terminal sanitized receipt."
     inputs:
@@ -1430,6 +1430,630 @@ tasks:
       - "Native Search and both-module evidence or truthful current ui_change for each channel"
       - "No user-tab enumeration, broad DOM scan, credential access, or action replay"
       - "One-time authorization consumed"
+    receipt:
+      result: done
+      run_id: qa_20260730T142346Z
+      disposition: blocked
+      terminal_reason: ambiguous_browser_action
+      blocking_product_finding: false
+      authorization_consumed: true
+      resume_supported: false
+      summary: "The exact pinned bootstrap and fresh-task gates passed, the plugin was installed and enabled from commit 8aea3b01e80c080247db64ef02fcb6f73dc18145, and the Instagram dedicated target was created and released without inspecting user tabs or exposing private content. The manager rejected the worker's target_created checkpoint because its lease hash did not match the reducer's deterministic task-scoped hash. Since the action had already started, the run stopped fail-closed as ambiguous_browser_action; Facebook and LinkedIn were not authorized."
+      evidence:
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_20260730T142346Z.md"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260730T142346Z.json"
+        - ".social-metadata/qa/manager-runs/qa_20260730T142346Z-state.json"
+      privacy:
+        dedicated_targets_created: 1
+        dedicated_targets_released: 1
+        existing_targets_enumerated: false
+        private_browser_content_persisted: false
+        credentials_accessed: false
+      finding:
+        severity: blocking_qa_process
+        owner: browser_acceptance_protocol
+        cause: "The reducer defines a canonical task-scoped lease hash, but the worker protocol neither supplies the stable manager task identity nor returns the manager-computed expected lease hash in QA_CHECKPOINT_ACK. The worker therefore locally invented an unverifiable lease hash after browser authorization."
+        correction: "Persist the manager-computed target lease hash before acknowledgement, include only that sanitized hash in QA_CHECKPOINT_ACK, require the worker to copy it exactly, and test the complete manager-to-worker hash handoff before browser access."
+  - id: T020
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Make the manager the sole authority for dedicated-target lease hashes and prove the exact hash handoff before any browser action."
+    inputs:
+      - "T019 terminal receipt and durable checkpoint"
+      - "Existing dedicatedTargetLeaseHash reducer helper"
+      - "Current qa-manager-worker/v1 acknowledgement contract"
+    constraints:
+      - "Do not operate a browser."
+      - "Do not expose task IDs, host IDs, cursors, tab handles, URLs beyond typed public official roots, or other transport metadata in protocol envelopes or receipts."
+      - "The manager must compute the task-scoped hash from durable state and its active task identity."
+      - "The worker must never invent, recompute from unavailable task metadata, or substitute a lease hash."
+      - "A missing or mismatched manager-supplied lease hash must stop before browser invocation."
+      - "Preserve one acknowledgement, no resend, one dedicated target, mandatory release, and ambiguous-action recovery rules."
+    expected_output:
+      - "QA_CHECKPOINT_ACK carries the canonical sanitized targetLeaseHash."
+      - "The reducer persists and verifies the expected target lease hash before acknowledgement."
+      - "Worker and manager runbooks require exact copy/compare semantics before browser access."
+      - "End-to-end protocol fixtures prove matching acceptance and missing/mismatched rejection before browser invocation."
+      - "Offline and release verification remain green."
+    allowed_files:
+      - scripts/browser-acceptance/qa-recovery.mjs
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+      - tests/browser-acceptance/qa-recovery.test.mjs
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The fix requires exposing a raw task identity or browser target identifier to the worker or receipt."
+      - "The worker could invoke the browser before receiving and checking the canonical targetLeaseHash."
+      - "Acknowledgement delivery could be retried or an acknowledged action replayed."
+      - "A required change falls outside the declared protocol, reducer, schema, prompt, runbook, and test files."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "27/27"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "24/24"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "The manager now computes and persists the canonical task-scoped target lease hash before acknowledgement, includes it as targetLeaseHash, and validates exact worker reuse. Missing, malformed, or substituted hashes fail before browser invocation. Authentication recovery receives a newly manager-derived hash without exposing task identity. Protocol, prompts, runbooks, schema, and end-to-end fixtures were updated without browser access."
+      deviations: []
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
+  - id: T021
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the manager-owned target lease handoff and decide whether the repaired package is safe to commit, repin, and replay under a new authorization."
+    inputs:
+      - "T019 blocked live receipt"
+      - "T020 implementation receipt and complete diff"
+      - "Current focused, offline, and release verification"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Reject any design that exposes task identity or target handles, lets the worker invent a lease hash, calls the browser before exact hash acknowledgement, permits acknowledgement resend, or weakens ambiguous-action recovery."
+      - "Do not mark the full goal complete without a fresh exact-pin three-channel replay."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Requirement-to-test mapping for the lease handoff"
+      - "Exact commit, QA repin, and new-authorization prerequisites if approved"
+      - "One bounded correction package if changes are required"
+    receipt:
+      result: done
+      decision: changes_required
+      full_outcome_complete: false
+      rationale: "Manager-derived persistence, sanitized fields, exact hash checks, release gating, and ambiguous-action recovery pass. However, qaCheckpointAckForState remains repeatable whenever an action is started, including after its task is terminal, so the same acknowledgement could be regenerated after delivery uncertainty. Authentication recovery derives a new hash but lacks a distinct single-use transport; reusing the initial ACK would violate the no-resend contract."
+      evidence:
+        - "The canonical hash is computed from private activeTask.taskId and stored before action state becomes started."
+        - "Acknowledgement validation rejects missing, extra, malformed, or mismatched fields and substituted lease hashes."
+        - "A read-only probe reproduced the same acknowledgement twice and again with activeTask=null after task termination."
+        - "Authentication continuation derives a new manager-owned hash, but current tests read it directly from manager state rather than proving sanitized delivery."
+        - "Focused, configuration, offline, release, and diff verification remain green but do not cover single-use issuance."
+      missing_evidence:
+        - "Durable single-use initial ACK issuance, rejecting second issuance and issuance after task termination."
+        - "Distinct single-use authentication-recovery hash delivery and worker exact-check without resending the initial ACK."
+        - "Explicit extra-field and every-field mismatch acknowledgement coverage."
+  - id: T022
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Make initial ACK issuance durably single-use and add a distinct sanitized single-use authentication-recovery lease-hash delivery path."
+    inputs:
+      - "T020 implementation"
+      - "T021 changes-required audit"
+      - "Existing manager-only lease derivation and fail-closed recovery state"
+    constraints:
+      - "Do not operate a browser."
+      - "Do not expose task identities, target handles, private browser metadata, or unsanitized state."
+      - "The same initial QA_CHECKPOINT_ACK must never be generated or sent twice, including after task termination or manager recovery."
+      - "Authentication recovery must not resend the initial ACK or require worker access to private manager state."
+      - "The browser must remain blocked until the exact applicable manager-issued hash is validated."
+      - "Preserve started-action ambiguity, one-time authorization consumption, one recovery limit, and mandatory target release."
+    expected_output:
+      - "A durable single-use initial acknowledgement issuance transition."
+      - "A separate sanitized single-use authentication-recovery targetLeaseHash envelope or checkpoint."
+      - "Second issuance and post-terminal issuance fail closed."
+      - "Worker exact-checks the initial or recovery hash before browser invocation."
+      - "Focused, offline, and release verification pass."
+    allowed_files:
+      - scripts/browser-acceptance/qa-recovery.mjs
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+      - tests/browser-acceptance/qa-recovery.test.mjs
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "Any task identity, target handle, private browser metadata, or unsanitized state enters a worker envelope or receipt."
+      - "The same initial QA_CHECKPOINT_ACK can be generated or sent more than once."
+      - "Authentication recovery requires resending the initial ACK or lets the worker read private manager state."
+      - "The browser can be invoked before exact validation of the appropriate manager-issued hash."
+      - "Started-action ambiguity, one-time authorization consumption, or mandatory target release is weakened."
+      - "A required change falls outside allowed_files or verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "29/29"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "24/24"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Implemented durable single-use initial acknowledgement issuance and a separate sanitized single-use authentication-recovery lease delivery. Duplicate, manager-recovery, and post-task-terminal issuance fail closed. Worker-side exact validation gates target creation and recovery without exposing task identity or private target state. Added every-field missing/mismatch, extra-field, duplicate issuance, post-terminal, and end-to-end recovery tests."
+      deviations: []
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
+  - id: T023
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Re-audit the complete lease-handoff package after single-use ACK and authentication-recovery transport hardening."
+    inputs:
+      - "T019 live failure"
+      - "T020 and T022 implementation receipts"
+      - "T021 rejection criteria"
+      - "Current complete diff and passing verification"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Reproduce duplicate, post-terminal, and recovery issuance behavior rather than relying only on tests."
+      - "Reject task identity disclosure, worker-derived lease identity, ACK replay, ambiguous recovery, or browser invocation before exact manager hash validation."
+      - "Keep full_outcome_complete=false until a fresh exact-pin live replay."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Adversarial reproduction evidence"
+      - "Exact commit, QA repin, and authorization prerequisites when approved"
+      - "One correction package when changes are required"
+    receipt:
+      result: done
+      decision: changes_required
+      full_outcome_complete: false
+      rationale: "The reducer logic passes adversarial probes, but both issuance helpers only return cloned in-memory state. The manager runbook requires every durable transition through qa-recovery.mjs and forbids hand edits, while the CLI exposes only create, apply, and check. A real manager therefore cannot atomically persist issued before sending either envelope."
+      evidence:
+        - "Duplicate initial issuance and issuance after manager recovery, task terminal, and run terminal fail closed in direct in-memory probes."
+        - "Initial and recovery envelopes contain no task identity or target handle."
+        - "Mismatched worker hash validation blocks simulated browser invocation."
+        - "Authentication recovery uses a distinct checkpoint and new manager-derived hash."
+        - "29/29 recovery tests, 24/24 config tests, offline/release verification, and diff checks pass."
+        - "The current CLI rejects an issue-ack command; tests persist issuance only by local assignment."
+      missing_evidence:
+        - "Atomic CLI-level initial ACK issuance that writes issued state before output."
+        - "Atomic CLI-level authentication-recovery lease issuance with the same guarantee."
+        - "Saved-state CLI tests for duplicate, manager-recovery, task-terminal, and run-terminal issuance."
+  - id: T024
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Expose both manager-owned issuance transitions through the durable qa-recovery CLI so state is atomically persisted before an envelope is emitted."
+    inputs:
+      - "T020/T022 manager-owned single-use issuance logic"
+      - "T023 CLI integration rejection"
+      - "Existing atomic state persistence implementation"
+    constraints:
+      - "Do not operate a browser."
+      - "Do not expose task identity, target handles, or private manager state in CLI output."
+      - "The CLI must durably write issued state before returning the envelope."
+      - "A saved issued state must never emit the same envelope again."
+      - "Preserve exact hash gating, ambiguous-action recovery, authorization consumption, recovery limits, and mandatory release."
+    expected_output:
+      - "Atomic initial ACK issuance CLI operation."
+      - "Atomic authentication-recovery lease issuance CLI operation."
+      - "CLI output contains only the sanitized envelope after durable write."
+      - "Saved-state tests prove duplicate, recovery, task-terminal, and run-terminal issuance cannot re-emit."
+      - "Focused, offline, and release verification pass."
+    allowed_files:
+      - scripts/browser-acceptance/qa-recovery.mjs
+      - tests/browser-acceptance/qa-recovery.test.mjs
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "Any task identity, target handle, or private manager state enters CLI output."
+      - "Either envelope can be emitted before issued state is durably written or emitted again from saved state."
+      - "The correction requires browser access or weakens exact-hash gating, ambiguous-action recovery, one-time authorization consumption, recovery limits, or mandatory release."
+      - "A required change falls outside allowed_files or verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "31/31"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "24/24"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Added issue-ack and issue-auth-recovery CLI operations that atomically persist single-use issued state before returning only their sanitized envelopes. Real subprocess and saved-file tests prove successful issuance and fail-closed duplicate, manager-recovery, task-terminal, and run-terminal behavior with no rejected-attempt stdout. Protocol, manager prompt, runbook, and contract tests mandate these durable operations."
+      deviations: []
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
+  - id: T025
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Perform the final offline release audit of the atomic manager-owned lease issuance package."
+    inputs:
+      - "T019 live failure"
+      - "T020, T022, and T024 implementation receipts"
+      - "T021 and T023 rejection criteria"
+      - "Current complete diff and 31-test recovery suite"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Exercise the actual issue-ack and issue-auth-recovery CLI against saved state."
+      - "Reject any stdout before durable persistence, duplicate emission, private identity disclosure, worker-derived lease, ACK replay, or weakened recovery/release semantics."
+      - "Keep full_outcome_complete=false pending exact repin and fresh live replay."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Saved-state CLI reproduction evidence"
+      - "Exact commit and QA repin Worker package if approved"
+      - "One bounded correction package if changes are required"
+    receipt:
+      result: done
+      decision: changes_required
+      full_outcome_complete: false
+      rationale: "Sequential saved-state behavior is correct, but issuance is an unlocked read-modify-rename operation. A 16-process contention probe made issue-ack emit the same envelope 16 times and issue-auth-recovery emit seven times. This violates single-use and no-resend guarantees under overlapping manager processes."
+      evidence:
+        - "Sequential issuance persists state before sanitized stdout and rejects duplicate, recovered-manager, task-terminal, and run-terminal attempts without stdout."
+        - "Initial and recovery output contains only approved protocol fields."
+        - "Sixteen simultaneous issue-ack processes produced sixteen identical envelopes."
+        - "Sixteen simultaneous issue-auth-recovery processes produced seven identical envelopes."
+        - "31/31 recovery tests, 24/24 config tests, offline/release verification, and diff checks pass but lacked contention coverage."
+      missing_evidence:
+        - "Exactly one winner under simultaneous initial ACK issuance."
+        - "Exactly one winner under simultaneous authentication-recovery issuance."
+        - "Fail-closed uncertain claim ownership with no replay."
+  - id: T026
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Make issue-ack and issue-auth-recovery durable inter-process single-winner transitions."
+    inputs:
+      - "T024 atomic saved-state CLI operations"
+      - "T025 contention failure evidence"
+      - "Existing atomic file persistence helpers"
+    constraints:
+      - "Do not operate a browser."
+      - "Acquire an exclusive issuance claim before reading or mutating saved state."
+      - "Persist issued state before winner stdout."
+      - "Every concurrent or recovered loser must fail closed with empty stdout."
+      - "Treat uncertain claim ownership as non-replayable ambiguity."
+      - "Do not expose task identity, target handles, private browser metadata, or unsanitized state in output or claims."
+      - "Preserve exact-hash gating, ambiguous-action recovery, authorization consumption, one recovery limit, and mandatory release."
+    expected_output:
+      - "Inter-process single-winner initial ACK issuance."
+      - "Inter-process single-winner authentication-recovery issuance."
+      - "Repeated contention tests yield exactly one envelope and empty-stdout losers."
+      - "Crash or stale-claim behavior is fail-closed and non-replayable."
+      - "Focused, offline, and release verification pass."
+    allowed_files:
+      - scripts/browser-acceptance/qa-recovery.mjs
+      - tests/browser-acceptance/qa-recovery.test.mjs
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "Any repeated contention round permits more than one stdout envelope for either issuance command."
+      - "A crash or uncertain exclusive claim can make the same envelope retryable instead of fail-closed."
+      - "Any task identity, target handle, private browser metadata, or unsanitized state enters output or an issuance claim."
+      - "Exact-hash browser gating, ambiguous-action recovery, authorization consumption, one recovery limit, or mandatory release is weakened."
+      - "A required change falls outside allowed_files or verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "34/34"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "24/24"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Added opaque exclusive issuance claims acquired before state reads for both CLI commands. Winners persist issued state, verify and release ownership, then emit; concurrent losers and crash-stale claims fail closed with empty stdout. Three repeated 16-process rounds per command produced exactly one winner, and crash tests proved claims remain non-replayable without private metadata."
+      deviations: []
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
+  - id: T027
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the contention-safe manager-owned lease issuance package for release."
+    inputs:
+      - "T025 contention rejection"
+      - "T026 implementation receipt"
+      - "Current complete diff and 34-test recovery suite"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Run independent multi-process contention and crashed-claim probes for both issuance commands."
+      - "Reject multiple winners, retryable uncertain claims, private metadata disclosure, pre-persistence stdout, or weakened browser/recovery invariants."
+      - "Keep full_outcome_complete=false until exact repin and fresh live replay."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Independent contention and crash-probe evidence"
+      - "Exact commit and QA repin Worker package if approved"
+      - "One correction package if changes are required"
+    receipt:
+      result: done
+      decision: changes_required
+      full_outcome_complete: false
+      rationale: "Same-command contention is fixed, but the issuance claim does not serialize issuance against other qa-recovery state mutations. Concurrent stop_run or task_terminal and issuance can both succeed while issuance overwrites the terminal state, resurrects browser authorization, and emits an envelope after the conflicting terminal transition."
+      evidence:
+        - "Four independent 16-process same-command rounds produced exactly one winner and fifteen empty-stdout losers."
+        - "Crash-stale claims remained non-replayable and contained only schemaVersion and nonce."
+        - "issue-ack versus stop_run allowed both to succeed in 42/80 rounds; every such final state lost terminal and restored authorization."
+        - "issue-auth-recovery versus stop_run allowed both to succeed in 28/60 rounds; 27 lost terminal and restored authorization."
+        - "issue-ack versus task_terminal allowed both to succeed in 56/120 rounds; every such final state lost the terminal task transition."
+        - "The root cause is issuance-only locking while apply remains an unlocked read-modify-rename of the same state."
+      missing_evidence:
+        - "Linearizable ordering between both issuance commands and every saved-state mutation."
+        - "Proof that terminal state and consumed authorization cannot be overwritten by a stale issuance read."
+  - id: T028
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Make saved-state issuance and conflicting reducer mutations linearizable across processes."
+    inputs:
+      - "T026 single-winner issuance claims"
+      - "T027 cross-command contention failures"
+      - "Existing atomic write and reducer apply CLI"
+    constraints:
+      - "Do not operate a browser."
+      - "Use one exclusive mutation boundary for issuance and every conflicting saved-state write."
+      - "Terminal/recovery transitions must never be overwritten or restore consumed authorization."
+      - "Retain single-winner issuance, issued-before-output, and non-replayable crash ambiguity."
+      - "Claims and output must not expose task identity, target handles, browser metadata, or unsanitized state."
+      - "Preserve exact-hash gating, ambiguity recovery, one-time authorization, one recovery limit, and mandatory release."
+    expected_output:
+      - "Linearizable saved-state mutation protocol shared by apply and issuance."
+      - "Cross-command contention has one valid ordering and no lost updates."
+      - "Terminal state and consumed authorization are monotonic."
+      - "Repeated contention tests cover stop_run, task_terminal, issuance, and recovery issuance."
+      - "Focused, offline, and release verification pass."
+    allowed_files:
+      - scripts/browser-acceptance/qa-recovery.mjs
+      - tests/browser-acceptance/qa-recovery.test.mjs
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "Any overlap can report issuance success while erasing a committed task/run terminal transition or restoring consumed authorization."
+      - "Any envelope can appear before issued state is durable, or any loser emits stdout."
+      - "A crash-stale or uncertain claim becomes deletable, stealable, expirable, or replayable."
+      - "Claims or output expose task identity, target handles, browser metadata, or unsanitized state."
+      - "Exact-hash gating, ambiguous-action recovery, one-time authorization consumption, one recovery limit, or mandatory release is weakened."
+      - "A required change falls outside allowed_files or verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "37/37"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "24/24"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Unified apply and both issuance commands behind one state-path-scoped exclusive mutation claim. Issuance remains durable-before-output, single-winner, privacy-preserving, and non-replayable after crash ambiguity. Repeated cross-command races prove stop_run and task_terminal cannot be overwritten or restore consumed authorization; authentication recovery races preserve monotonic ordering. Crash-stale claims also block reducer apply without deletion or replay."
+      deviations: []
+      remaining_blockers: []
+      verification_attempts: 3
+      stopped_because: null
+  - id: T029
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the linearizable saved-state protocol and approve or reject the final offline package."
+    inputs:
+      - "T027 cross-command race evidence"
+      - "T028 implementation receipt"
+      - "Current complete diff and 37-test recovery suite"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Independently race issuance against stop_run, task_terminal, and recovery transitions."
+      - "Reject lost terminal state, restored authorization, multiple stdout winners, replayable stale claims, private metadata, or weakened browser gating."
+      - "Keep full_outcome_complete=false pending exact repin and fresh live replay."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Independent cross-command contention evidence"
+      - "Exact commit and QA repin Worker package when approved"
+      - "One correction package if changes are required"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Apply and both issuance commands now acquire one state-path claim before reading state. Independent contention showed only valid serial orderings, with no lost terminal state, restored authorization, duplicate stdout, or replay through stale claims. Issuance remains persisted-before-output, privacy-safe, exact-hash gated, single-use, and compatible with release and bounded recovery invariants."
+      evidence:
+        - "Four independent 16-process issue-ack rounds each produced exactly one stdout winner."
+        - "Four independent 16-process issue-auth-recovery rounds each produced exactly one stdout winner."
+        - "Cross-command races against stop_run, task_terminal, and authentication recreation retained valid serialized terminal/recovery state."
+        - "Crash-stale claims contained only schemaVersion and nonce, blocked issuance and apply, and emitted no stdout."
+        - "37/37 recovery tests, 24/24 config tests, offline/release verification, diff checks, and board validation pass."
+      missing_evidence:
+        - "Immutable product commit and refreshed exact QA pin."
+        - "Fresh one-time-authorized three-channel live replay."
+  - id: T030
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: "Commit the exact Judge-approved product package and pin that immutable commit into the isolated QA repository."
+    inputs:
+      - "T029 approved audit"
+      - "Current exact verified product diff"
+      - "Dedicated QA repository"
+    constraints:
+      - "Do not operate a browser."
+      - "Do not alter the approved product diff except PM-owned board bookkeeping."
+      - "Keep QA notes, receipts, private state, scenarios, and ignored source checkout out of commits."
+      - "The private scenario must be unapproved with browserAccessAuthorized=false."
+      - "Never reuse the consumed qa_20260730T142346Z authorization."
+    expected_output:
+      - "Immutable clean product commit containing the exact package."
+      - "Committed QA source manifest and worker artifacts pinned to that commit."
+      - "Clean detached ignored product-source checkout."
+      - "All declared source and QA hashes verified."
+      - "Validated unapproved private three-channel scenario."
+    allowed_files:
+      - "/Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/prompts/qa-manager-starter.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/protocol/manager-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/runbooks/qa-manager.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+      - "/Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-dedicated-browser-targets/state.yaml"
+      - "/Users/neonwatty/Desktop/social-autocomplete/scripts/browser-acceptance/qa-recovery.mjs"
+      - "/Users/neonwatty/Desktop/social-autocomplete/tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      - "/Users/neonwatty/Desktop/social-autocomplete/tests/browser-acceptance/qa-recovery.test.mjs"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/templates/qa-receipt.v1.json"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/scenarios/dedicated-targets-instagram-facebook-linkedin.yaml"
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+      - "Verify product and QA tracked worktrees are clean."
+      - "Verify the ignored QA source checkout is detached and clean at the exact product commit."
+      - "Verify all declared source and QA SHA-256 hashes."
+      - "Validate the private scenario with approved=false and browserAccessAuthorized=false."
+    stop_if:
+      - "The approved product diff changes except board bookkeeping."
+      - "Any pre-commit verification is not green."
+      - "The QA pin differs from the immutable product commit or a hash mismatches."
+      - "Browser access, credentials, or prior authorization reuse would be required."
+      - "Private QA state, receipts, notes, scenario data, or ignored source content would be committed."
     receipt: null
   - id: T999
     type: judge

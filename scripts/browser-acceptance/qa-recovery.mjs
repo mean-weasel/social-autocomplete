@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from "node:crypto";
-import { link, readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { link, open, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -57,6 +57,157 @@ export function dedicatedTargetLeaseHash({
       taskId,
     }))
     .digest("hex");
+}
+
+export function issueQaCheckpointAck(inputState) {
+  assertQaManagerRunState(inputState);
+  const state = clone(inputState);
+  requireActiveRun(state);
+  requireActiveTask(state);
+  const pending = state.protocol.pending;
+  invariant(
+    pending?.requestId === "channel_begin" &&
+      pending.action.state === "started" &&
+      pending.action.acknowledgementState === "pending",
+    "browser action acknowledgement is not available for issuance",
+  );
+  requireHash(pending.action.target.leaseHash, "targetLeaseHash");
+  const acknowledgement = qaCheckpointAckEnvelope(state);
+  pending.action.acknowledgementState = "issued";
+  assertQaManagerRunState(state);
+  return { state, acknowledgement };
+}
+
+function qaCheckpointAckEnvelope(state) {
+  assertQaManagerRunState(state);
+  const pending = state.protocol.pending;
+  invariant(
+    pending?.requestId === "channel_begin" &&
+      pending.action.state === "started" &&
+      ["pending", "issued"].includes(pending.action.acknowledgementState),
+    "browser action acknowledgement is not durably authorized",
+  );
+  requireHash(pending.action.target.leaseHash, "targetLeaseHash");
+  return {
+    protocol: "qa-manager-worker/v1",
+    runId: state.run.runId,
+    sequence: pending.sequence,
+    checkpointId: "browser_action_started",
+    channel: pending.channel,
+    actionHash: pending.action.hash,
+    timeoutMs: pending.action.timeoutMs,
+    targetLeaseHash: pending.action.target.leaseHash,
+  };
+}
+
+export function issueAuthenticationRecoveryLease(inputState) {
+  assertQaManagerRunState(inputState);
+  const state = clone(inputState);
+  requireActiveRun(state);
+  requireActiveTask(state);
+  const pending = state.protocol.pending;
+  invariant(
+    pending?.requestId === "channel_begin" &&
+      pending.action.state === "started" &&
+      pending.action.target.state === "recreation_required" &&
+      pending.action.target.recoveryLeaseDeliveryState === "pending",
+    "authentication recovery lease is not available for issuance",
+  );
+  requireHash(pending.action.target.leaseHash, "targetLeaseHash");
+  const delivery = {
+    protocol: "qa-manager-worker/v1",
+    runId: state.run.runId,
+    sequence: pending.sequence,
+    checkpointId: "authentication_recovery_target",
+    channel: pending.channel,
+    targetLeaseHash: pending.action.target.leaseHash,
+  };
+  pending.action.target.recoveryLeaseDeliveryState = "issued";
+  assertQaManagerRunState(state);
+  return { state, delivery };
+}
+
+export function assertQaCheckpointAck(intent, acknowledgement) {
+  invariant(intent && typeof intent === "object", "start intent is required");
+  invariant(
+    acknowledgement && typeof acknowledgement === "object",
+    "QA_CHECKPOINT_ACK is required",
+  );
+  const expectedKeys = [
+    "protocol",
+    "runId",
+    "sequence",
+    "checkpointId",
+    "channel",
+    "actionHash",
+    "timeoutMs",
+    "targetLeaseHash",
+  ];
+  invariant(
+    Object.keys(acknowledgement).sort().join(",") ===
+      [...expectedKeys].sort().join(","),
+    "QA_CHECKPOINT_ACK fields mismatch",
+  );
+  for (const field of [
+    "protocol",
+    "runId",
+    "sequence",
+    "channel",
+    "actionHash",
+    "timeoutMs",
+  ]) {
+    invariant(
+      acknowledgement[field] === intent[field],
+      `QA_CHECKPOINT_ACK ${field} mismatch`,
+    );
+  }
+  invariant(
+    acknowledgement.checkpointId === "browser_action_started",
+    "QA_CHECKPOINT_ACK checkpointId mismatch",
+  );
+  requireHash(acknowledgement.targetLeaseHash, "targetLeaseHash");
+  invariant(
+    intent.targetLeaseHash === acknowledgement.targetLeaseHash,
+    "QA_CHECKPOINT_ACK targetLeaseHash mismatch",
+  );
+  return true;
+}
+
+export function assertAuthenticationRecoveryLease(intent, delivery) {
+  invariant(intent && typeof intent === "object", "recovery intent is required");
+  invariant(
+    delivery && typeof delivery === "object",
+    "authentication recovery lease is required",
+  );
+  const expectedKeys = [
+    "protocol",
+    "runId",
+    "sequence",
+    "checkpointId",
+    "channel",
+    "targetLeaseHash",
+  ];
+  invariant(
+    Object.keys(delivery).sort().join(",") ===
+      [...expectedKeys].sort().join(","),
+    "authentication recovery lease fields mismatch",
+  );
+  for (const field of ["protocol", "runId", "sequence", "channel"]) {
+    invariant(
+      delivery[field] === intent[field],
+      `authentication recovery lease ${field} mismatch`,
+    );
+  }
+  invariant(
+    delivery.checkpointId === "authentication_recovery_target",
+    "authentication recovery lease checkpointId mismatch",
+  );
+  requireHash(delivery.targetLeaseHash, "targetLeaseHash");
+  invariant(
+    intent.targetLeaseHash === delivery.targetLeaseHash,
+    "authentication recovery lease targetLeaseHash mismatch",
+  );
+  return true;
 }
 
 const CHANNELS = new Set([
@@ -315,6 +466,8 @@ function recordTaskTerminal(state, event) {
   ) {
     state.protocol.pending.action.target.state = "recreation_required";
     state.protocol.pending.action.target.leaseHash = null;
+    state.protocol.pending.action.target.recoveryLeaseDeliveryState =
+      "not_required";
   }
   state.coordination.activeTask = null;
 }
@@ -404,6 +557,20 @@ function activateContinuation(state, event) {
     generation: state.coordination.taskHistory.length + 1,
     status: "active",
   };
+  const pending = state.protocol.pending;
+  if (
+    pending?.action.state === "started" &&
+    pending.action.target.state === "recreation_required"
+  ) {
+    pending.action.target.leaseHash = dedicatedTargetLeaseHash({
+      runId: state.run.runId,
+      taskId: event.taskId,
+      channel: pending.channel,
+      browser: state.run.browser,
+      actionHash: pending.action.hash,
+    });
+    pending.action.target.recoveryLeaseDeliveryState = "pending";
+  }
 }
 
 function applyActiveEvent(state, event) {
@@ -515,10 +682,12 @@ function applyActiveEvent(state, event) {
           hash: null,
           timeoutMs: null,
           outcomeHash: null,
+          acknowledgementState: "not_ready",
           target: {
             ownership: QA_DEDICATED_TARGET_OWNERSHIP,
             state: "not_created",
             leaseHash: null,
+            recoveryLeaseDeliveryState: "not_required",
           },
         },
         result: null,
@@ -615,6 +784,7 @@ function applyActiveEvent(state, event) {
     case "authorize_browser_action_start": {
       requireActor(event, "manager");
       const pending = state.protocol.pending;
+      const active = requireActiveTask(state);
       invariant(
         pending?.requestId === "channel_begin",
         "browser action requires channel_begin",
@@ -631,14 +801,22 @@ function applyActiveEvent(state, event) {
         event.timeoutMs === pending.action.timeoutMs,
         "browser action timeout mismatch",
       );
+      pending.action.target.leaseHash = dedicatedTargetLeaseHash({
+        runId: state.run.runId,
+        taskId: active.taskId,
+        channel: pending.channel,
+        browser: state.run.browser,
+        actionHash: pending.action.hash,
+      });
       pending.action.state = "started";
+      pending.action.acknowledgementState = "pending";
       break;
     }
     case "record_target_created":
     case "recreate_target_after_authentication": {
       requireActor(event, "worker");
       const pending = state.protocol.pending;
-      const active = requireActiveTask(state);
+      requireActiveTask(state);
       invariant(pending?.action.state === "started", "action was not started");
       const expectedState =
         event.type === "record_target_created"
@@ -648,6 +826,14 @@ function applyActiveEvent(state, event) {
         pending.action.target.state === expectedState,
         `target must be ${expectedState}`,
       );
+      invariant(
+        event.type === "record_target_created"
+          ? pending.action.acknowledgementState === "issued"
+          : pending.action.target.recoveryLeaseDeliveryState === "issued",
+        event.type === "record_target_created"
+          ? "initial acknowledgement was not durably issued"
+          : "authentication recovery lease was not durably issued",
+      );
       invariant(event.channel === pending.channel, "target channel mismatch");
       invariant(event.browser === state.run.browser, "target browser mismatch");
       invariant(
@@ -656,17 +842,11 @@ function applyActiveEvent(state, event) {
       );
       requireHash(event.leaseHash, "leaseHash");
       invariant(
-        event.leaseHash === dedicatedTargetLeaseHash({
-          runId: state.run.runId,
-          taskId: active.taskId,
-          channel: pending.channel,
-          browser: state.run.browser,
-          actionHash: pending.action.hash,
-        }),
-        "lease hash does not match the task-scoped target descriptor",
+        event.leaseHash === pending.action.target.leaseHash,
+        "lease hash does not match the manager-supplied target lease",
       );
       pending.action.target.state = "created";
-      pending.action.target.leaseHash = event.leaseHash;
+      pending.action.target.recoveryLeaseDeliveryState = "not_required";
       break;
     }
     case "mark_authentication_handoff": {
@@ -924,6 +1104,23 @@ export function assertQaManagerRunState(state) {
       );
     }
     invariant(
+      ["not_ready", "pending", "issued"].includes(
+        action.acknowledgementState,
+      ),
+      "invalid acknowledgement issuance state",
+    );
+    if (action.state === "started" || action.state === "completed") {
+      invariant(
+        ["pending", "issued"].includes(action.acknowledgementState),
+        "started action lacks acknowledgement issuance state",
+      );
+    } else {
+      invariant(
+        action.acknowledgementState === "not_ready",
+        "unstarted action retained acknowledgement issuance state",
+      );
+    }
+    invariant(
       action.target?.ownership === QA_DEDICATED_TARGET_OWNERSHIP,
       "dedicated target ownership mismatch",
     );
@@ -937,7 +1134,35 @@ export function assertQaManagerRunState(state) {
       ].includes(action.target.state),
       "invalid dedicated target lifecycle state",
     );
-    if (["created", "authentication_handoff", "released"].includes(action.target.state)) {
+    invariant(
+      ["not_required", "pending", "issued"].includes(
+        action.target.recoveryLeaseDeliveryState,
+      ),
+      "invalid authentication recovery lease delivery state",
+    );
+    if (action.target.state === "recreation_required") {
+      invariant(
+        action.target.leaseHash === null
+          ? action.target.recoveryLeaseDeliveryState === "not_required"
+          : ["pending", "issued"].includes(
+              action.target.recoveryLeaseDeliveryState,
+            ),
+        "authentication recovery lease delivery state is inconsistent",
+      );
+    } else {
+      invariant(
+        action.target.recoveryLeaseDeliveryState === "not_required",
+        "non-recovery target retained recovery lease delivery state",
+      );
+    }
+    if (
+      ["created", "authentication_handoff", "released"].includes(
+        action.target.state,
+      ) ||
+      (action.state === "started" && action.target.state === "not_created") ||
+      (action.target.state === "recreation_required" &&
+        action.target.leaseHash !== null)
+    ) {
       requireHash(action.target.leaseHash, "leaseHash");
     } else {
       invariant(
@@ -1041,6 +1266,100 @@ async function writeJsonExclusive(path, value) {
   }
 }
 
+const MUTATION_COMMANDS = new Set([
+  "apply",
+  "issue-ack",
+  "issue-auth-recovery",
+]);
+const MUTATION_CLAIM_WAIT_MS = 2_000;
+const MUTATION_CLAIM_RETRY_MS = 5;
+
+export function qaMutationClaimPath(statePath) {
+  const absoluteStatePath = resolve(statePath);
+  const pathHash = createHash("sha256")
+    .update(JSON.stringify({ statePath: absoluteStatePath }))
+    .digest("hex");
+  return resolve(dirname(absoluteStatePath), `.qa-mutation-${pathHash}.claim`);
+}
+
+export function qaIssuanceClaimPath(statePath, command) {
+  invariant(MUTATION_COMMANDS.has(command), "invalid mutation command");
+  return qaMutationClaimPath(statePath);
+}
+
+function wait(milliseconds) {
+  return new Promise((resolveWait) => setTimeout(resolveWait, milliseconds));
+}
+
+export async function acquireQaMutationClaim(statePath, command) {
+  invariant(MUTATION_COMMANDS.has(command), "invalid mutation command");
+  const claimPath = qaMutationClaimPath(statePath);
+  const claim = JSON.stringify({
+    schemaVersion: "qa-issuance-claim/v1",
+    nonce: randomUUID(),
+  });
+  const waitDeadline = Date.now() + MUTATION_CLAIM_WAIT_MS;
+  let handle;
+  while (!handle) {
+    try {
+      handle = await open(claimPath, "wx", 0o600);
+    } catch (error) {
+      if (error?.code !== "EEXIST") throw error;
+      if (Date.now() >= waitDeadline) {
+        throw new Error(
+          "saved-state mutation claim is unavailable; ownership is ambiguous",
+        );
+      }
+      await wait(MUTATION_CLAIM_RETRY_MS);
+    }
+  }
+  try {
+    await handle.writeFile(`${claim}\n`, "utf8");
+    await handle.sync();
+    await handle.close();
+  } catch (error) {
+    await handle?.close().catch(() => {});
+    throw error;
+  }
+
+  let released = false;
+  return {
+    path: claimPath,
+    async release() {
+      invariant(!released, "issuance claim was already released");
+      const savedClaim = await readFile(claimPath, "utf8");
+      invariant(
+        savedClaim === `${claim}\n`,
+        "issuance claim ownership is uncertain",
+      );
+      await unlink(claimPath);
+      released = true;
+    },
+  };
+}
+
+export async function acquireQaIssuanceClaim(statePath, command) {
+  return acquireQaMutationClaim(statePath, command);
+}
+
+async function mutateSavedState(statePath, command, mutate) {
+  const claim = await acquireQaMutationClaim(statePath, command);
+  let persistenceStarted = false;
+  try {
+    const state = JSON.parse(await readFile(resolve(statePath), "utf8"));
+    const mutation = mutate(state);
+    persistenceStarted = true;
+    await writeJsonAtomic(statePath, mutation.state);
+    await claim.release();
+    return mutation.output;
+  } catch (error) {
+    if (!persistenceStarted) {
+      await claim.release().catch(() => {});
+    }
+    throw error;
+  }
+}
+
 function parseArguments(argv) {
   const [command, ...rest] = argv;
   const options = {};
@@ -1066,19 +1385,32 @@ export async function runQaRecoveryCli(argv) {
   }
   if (command === "apply") {
     invariant(options.event, "--event is required");
-    const [state, event] = await Promise.all([
-      readFile(resolve(options.state), "utf8").then(JSON.parse),
-      readFile(resolve(options.event), "utf8").then(JSON.parse),
-    ]);
-    const next = applyQaRecoveryEvent(state, event);
-    assertQaManagerRunState(next);
-    await writeJsonAtomic(options.state, next);
-    return {
-      ok: true,
-      runId: next.run.runId,
-      nextSequence: next.protocol.nextSequence,
-      terminal: next.terminal?.resultId ?? null,
-    };
+    const event = JSON.parse(await readFile(resolve(options.event), "utf8"));
+    return mutateSavedState(options.state, command, (state) => {
+      const next = applyQaRecoveryEvent(state, event);
+      assertQaManagerRunState(next);
+      return {
+        state: next,
+        output: {
+          ok: true,
+          runId: next.run.runId,
+          nextSequence: next.protocol.nextSequence,
+          terminal: next.terminal?.resultId ?? null,
+        },
+      };
+    });
+  }
+  if (command === "issue-ack") {
+    return mutateSavedState(options.state, command, (state) => {
+      const issuance = issueQaCheckpointAck(state);
+      return { state: issuance.state, output: issuance.acknowledgement };
+    });
+  }
+  if (command === "issue-auth-recovery") {
+    return mutateSavedState(options.state, command, (state) => {
+      const issuance = issueAuthenticationRecoveryLease(state);
+      return { state: issuance.state, output: issuance.delivery };
+    });
   }
   if (command === "check") {
     const state = JSON.parse(await readFile(resolve(options.state), "utf8"));
@@ -1090,7 +1422,9 @@ export async function runQaRecoveryCli(argv) {
       terminal: state.terminal?.resultId ?? null,
     };
   }
-  throw new Error("command must be create, apply, or check");
+  throw new Error(
+    "command must be create, apply, issue-ack, issue-auth-recovery, or check",
+  );
 }
 
 const invokedPath = process.argv[1] ? pathToFileURL(resolve(process.argv[1])).href : "";

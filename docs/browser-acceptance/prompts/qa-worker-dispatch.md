@@ -59,14 +59,18 @@ task turn. Then hash the sanitized action descriptor and emit exactly one
 `browser_action_started` containing `channel`, `browser`, `action`,
 `actionHash`, and `timeoutMs:60000`. Do not call the browser until the manager
 returns an exact matching `QA_CHECKPOINT_ACK` for that start intent. Manager
-prose does not count. Never assume a binding object survives a Codex turn or
-task boundary. If binding setup fails, emit `browser_binding_unavailable`
+prose does not count. Require its manager-supplied `targetLeaseHash`, copy it
+unchanged into the local action context, and exact-compare the copy to the
+acknowledgement before any browser invocation. Never invent or recompute a
+lease hash; a missing, malformed, substituted, or unequal value stops before
+browser access. Never assume a binding object survives a Codex turn or task
+boundary. If binding setup fails, emit `browser_binding_unavailable`
 while the action remains `authorized`; do not record `browser_action_started`.
 If the start envelope is rejected or the acknowledgement is missing or
 mismatched, do not call the browser. After the acknowledgement, perform the
 one browser operation with the declared 60000 ms timeout and no retry. First
 create one new agent tab, navigate only to the playbook's typed official root,
-and record its deterministic task-scoped lease hash. Never list, claim,
+and record the exact manager-supplied task-scoped lease hash. Never list, claim,
 inspect, or reuse user tabs and never persist its raw handle or ID. Release the
 target before durably storing the sanitized outcome and record
 `browser_action_completed` with its hash, and persist the result from that
@@ -75,7 +79,11 @@ durable checkpoint. Never resend an accepted response, repeat an action at
 `started` or `completed`, or revisit a completed channel. Stop on any
 checkpoint contradiction. Explicit `authentication_handoff` retains the live
 handle only in the same task; after a task/process boundary discard it and
-recreate from the typed official root.
+wait for the distinct single-use `QA_AUTHENTICATION_RECOVERY_LEASE`. Require
+exactly `protocol`, `runId`, `sequence`, `checkpointId`, `channel`, and
+`targetLeaseHash`; reject missing, extra, malformed, or mismatched fields.
+Exact-copy its hash before recreating from the typed official root. Never treat
+it as a resent initial acknowledgement or read private manager state.
 
 For Instagram and LinkedIn Search readiness, use only exact accessible-name
 `Search` role locators: `searchbox`, `combobox`, or `textbox` for the entry

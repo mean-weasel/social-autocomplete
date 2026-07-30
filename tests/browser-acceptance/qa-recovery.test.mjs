@@ -1,15 +1,23 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 import Ajv2020 from "ajv/dist/2020.js";
 import {
   applyQaRecoveryEvent,
+  assertAuthenticationRecoveryLease,
+  assertQaCheckpointAck,
   assertQaManagerRunState,
   browserActionDescriptorHash,
   createQaManagerRunState,
   dedicatedTargetLeaseHash,
+  issueAuthenticationRecoveryLease,
+  issueQaCheckpointAck,
+  qaIssuanceClaimPath,
   QA_BROWSER_ACTION,
   QA_BROWSER_ACTION_TIMEOUT_MS,
   QA_RECOVERY_RETRY_LIMIT,
@@ -25,6 +33,9 @@ const ACTION_HASH = browserActionDescriptorHash({
   channel: "instagram",
   browser: "chrome",
 });
+const execFileAsync = promisify(execFile);
+const recoveryCliPath = resolve("scripts/browser-acceptance/qa-recovery.mjs");
+const recoveryCliUrl = pathToFileURL(recoveryCliPath).href;
 
 function spec() {
   return {
@@ -140,20 +151,25 @@ function acceptAndStart(state) {
     actionHash: ACTION_HASH,
     timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
   });
-  const leaseHash = dedicatedTargetLeaseHash({
+  const issuance = issueQaCheckpointAck(state);
+  state = issuance.state;
+  const acknowledgement = issuance.acknowledgement;
+  assertQaCheckpointAck({
+    protocol: "qa-manager-worker/v1",
     runId: state.run.runId,
-    taskId: state.coordination.activeTask.taskId,
+    sequence: state.protocol.pending.sequence,
     channel: state.protocol.pending.channel,
-    browser: state.run.browser,
     actionHash: ACTION_HASH,
-  });
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+    targetLeaseHash: acknowledgement.targetLeaseHash,
+  }, acknowledgement);
   return apply(state, {
     type: "record_target_created",
     actor: "worker",
     channel: state.protocol.pending.channel,
     browser: state.run.browser,
     officialRoot: "https://www.instagram.com/",
-    leaseHash,
+    leaseHash: acknowledgement.targetLeaseHash,
   });
 }
 
@@ -193,6 +209,173 @@ function reserveRecovery(state) {
     actor: "manager",
     purpose: "host_recovery",
   });
+}
+
+function initialAckReadyState() {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  state = apply(state, {
+    type: "start_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  return apply(state, {
+    type: "authorize_browser_action_start",
+    actor: "manager",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+}
+
+function authenticationRecoveryReadyState() {
+  let state = acceptAndStart(persistAndSend(observeChannel(executionState())));
+  state = apply(state, {
+    type: "mark_authentication_handoff",
+    actor: "worker",
+    leaseHash: state.protocol.pending.action.target.leaseHash,
+  });
+  state = reserveRecovery(terminalHostFailure(state));
+  const leaseKey = state.coordination.continuation.key;
+  state = apply(state, {
+    type: "begin_continuation_create",
+    actor: "manager",
+    leaseKey,
+  });
+  return apply(state, {
+    type: "activate_continuation",
+    actor: "manager",
+    leaseKey,
+    taskId: "auth-recovery-cli",
+  });
+}
+
+async function runRecoveryCliProcess(...args) {
+  return execFileAsync(process.execPath, [recoveryCliPath, ...args], {
+    encoding: "utf8",
+  });
+}
+
+async function assertCliRejectsWithoutStdout(...args) {
+  await assert.rejects(
+    runRecoveryCliProcess(...args),
+    (error) => {
+      assert.equal(error.stdout, "");
+      return true;
+    },
+  );
+}
+
+async function runContentionRound(command, readyState) {
+  const directory = await mkdtemp(join(tmpdir(), `qa-${command}-race-`));
+  const statePath = join(directory, "state.json");
+  await writeFile(statePath, JSON.stringify(readyState), "utf8");
+  const attempts = await Promise.allSettled(
+    Array.from({ length: 16 }, () =>
+      runRecoveryCliProcess(command, "--state", statePath),
+    ),
+  );
+  const winners = attempts.filter((attempt) => attempt.status === "fulfilled");
+  const losers = attempts.filter((attempt) => attempt.status === "rejected");
+  assert.equal(winners.length, 1);
+  assert.equal(losers.length, 15);
+  assert.equal(winners[0].value.stderr, "");
+  assert.doesNotThrow(() => JSON.parse(winners[0].value.stdout));
+  for (const loser of losers) {
+    assert.equal(loser.reason.stdout, "");
+  }
+  return JSON.parse(await readFile(statePath, "utf8"));
+}
+
+async function runCrossCommandContentionRound(command, readyState, event) {
+  const directory = await mkdtemp(join(tmpdir(), `qa-${command}-apply-race-`));
+  const statePath = join(directory, "state.json");
+  const eventPath = join(directory, "event.json");
+  await Promise.all([
+    writeFile(statePath, JSON.stringify(readyState), "utf8"),
+    writeFile(eventPath, JSON.stringify(event), "utf8"),
+  ]);
+  const [issuance, mutation] = await Promise.allSettled([
+    runRecoveryCliProcess(command, "--state", statePath),
+    runRecoveryCliProcess(
+      "apply",
+      "--state",
+      statePath,
+      "--event",
+      eventPath,
+    ),
+  ]);
+  assert.equal(mutation.status, "fulfilled");
+  assert.equal(mutation.value.stderr, "");
+  assert.equal(JSON.parse(mutation.value.stdout).ok, true);
+  if (issuance.status === "fulfilled") {
+    assert.equal(issuance.value.stderr, "");
+    const envelope = JSON.parse(issuance.value.stdout);
+    assert.equal("taskId" in envelope, false);
+    assert.equal("targetHandle" in envelope, false);
+    assert.equal("privateState" in envelope, false);
+  } else {
+    assert.equal(issuance.reason.stdout, "");
+  }
+  return {
+    issuanceSucceeded: issuance.status === "fulfilled",
+    state: JSON.parse(await readFile(statePath, "utf8")),
+  };
+}
+
+async function leaveCrashedIssuanceClaim(statePath, command) {
+  const script = `
+    import { acquireQaIssuanceClaim } from ${JSON.stringify(recoveryCliUrl)};
+    await acquireQaIssuanceClaim(process.argv[1], process.argv[2]);
+    process.exit(86);
+  `;
+  await assert.rejects(
+    execFileAsync(
+      process.execPath,
+      ["--input-type=module", "--eval", script, statePath, command],
+      { encoding: "utf8" },
+    ),
+    (error) => {
+      assert.equal(error.code, 86);
+      assert.equal(error.stdout, "");
+      return true;
+    },
+  );
+}
+
+function terminalRunState() {
+  let state = reserveRecovery(terminalHostFailure(executionState()));
+  const leaseKey = state.coordination.continuation.key;
+  state = apply(state, {
+    type: "begin_continuation_create",
+    actor: "manager",
+    leaseKey,
+  });
+  state = apply(state, {
+    type: "activate_continuation",
+    actor: "manager",
+    leaseKey,
+    taskId: "recovery-terminal-cli",
+  });
+  state = terminalHostFailure(state, "recovery-terminal-cli");
+  return reserveRecovery(state);
 }
 
 test("durable state preserves immutable run identity and one-time authorization", () => {
@@ -556,6 +739,212 @@ test("browser work remains gated until the manager acknowledges the persisted st
     timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
   });
   assert.equal(state.protocol.pending.action.state, "started");
+  const issuance = issueQaCheckpointAck(state);
+  state = issuance.state;
+  const acknowledgement = issuance.acknowledgement;
+  assert.equal(
+    acknowledgement.targetLeaseHash,
+    state.protocol.pending.action.target.leaseHash,
+  );
+});
+
+test("worker rejects a missing or substituted manager lease before browser invocation", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  state = apply(state, {
+    type: "start_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  state = apply(state, {
+    type: "authorize_browser_action_start",
+    actor: "manager",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  const issuance = issueQaCheckpointAck(state);
+  state = issuance.state;
+  const acknowledgement = issuance.acknowledgement;
+  let browserInvocations = 0;
+  const invokeBrowser = (copiedTargetLeaseHash) => {
+    assertQaCheckpointAck({
+      protocol: "qa-manager-worker/v1",
+      runId: state.run.runId,
+      sequence: state.protocol.pending.sequence,
+      channel: "instagram",
+      actionHash: ACTION_HASH,
+      timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+      targetLeaseHash: copiedTargetLeaseHash,
+    }, acknowledgement);
+    browserInvocations += 1;
+  };
+
+  assert.throws(() => invokeBrowser(undefined), /targetLeaseHash mismatch/);
+  assert.throws(() => invokeBrowser(HASH_C), /targetLeaseHash mismatch/);
+  assert.equal(browserInvocations, 0);
+  invokeBrowser(acknowledgement.targetLeaseHash);
+  assert.equal(browserInvocations, 1);
+});
+
+test("initial acknowledgement issuance is durable, single-use, and unavailable after task termination or manager recovery", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  state = apply(state, {
+    type: "start_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  state = apply(state, {
+    type: "authorize_browser_action_start",
+    actor: "manager",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+
+  const issuance = issueQaCheckpointAck(state);
+  state = issuance.state;
+  assert.equal(state.protocol.pending.action.acknowledgementState, "issued");
+  assert.throws(
+    () => issueQaCheckpointAck(state),
+    /not available for issuance/,
+  );
+  const recoveredManagerState = apply(state, {
+    type: "recover_manager_process",
+    actor: "manager",
+  });
+  assert.throws(
+    () => issueQaCheckpointAck(recoveredManagerState),
+    /not available for issuance/,
+  );
+  const terminalTaskState = apply(state, {
+    type: "task_terminal",
+    actor: "manager",
+    reason: "worker_stopped",
+  });
+  assert.throws(
+    () => issueQaCheckpointAck(terminalTaskState),
+    /no active worker task/,
+  );
+});
+
+test("worker rejects every missing, mismatched, or extra acknowledgement field", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  state = apply(state, {
+    type: "start_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  state = apply(state, {
+    type: "authorize_browser_action_start",
+    actor: "manager",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  const issuance = issueQaCheckpointAck(state);
+  const acknowledgement = issuance.acknowledgement;
+  const intent = {
+    protocol: "qa-manager-worker/v1",
+    runId: state.run.runId,
+    sequence: state.protocol.pending.sequence,
+    channel: "instagram",
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+    targetLeaseHash: acknowledgement.targetLeaseHash,
+  };
+
+  for (const field of Object.keys(acknowledgement)) {
+    const missing = { ...acknowledgement };
+    delete missing[field];
+    assert.throws(
+      () => assertQaCheckpointAck(intent, missing),
+      /QA_CHECKPOINT_ACK fields mismatch/,
+      `missing ${field}`,
+    );
+  }
+  const mismatches = {
+    protocol: "qa-manager-worker/v0",
+    runId: "qa_other",
+    sequence: acknowledgement.sequence + 1,
+    checkpointId: "wrong_checkpoint",
+    channel: "facebook",
+    actionHash: HASH_C,
+    timeoutMs: acknowledgement.timeoutMs + 1,
+    targetLeaseHash: HASH_C,
+  };
+  for (const [field, value] of Object.entries(mismatches)) {
+    assert.throws(
+      () =>
+        assertQaCheckpointAck(intent, {
+          ...acknowledgement,
+          [field]: value,
+        }),
+      new RegExp(`${field} mismatch`),
+      `mismatched ${field}`,
+    );
+  }
+  assert.throws(
+    () =>
+      assertQaCheckpointAck(intent, {
+        ...acknowledgement,
+        taskId: "private-task",
+      }),
+    /QA_CHECKPOINT_ACK fields mismatch/,
+  );
 });
 
 test("host recovery before the start acknowledgement invalidates the binding and remains retry-safe", () => {
@@ -685,6 +1074,9 @@ test("dedicated target creation is acknowledged, typed, task-scoped, and release
     actionHash: ACTION_HASH,
     timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
   });
+  const issuance = issueQaCheckpointAck(state);
+  state = issuance.state;
+  assert.equal(state.protocol.pending.action.target.leaseHash, leaseHash);
   assert.throws(
     () => apply(state, {
       type: "record_target_created",
@@ -754,14 +1146,55 @@ test("manual authentication retains the lease only in-task and recreates it afte
     leaseKey: continuationKey,
     taskId: "auth-recovery-1",
   });
-  const secondLease = dedicatedTargetLeaseHash({
-    runId: state.run.runId,
-    taskId: "auth-recovery-1",
-    channel: "instagram",
-    browser: "chrome",
-    actionHash: ACTION_HASH,
-  });
+  const recoveryIssuance = issueAuthenticationRecoveryLease(state);
+  state = recoveryIssuance.state;
+  const delivery = recoveryIssuance.delivery;
+  assert.deepEqual(Object.keys(delivery), [
+    "protocol",
+    "runId",
+    "sequence",
+    "checkpointId",
+    "channel",
+    "targetLeaseHash",
+  ]);
+  assert.equal("taskId" in delivery, false);
+  assert.equal("targetHandle" in delivery, false);
+  assert.equal("privateState" in delivery, false);
+  const secondLease = delivery.targetLeaseHash;
   assert.notEqual(secondLease, firstLease);
+  assertAuthenticationRecoveryLease({
+    protocol: "qa-manager-worker/v1",
+    runId: state.run.runId,
+    sequence: state.protocol.pending.sequence,
+    channel: "instagram",
+    targetLeaseHash: secondLease,
+  }, delivery);
+  assert.throws(
+    () => issueAuthenticationRecoveryLease(state),
+    /not available for issuance/,
+  );
+  assert.throws(
+    () =>
+      assertAuthenticationRecoveryLease({
+        protocol: "qa-manager-worker/v1",
+        runId: state.run.runId,
+        sequence: state.protocol.pending.sequence,
+        channel: "instagram",
+        targetLeaseHash: HASH_C,
+      }, delivery),
+    /targetLeaseHash mismatch/,
+  );
+  assert.throws(
+    () =>
+      assertAuthenticationRecoveryLease({
+        protocol: "qa-manager-worker/v1",
+        runId: state.run.runId,
+        sequence: state.protocol.pending.sequence,
+        channel: "instagram",
+        targetLeaseHash: secondLease,
+      }, { ...delivery, taskId: "private-task" }),
+    /fields mismatch/,
+  );
   state = apply(state, {
     type: "recreate_target_after_authentication",
     actor: "worker",
@@ -955,6 +1388,319 @@ test("blockingProductFinding is rejected on passing complete runs", () => {
     }),
     /blockingProductFinding must be true only/,
   );
+});
+
+test("CLI issue-ack persists issued state before emitting only the sanitized envelope", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qa-recovery-ack-"));
+  const statePath = join(directory, "state.json");
+  await writeFile(statePath, JSON.stringify(initialAckReadyState()), "utf8");
+
+  const issued = await runRecoveryCliProcess(
+    "issue-ack",
+    "--state",
+    statePath,
+  );
+  const acknowledgement = JSON.parse(issued.stdout);
+  assert.deepEqual(Object.keys(acknowledgement), [
+    "protocol",
+    "runId",
+    "sequence",
+    "checkpointId",
+    "channel",
+    "actionHash",
+    "timeoutMs",
+    "targetLeaseHash",
+  ]);
+  assert.equal("ok" in acknowledgement, false);
+  assert.equal("taskId" in acknowledgement, false);
+  assert.equal("targetHandle" in acknowledgement, false);
+  assert.equal("privateState" in acknowledgement, false);
+  const issuedState = JSON.parse(await readFile(statePath, "utf8"));
+  assert.equal(
+    issuedState.protocol.pending.action.acknowledgementState,
+    "issued",
+  );
+  assert.equal(
+    issuedState.protocol.pending.action.target.leaseHash,
+    acknowledgement.targetLeaseHash,
+  );
+
+  await assertCliRejectsWithoutStdout(
+    "issue-ack",
+    "--state",
+    statePath,
+  );
+  const recoveredState = apply(issuedState, {
+    type: "recover_manager_process",
+    actor: "manager",
+  });
+  await writeFile(statePath, JSON.stringify(recoveredState), "utf8");
+  await assertCliRejectsWithoutStdout(
+    "issue-ack",
+    "--state",
+    statePath,
+  );
+
+  const terminalTaskState = apply(initialAckReadyState(), {
+    type: "task_terminal",
+    actor: "manager",
+    reason: "worker_stopped",
+  });
+  await writeFile(statePath, JSON.stringify(terminalTaskState), "utf8");
+  await assertCliRejectsWithoutStdout(
+    "issue-ack",
+    "--state",
+    statePath,
+  );
+
+  await writeFile(statePath, JSON.stringify(terminalRunState()), "utf8");
+  await assertCliRejectsWithoutStdout(
+    "issue-ack",
+    "--state",
+    statePath,
+  );
+});
+
+test("CLI issue-auth-recovery persists issued state and never re-emits from saved terminal or recovered state", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qa-recovery-auth-"));
+  const statePath = join(directory, "state.json");
+  await writeFile(
+    statePath,
+    JSON.stringify(authenticationRecoveryReadyState()),
+    "utf8",
+  );
+
+  const issued = await runRecoveryCliProcess(
+    "issue-auth-recovery",
+    "--state",
+    statePath,
+  );
+  const delivery = JSON.parse(issued.stdout);
+  assert.deepEqual(Object.keys(delivery), [
+    "protocol",
+    "runId",
+    "sequence",
+    "checkpointId",
+    "channel",
+    "targetLeaseHash",
+  ]);
+  assert.equal("ok" in delivery, false);
+  assert.equal("taskId" in delivery, false);
+  assert.equal("targetHandle" in delivery, false);
+  assert.equal("privateState" in delivery, false);
+  const issuedState = JSON.parse(await readFile(statePath, "utf8"));
+  assert.equal(
+    issuedState.protocol.pending.action.target.recoveryLeaseDeliveryState,
+    "issued",
+  );
+  assert.equal(
+    issuedState.protocol.pending.action.target.leaseHash,
+    delivery.targetLeaseHash,
+  );
+
+  await assertCliRejectsWithoutStdout(
+    "issue-auth-recovery",
+    "--state",
+    statePath,
+  );
+  const recoveredState = apply(issuedState, {
+    type: "recover_manager_process",
+    actor: "manager",
+  });
+  await writeFile(statePath, JSON.stringify(recoveredState), "utf8");
+  await assertCliRejectsWithoutStdout(
+    "issue-auth-recovery",
+    "--state",
+    statePath,
+  );
+
+  const terminalTaskState = apply(authenticationRecoveryReadyState(), {
+    type: "task_terminal",
+    actor: "manager",
+    reason: "worker_stopped",
+  });
+  await writeFile(statePath, JSON.stringify(terminalTaskState), "utf8");
+  await assertCliRejectsWithoutStdout(
+    "issue-auth-recovery",
+    "--state",
+    statePath,
+  );
+
+  await writeFile(statePath, JSON.stringify(terminalRunState()), "utf8");
+  await assertCliRejectsWithoutStdout(
+    "issue-auth-recovery",
+    "--state",
+    statePath,
+  );
+});
+
+test("issue-ack is a single winner across repeated 16-process contention", async () => {
+  for (let round = 0; round < 3; round += 1) {
+    const state = await runContentionRound(
+      "issue-ack",
+      initialAckReadyState(),
+    );
+    assert.equal(
+      state.protocol.pending.action.acknowledgementState,
+      "issued",
+    );
+  }
+});
+
+test("issue-auth-recovery is a single winner across repeated 16-process contention", async () => {
+  for (let round = 0; round < 3; round += 1) {
+    const state = await runContentionRound(
+      "issue-auth-recovery",
+      authenticationRecoveryReadyState(),
+    );
+    assert.equal(
+      state.protocol.pending.action.target.recoveryLeaseDeliveryState,
+      "issued",
+    );
+  }
+});
+
+test("issue-ack is linearizable with stop_run and cannot restore terminal authorization", async () => {
+  for (let round = 0; round < 3; round += 1) {
+    const { state } = await runCrossCommandContentionRound(
+      "issue-ack",
+      initialAckReadyState(),
+      {
+        type: "stop_run",
+        actor: "manager",
+        reason: "browser_binding_unavailable",
+      },
+    );
+    assert.equal(state.terminal.resultId, "run_stopped");
+    assert.equal(state.terminal.reason, "browser_binding_unavailable");
+    assert.equal(state.authorization.browserAccessAuthorized, false);
+    assert.equal(state.authorization.consumed, true);
+    assert.equal(state.protocol.pending, null);
+  }
+});
+
+test("issue-ack is linearizable with task_terminal without resurrecting the task", async () => {
+  for (let round = 0; round < 3; round += 1) {
+    const { issuanceSucceeded, state } =
+      await runCrossCommandContentionRound(
+        "issue-ack",
+        initialAckReadyState(),
+        {
+          type: "task_terminal",
+          actor: "manager",
+          reason: "system_error",
+        },
+      );
+    assert.equal(state.coordination.activeTask, null);
+    assert.equal(state.coordination.taskHistory.at(-1).status, "terminal");
+    assert.equal(
+      state.protocol.pending.action.acknowledgementState,
+      issuanceSucceeded ? "issued" : "pending",
+    );
+  }
+});
+
+test("issue-auth-recovery is linearizable with stop_run and recovery task termination", async () => {
+  for (const event of [
+    {
+      type: "stop_run",
+      actor: "manager",
+      reason: "worker_host_unavailable",
+    },
+    {
+      type: "task_terminal",
+      actor: "manager",
+      reason: "system_error",
+    },
+  ]) {
+    for (let round = 0; round < 3; round += 1) {
+      const { issuanceSucceeded, state } =
+        await runCrossCommandContentionRound(
+          "issue-auth-recovery",
+          authenticationRecoveryReadyState(),
+          event,
+        );
+      assert.equal(state.coordination.activeTask, null);
+      if (event.type === "stop_run") {
+        assert.equal(state.terminal.resultId, "run_stopped");
+        assert.equal(state.authorization.browserAccessAuthorized, false);
+        assert.equal(state.authorization.consumed, true);
+        assert.equal(state.protocol.pending, null);
+      } else {
+        assert.equal(
+          state.protocol.pending.action.target.recoveryLeaseDeliveryState,
+          issuanceSucceeded ? "issued" : "pending",
+        );
+        assert.equal(
+          state.coordination.taskHistory.at(-1).status,
+          "terminal",
+        );
+      }
+    }
+  }
+});
+
+test("crashed or stale issuance claims fail closed without replay or private metadata", async () => {
+  for (const [command, readyState, pendingState] of [
+    [
+      "issue-ack",
+      initialAckReadyState(),
+      (state) => state.protocol.pending.action.acknowledgementState,
+    ],
+    [
+      "issue-auth-recovery",
+      authenticationRecoveryReadyState(),
+      (state) =>
+        state.protocol.pending.action.target.recoveryLeaseDeliveryState,
+    ],
+  ]) {
+    const directory = await mkdtemp(join(tmpdir(), `qa-${command}-crash-`));
+    const statePath = join(directory, "state.json");
+    await writeFile(statePath, JSON.stringify(readyState), "utf8");
+    await leaveCrashedIssuanceClaim(statePath, command);
+
+    const claimPath = qaIssuanceClaimPath(statePath, command);
+    const claim = JSON.parse(await readFile(claimPath, "utf8"));
+    assert.deepEqual(Object.keys(claim), ["schemaVersion", "nonce"]);
+    assert.equal(claim.schemaVersion, "qa-issuance-claim/v1");
+    assert.match(claim.nonce, /^[a-f0-9-]{36}$/);
+    const serializedClaim = JSON.stringify(claim);
+    for (const privateValue of [
+      readyState.run.runId,
+      readyState.coordination.activeTask.taskId,
+      readyState.protocol.pending.action.target.leaseHash,
+      "targetHandle",
+      "privateState",
+    ]) {
+      assert.equal(serializedClaim.includes(privateValue), false);
+    }
+
+    await assertCliRejectsWithoutStdout(command, "--state", statePath);
+    await assertCliRejectsWithoutStdout(command, "--state", statePath);
+    const eventPath = join(directory, "event.json");
+    await writeFile(
+      eventPath,
+      JSON.stringify({
+        type: "stop_run",
+        actor: "manager",
+        reason: "worker_host_unavailable",
+      }),
+      "utf8",
+    );
+    await assertCliRejectsWithoutStdout(
+      "apply",
+      "--state",
+      statePath,
+      "--event",
+      eventPath,
+    );
+    const unchangedState = JSON.parse(await readFile(statePath, "utf8"));
+    assert.equal(pendingState(unchangedState), "pending");
+    assert.equal(
+      await readFile(claimPath, "utf8"),
+      `${serializedClaim}\n`,
+    );
+  }
 });
 
 test("CLI create, apply, and check atomically maintain ignored-state-compatible JSON", async () => {

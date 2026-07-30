@@ -75,6 +75,12 @@ test("manager starter makes recovery manager-owned, durable, and bounded", async
   assert.match(starter, /authorize_browser_action_start/);
   assert.match(starter, /QA_CHECKPOINT_ACK/);
   assert.match(starter, /timeoutMs:60000/);
+  assert.match(starter, /targetLeaseHash/);
+  assert.match(starter, /private active-task\s+identity/);
+  assert.match(starter, /single-use `issued` state/);
+  assert.match(starter, /qa-recovery\.mjs issue-ack/);
+  assert.match(starter, /qa-recovery\.mjs issue-auth-recovery/);
+  assert.match(starter, /QA_AUTHENTICATION_RECOVERY_LEASE/);
 });
 
 test("worker dispatch prompt has an exact versioned placeholder contract", async () => {
@@ -114,6 +120,10 @@ test("worker dispatch prompt has an exact versioned placeholder contract", async
   assert.match(dispatch, /timeoutMs:60000/);
   assert.match(dispatch, /QA_CHECKPOINT_ACK/);
   assert.match(dispatch, /Do not call the browser until/);
+  assert.match(dispatch, /manager-supplied `targetLeaseHash`/);
+  assert.match(dispatch, /Never invent or recompute a\s+lease hash/);
+  assert.match(dispatch, /QA_AUTHENTICATION_RECOVERY_LEASE/);
+  assert.match(dispatch, /reject missing, extra, malformed, or mismatched fields/);
   assert.match(dispatch, /Never resend an accepted response/);
 });
 
@@ -152,6 +162,17 @@ test("manager runbook defines cursor and timeout behavior without status polling
   assert.match(runbook, /never send repeated “status\?” messages/);
   assert.match(runbook, /authorize_browser_action_start/);
   assert.match(runbook, /QA_CHECKPOINT_ACK/);
+  assert.match(runbook, /canonical target lease hash/);
+  assert.match(runbook, /exact-copy and compare that hash/);
+  assert.match(runbook, /Persist the single-use acknowledgement\s+issuance state/);
+  assert.match(runbook, /qa-recovery\.mjs issue-ack/);
+  assert.match(runbook, /qa-recovery\.mjs issue-auth-recovery/);
+  assert.match(runbook, /before writing only the sanitized\s+envelope to stdout/);
+  assert.match(runbook, /same state-path-scoped\s+exclusive mutation boundary/);
+  assert.match(runbook, /no stale read may erase a\s+terminal transition or restore consumed authorization/);
+  assert.match(runbook, /all losers return empty stdout/);
+  assert.match(runbook, /non-replayable/);
+  assert.match(runbook, /QA_AUTHENTICATION_RECOVERY_LEASE/);
   assert.match(runbook, /never resend the\s+acknowledgement/);
   assert.match(runbook, /do not return a final answer while the worker remains active/);
   assert.match(runbook, /Do not substitute shell\s+polling, a recurring automation, or an operating-system timer/);
@@ -160,6 +181,12 @@ test("manager runbook defines cursor and timeout behavior without status polling
   assert.match(protocol, /wait timeout is a local manager\s+heartbeat only/);
   assert.match(protocol, /must never be converted into `run_complete` or `run_stopped`/);
   assert.match(protocol, /waits again without sending a status ping/);
+  assert.match(protocol, /issue-ack --state <run-state>/);
+  assert.match(protocol, /issue-auth-recovery --state <run-state>/);
+  assert.match(protocol, /fails closed without output/);
+  assert.match(protocol, /exclusive\s+opaque saved-state mutation boundary/);
+  assert.match(protocol, /No stale read can overwrite\s+a committed terminal\/recovery transition or restore consumed authorization/);
+  assert.match(protocol, /never expired, stolen, deleted by a\s+loser/);
 });
 
 test("protocol and runbooks define fail-closed single-owner host recovery", async () => {
@@ -186,6 +213,10 @@ test("protocol and runbooks define fail-closed single-owner host recovery", asyn
   assert.match(protocol, /retry limit is exactly one recovery continuation/);
   assert.match(protocol, /ambiguous_browser_action/);
   assert.match(protocol, /Repeated terminal processing returns the existing terminal record/);
+  assert.match(protocol, /manager is the sole authority for `targetLeaseHash`/);
+  assert.match(protocol, /Missing,\s+malformed, or unequal values stop the run before browser access/);
+  assert.match(protocol, /durable single-use transition/);
+  assert.match(protocol, /QA_AUTHENTICATION_RECOVERY_LEASE/);
 });
 
 test("manager-worker protocol excludes omitted capability channels", async () => {

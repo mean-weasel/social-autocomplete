@@ -251,13 +251,38 @@ emitted `browser_binding_verified` for the selected browser and channel in the
 current task turn before `browser_action_started`. Require that start envelope
 to contain the exact channel, browser, bounded action label, SHA-256
 `actionHash`, and `timeoutMs:60000`. Apply `start_browser_action` to persist
-`start_persisted`, then apply `authorize_browser_action_start` before sending
-one matching `QA_CHECKPOINT_ACK`. The manager acknowledgement is the worker's
-only authority to invoke the browser; commentary is never sufficient. After
-the `authorize_browser_action_start` transition, never resend the
-acknowledgement; uncertain delivery is `ambiguous_browser_action`. After
+`start_persisted`, then apply `authorize_browser_action_start`. That transition
+must use the private active-task identity and durable action state to compute
+and persist the canonical target lease hash before sending one matching
+`QA_CHECKPOINT_ACK` with `targetLeaseHash`; never place the task identity in
+the envelope. The manager acknowledgement is the worker's only authority to
+invoke the browser, and the worker must exact-copy and compare that hash first;
+commentary is never sufficient. Issue it only with:
+
+```sh
+node scripts/browser-acceptance/qa-recovery.mjs issue-ack \
+  --state .social-metadata/qa/manager-runs/<run-id>-state.json
+```
+
+Persist the single-use acknowledgement issuance state only through this
+command. It writes the state atomically before writing only the sanitized
+envelope to stdout. Before reading state it enters the same state-path-scoped
+exclusive mutation boundary used by every reducer `apply` and both issuance
+commands. The opaque claim contains only a schema version and random nonce.
+Issuance either commits before a conflicting terminal/recovery transition or
+observes that transition and returns empty stdout; no stale read may erase a
+terminal transition or restore consumed authorization. Exactly one issuer can
+win; all losers return empty stdout. It releases its
+verified claim only after `issued` is durable and before stdout. Contenders may
+wait for verified release, but a crash, stale claim, persistence uncertainty,
+or uncertain ownership is non-replayable: never delete, expire, steal, or
+retry through the claim. Send the exact winner output.
+Reject a second issuance, issuance after task termination, and regeneration
+after manager recovery; never resend the acknowledgement; uncertain delivery
+is `ambiguous_browser_action`. After
 acknowledgement, require `record_target_created` for a new plugin-owned agent
-tab at the channel's typed official root, then `release_target` before
+tab at the channel's typed official root with the exact persisted lease hash,
+then `release_target` before
 `browser_action_completed` and persisted-result checkpoints. Reject user-tab
 listing, claiming, inspection, or reuse and reject any raw handle/ID in durable
 state. A recovered worker re-establishes and verifies the binding before
@@ -265,8 +290,24 @@ an unacknowledged action; task termination invalidates `binding_verified` and
 `start_persisted`. It never repeats an accepted request, acknowledged/started
 or completed action, or completed channel. A durable
 `authentication_handoff` is the only recoverable started state: the old handle
-is discarded and the recovery task creates a new dedicated tab from the typed
-official root.
+is discarded, activation of the confirmed recovery task persists its new
+canonical lease hash, and the manager durably issues one distinct sanitized
+`QA_AUTHENTICATION_RECOVERY_LEASE` only with:
+
+```sh
+node scripts/browser-acceptance/qa-recovery.mjs issue-auth-recovery \
+  --state .social-metadata/qa/manager-runs/<run-id>-state.json
+```
+
+The command atomically persists the recovery delivery's issued state before
+writing only the sanitized envelope to stdout. It contains only protocol, run,
+sequence, checkpoint, channel, and hash fields. Never resend the initial
+acknowledgement or expose the private task identity. Require the recovery
+worker to exact-copy and validate the supplied hash before creating a new
+dedicated tab from the typed official root; reject a second recovery-envelope
+issuance from saved state. Apply the identical opaque exclusive-claim,
+empty-stdout loser, shared saved-state mutation boundary, and non-replayable
+crash or stale-claim rules.
 
 If the worker emits commentary without an envelope, wait. If it asks a
 question without a valid envelope, stop as `unexpected_request`.

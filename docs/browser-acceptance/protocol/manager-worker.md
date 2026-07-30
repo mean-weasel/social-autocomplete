@@ -32,11 +32,39 @@ QA_EVENT {"protocol":"qa-manager-worker/v1","type":"result","runId":"qa_example"
 After persisting that intent, the manager acknowledges it:
 
 ```text
-QA_CHECKPOINT_ACK {"protocol":"qa-manager-worker/v1","runId":"qa_example","sequence":4,"checkpointId":"browser_action_started","channel":"instagram","actionHash":"<sha256>","timeoutMs":60000}
+QA_CHECKPOINT_ACK {"protocol":"qa-manager-worker/v1","runId":"qa_example","sequence":4,"checkpointId":"browser_action_started","channel":"instagram","actionHash":"<sha256>","timeoutMs":60000,"targetLeaseHash":"<sha256>"}
 ```
 
 The worker must not call the browser before receiving this exact matching
-acknowledgement. Manager prose is never an acknowledgement.
+acknowledgement. The manager is the sole authority for `targetLeaseHash`: it
+computes the hash from durable run state and the private active-task identity,
+persists it before acknowledgement, and exposes only the sanitized hash. The
+worker must neither invent nor recompute it. Before browser invocation, the
+worker must require the field, copy it without transformation into its local
+action context, and exact-compare that copy with the acknowledgement. Missing,
+malformed, or unequal values stop the run before browser access. Manager prose
+is never an acknowledgement.
+Initial acknowledgement issuance is a durable single-use transition. The
+manager must run `qa-recovery.mjs issue-ack --state <run-state>` and send only
+its sanitized stdout envelope. The operation atomically persists
+`acknowledgementState:"issued"` before emitting stdout. A second issuance
+attempt from saved state, an attempt after the worker task becomes terminal, or
+an attempt after manager recovery fails closed without output. Delivery
+uncertainty remains `ambiguous_browser_action`; the initial acknowledgement is
+never regenerated or resent.
+Before reading or mutating run state, the command enters the same exclusive
+opaque saved-state mutation boundary used by `apply` and both issuance
+commands. This makes terminal, recovery, and issuance transitions
+linearizable: issuance either commits before a later transition, or observes
+that transition and fails closed with empty stdout. The claim is scoped only
+to the state path and contains only its schema version and a random nonce,
+never task identity, target identity, browser metadata, or run state. The
+winner persists `issued`, releases its verified claim, and only then emits the
+envelope. Contenders may wait only for the current verified owner to release;
+the claim is never expired, stolen, deleted by a loser, or otherwise taken
+from that owner. A crash, persistence uncertainty, stale claim, or uncertain
+claim ownership leaves the claim in place and eventually fails contenders
+closed; it is never treated as permission to replay.
 `actionHash` is the SHA-256 of the UTF-8 compact JSON descriptor with this
 exact key order:
 
@@ -94,15 +122,19 @@ handled twice.
 
 Before dispatch, the manager creates ignored project-local state conforming to
 `schemas/qa-manager-run-state.schema.json`. Every transition is applied through
-`scripts/browser-acceptance/qa-recovery.mjs`; the state is persisted atomically
-before the corresponding external send, browser action, result emission, or
-task creation. The state path is deterministic for the run and `create`
-refuses to overwrite it. The one-time authorization ID is derived from the run
-ID, so a terminal record cannot be reset or repurposed as a fresh run.
+`scripts/browser-acceptance/qa-recovery.mjs`; `apply`, `issue-ack`, and
+`issue-auth-recovery` share one state-path-scoped exclusive mutation boundary,
+and state is persisted atomically before the corresponding external send,
+browser action, result emission, or task creation. No stale read can overwrite
+a committed terminal/recovery transition or restore consumed authorization.
+The state path is deterministic for the run and `create` refuses to overwrite
+it. The one-time authorization ID is derived from the run ID, so a terminal
+record cannot be reset or repurposed as a fresh run.
 
 The state preserves the exact run ID, scenario/oracle/protocol IDs and hashes,
 browser, ordered channels, one-time authorization ID, next sequence, completed
-channels, response and result hashes, active task, and continuation lease.
+channels, response and result hashes, active task, continuation lease, and the
+manager-computed canonical target lease hash.
 Response checkpoints are `persisted`, `sent`, and `accepted`. A
 `channel_begin` action is separately `authorized`, `binding_verified`,
 `start_persisted`, `started`, and `completed`. Its dedicated target is
@@ -120,13 +152,16 @@ after every task or process boundary; prior verification is invalidated by a
 host continuation. Only then may the worker emit `browser_action_started` with
 the SHA-256 of its sanitized action descriptor and `timeoutMs:60000`. The
 manager applies `start_browser_action`, which records `start_persisted`, then
-applies `authorize_browser_action_start` before sending one exact
-`QA_CHECKPOINT_ACK`. Only after receiving the matching acknowledgement may the
-worker invoke the browser. The manager's conservative `started` state therefore
+applies `authorize_browser_action_start`, which derives and durably stores the
+canonical task-scoped target lease hash before sending one exact
+`QA_CHECKPOINT_ACK` containing that hash. Only after receiving the matching
+acknowledgement and exact-comparing its copied `targetLeaseHash` may the worker
+invoke the browser. The manager's conservative `started` state therefore
 precedes the external browser call. The worker then creates one new agent tab,
 navigates only to the channel's typed official root, keeps the raw handle in
-the host runtime, and records `record_target_created` with the deterministic
-task-scoped lease hash. It never lists, claims, inspects, or reuses user tabs.
+the host runtime, and records `record_target_created` with the unchanged
+manager-supplied lease hash. The reducer compares it with the persisted
+canonical value. It never lists, claims, inspects, or reuses user tabs.
 If acknowledgement delivery or manager
 state becomes uncertain after that transition, the run stops as
 `ambiguous_browser_action`; the manager never resends the acknowledgement. The
@@ -155,9 +190,27 @@ task is terminal and the durable checkpoint is unambiguous:
 An action at `started` without durable `completed` is
 `ambiguous_browser_action` and stops, except when the target was durably marked
 `authentication_handoff` before the task ended. That one explicit state becomes
-`recreation_required`; the recovery task must create a new agent tab from the
-typed official root and derive a new task-scoped lease hash. It must never
-reuse a stale handle or rediscover a user tab. A same-task manual sign-in
+`recreation_required`; after activating the confirmed recovery task, the
+manager derives and persists its new task-scoped lease hash in the durable
+checkpoint, then runs
+`qa-recovery.mjs issue-auth-recovery --state <run-state>`. The operation
+atomically persists `recoveryLeaseDeliveryState:"issued"` before emitting only
+this separate single-use sanitized stdout envelope:
+
+```text
+QA_AUTHENTICATION_RECOVERY_LEASE {"protocol":"qa-manager-worker/v1","runId":"qa_example","sequence":4,"checkpointId":"authentication_recovery_target","channel":"instagram","targetLeaseHash":"<sha256>"}
+```
+
+This is not a resent `QA_CHECKPOINT_ACK` and contains no task identity, target
+handle, or private manager state. The recovery worker must reject every
+missing, extra, malformed, or mismatched field and exact-copy the supplied hash
+before it creates a new agent tab from the typed official root. A second
+recovery-envelope issuance from saved state, including after manager recovery
+or task/run terminal state, fails closed without output. It must never
+reuse a stale handle or rediscover a user tab. The same shared saved-state
+mutation boundary, empty-stdout loser, and non-replayable crash or stale-claim
+rules apply. A
+same-task manual sign-in
 retains and resumes the exact live handle. The manager persists a deterministic
 continuation lease as `reserved`, then persists `creating` immediately before
 the one external task-creation call. Only that `creating` lease may be
