@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -477,11 +477,12 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Pin the exact approved build into the isolated QA repository and prepare a fresh dedicated-target scenario without browser access."
     inputs:
-      - "T004 approval"
+      - "T010 approval"
+      - "Approved product commit 41d31308665f0ee4c9de12e686c9efb7a705676d"
       - "Dedicated QA repository /Users/neonwatty/Desktop/social-autocomplete-qa"
     constraints:
       - "Do not operate a browser."
@@ -495,20 +496,52 @@ tasks:
       - "Exact one-time authorization prerequisite"
     allowed_files:
       - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/templates/qa-receipt.v1.json"
       - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-41d3130/"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/scenarios/dedicated-targets-instagram-facebook-linkedin.yaml"
     verify:
+      - "Verify the ignored product-source checkout is detached at 41d31308665f0ee4c9de12e686c9efb7a705676d and clean."
       - "Verify every declared source and QA SHA-256."
+      - "Validate the ignored scenario against the pinned scenario schema and Chrome oracle without approving browser access."
       - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
       - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa status --short"
     stop_if:
       - "The source checkout is mutable or does not match the approved commit."
       - "QA packaging requires browser access."
       - "Private QA artifacts would be committed."
-    receipt: null
+      - "Any tracked QA path outside the four declared runbook/manifest files would change."
+    receipt:
+      result: done
+      changed_files:
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/templates/qa-receipt.v1.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+      commands:
+        - command: "Verify ignored product-source checkout is detached and clean at 41d31308665f0ee4c9de12e686c9efb7a705676d"
+          status: pass
+        - command: "Verify all 4 worker-file source/QA hashes and 11 manager-source hashes"
+          status: pass
+        - command: "Validate dedicated-target scenario against pinned schema and Chrome oracle without approval"
+          status: pass
+        - command: "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+          status: pass
+        - command: "Verify QA commit 67442b29653ed561d7393ccf72b9d2a2d91811be is clean and private source/scenario paths are ignored"
+          status: pass
+      summary: "Pinned approved product commit 41d31308665f0ee4c9de12e686c9efb7a705676d into a clean detached ignored checkout and committed only the four declared QA files as 67442b29653ed561d7393ccf72b9d2a2d91811be. All declared hashes match. The ignored scenario dedicated_targets_instagram_facebook_linkedin validates with SHA-256 27660d6c33e778d75a6e4c6ef42f885510fa1f5ce44e63a890f1fb8dc0b6590d, exact order Instagram→Facebook→LinkedIn, Chrome, both modules, autocomplete_only, automatic mode, status unapproved, and browserAccessAuthorized=false. Browser work now requires the user’s exact one-time APPROVE QA BROWSER RUN authorization."
+      deviations:
+        - "The assigned Worker made no allowed-file progress within one wait window, so GoalBuddy PM fallback performed the same bounded pin."
+        - "The first pinned validation lacked local dependencies; a temporary node_modules symlink was used for validation and removed, leaving the detached checkout clean."
+      remaining_blockers:
+        - "Exact human authorization: APPROVE QA BROWSER RUN."
+      verification_attempts: 2
+      stopped_because: null
   - id: T006
     type: pm
     assignee: PM
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Obtain exact one-time authorization and supervise a fresh Instagram→Facebook→LinkedIn dedicated-target Chrome replay."
     inputs:
