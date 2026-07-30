@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: T030
+active_task: T031
 
 tasks:
   - id: T001
@@ -2002,7 +2002,7 @@ tasks:
   - id: T030
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Commit the exact Judge-approved product package and pin that immutable commit into the isolated QA repository."
     inputs:
@@ -2054,6 +2054,76 @@ tasks:
       - "The QA pin differs from the immutable product commit or a hash mismatches."
       - "Browser access, credentials, or prior authorization reuse would be required."
       - "Private QA state, receipts, notes, scenario data, or ignored source content would be committed."
+    receipt:
+      result: done
+      changed_files:
+        - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/prompts/qa-manager-starter.md
+        - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/protocol/manager-worker.md
+        - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/runbooks/qa-manager.md
+        - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/runbooks/qa-worker.md
+        - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+        - /Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-dedicated-browser-targets/state.yaml
+        - /Users/neonwatty/Desktop/social-autocomplete/scripts/browser-acceptance/qa-recovery.mjs
+        - /Users/neonwatty/Desktop/social-autocomplete/tests/browser-acceptance/qa-manager-prompt.test.mjs
+        - /Users/neonwatty/Desktop/social-autocomplete/tests/browser-acceptance/qa-recovery.test.mjs
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-111c4c0/
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/scenarios/dedicated-targets-instagram-facebook-linkedin.yaml
+      product_commit: 111c4c0655bc0bcf18e730d418c77c94a9ace584
+      product_tree: f97dbc697270c2c74c5b1e78c36ef929e0f66664
+      qa_commit: 034259e8a08e7ee92d614b27add4c574ede6dd2e
+      qa_tree: d00f17fbb05c4a2784df3ddc4fbfb335f10bf5f0
+      scenario_sha256: 27660d6c33e778d75a6e4c6ef42f885510fa1f5ce44e63a890f1fb8dc0b6590d
+      oracle_sha256: b37f8b1494ac4b9e67a332e237756ee7f3677f94832eaf7858012a822160f386
+      commands:
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "37/37"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "24/24"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "Verify all declared source and QA hashes"
+          status: pass
+          detail: "19/19"
+        - command: "Validate private scenario"
+          status: pass
+          detail: "approved=false; browserAccessAuthorized=false"
+      summary: "Committed the exact Judge-approved package, refreshed the QA worker artifact and source pin, created a clean detached ignored checkout at the exact product commit, and verified both tracked worktrees clean. Private scenario, state, notes, receipts, and source checkout remain ignored and uncommitted. No browser was operated."
+      deviations: []
+      remaining_blockers:
+        - "A new exact one-time APPROVE QA BROWSER RUN authorization."
+      verification_attempts: 2
+      stopped_because: null
+  - id: T031
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: high
+    objective: "Obtain a new exact one-time authorization and supervise the corrected exact-pin Instagram→Facebook→LinkedIn Chrome replay through a terminal sanitized receipt."
+    inputs:
+      - "Product commit 111c4c0655bc0bcf18e730d418c77c94a9ace584"
+      - "QA pin commit 034259e8a08e7ee92d614b27add4c574ede6dd2e"
+      - "Validated private unapproved scenario SHA-256 27660d6c33e778d75a6e4c6ef42f885510fa1f5ce44e63a890f1fb8dc0b6590d"
+      - "Oracle SHA-256 b37f8b1494ac4b9e67a332e237756ee7f3677f94832eaf7858012a822160f386"
+    constraints:
+      - "Do not approve or begin browser work without a new user message containing exactly: APPROVE QA BROWSER RUN."
+      - "Never reuse qa_20260730T142346Z or its consumed authorization."
+      - "Use only existing visible Chrome and plugin-created dedicated targets."
+      - "Never request or handle credentials."
+      - "Use the new atomic issue-ack CLI operation for initial target authorization and the distinct issue-auth-recovery operation when applicable."
+      - "Require one manager-owned targetLeaseHash, single-winner issuance, exact worker validation, mandatory target release, and terminal authorization consumption."
+    expected_output:
+      - "Fresh terminal sanitized receipt for exactly Instagram, Facebook, and LinkedIn"
+      - "No lease-hash mismatch, duplicate acknowledgement, lost terminal state, or restored authorization"
+      - "Native Search and both-module evidence or truthful current ui_change for each channel"
+      - "No user-tab enumeration, broad DOM scan, credential access, or action replay"
+      - "One-time authorization consumed"
     receipt: null
   - id: T999
     type: judge
