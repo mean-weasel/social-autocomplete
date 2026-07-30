@@ -1,5 +1,5 @@
 import type { ChannelPlaybook } from "../types.js";
-import { moduleProcedure, sharedPlaybookFields } from "./shared.js";
+import { dedicatedTargetPolicy, moduleProcedure, sharedPlaybookFields } from "./shared.js";
 
 export const instagramPlaybook: ChannelPlaybook = {
   ...sharedPlaybookFields(),
@@ -7,7 +7,8 @@ export const instagramPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated",
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
-  entryInstruction: "Use the matched Instagram target in the user-controlled signed-in Chrome session. Proceed only on instagram_search with instagram_native_search_entry; an authenticated shell or unavailable target is ui_change.",
+  dedicatedTarget: dedicatedTargetPolicy("instagram"),
+  entryInstruction: "Create a plugin-owned Instagram target at the typed official root in the user-controlled signed-in Chrome session. Proceed only on instagram_search with instagram_native_search_entry; an authenticated shell or lost dedicated target is ui_change.",
   semanticCheckpoints: [
     { id: "instagram-channel", purpose: "channel", description: "Instagram identity is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "instagram-auth", purpose: "access", description: "The surface is not the Instagram login page.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },

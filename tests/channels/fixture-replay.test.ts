@@ -13,6 +13,12 @@ test("channel fixtures preserve route-aware semantic boundaries", async () => {
   const instagram = fixtures.find(({ channel }: { channel: string }) => channel === "instagram");
   const linkedin = fixtures.find(({ channel }: { channel: string }) => channel === "linkedin");
   const pinterest = fixtures.find(({ channel }: { channel: string }) => channel === "pinterest");
+  for (const fixture of fixtures) {
+    assert.equal(fixture.dedicatedTarget.ownership, "plugin_owned");
+    assert.match(fixture.dedicatedTarget.officialRoot, /^https:\/\/(?:www\.)?/);
+    assert.deepEqual(fixture.dedicatedTarget.normalLifecycle, ["created", "released"]);
+    assert.deepEqual(fixture.dedicatedTarget.authenticationLifecycle, ["created", "authentication_handoff"]);
+  }
   assert.equal(facebook.success.targetMatched, true);
   assert.equal(facebook.success.diagnostic.routeClass, "facebook_search");
   assert.equal(facebook.failure.diagnostic.routeClass, "facebook_target_unavailable");

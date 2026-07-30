@@ -1,5 +1,5 @@
 import type { ChannelPlaybook } from "../types.js";
-import { moduleProcedure, sharedPlaybookFields } from "./shared.js";
+import { dedicatedTargetPolicy, moduleProcedure, sharedPlaybookFields } from "./shared.js";
 
 export const youtubePlaybook: ChannelPlaybook = {
   ...sharedPlaybookFields(),
@@ -7,6 +7,7 @@ export const youtubePlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated_preferred",
   publicCompletion: true,
   supportedBrowsers: { codex: ["chrome", "in_app"], claude: ["chrome"] },
+  dedicatedTarget: dedicatedTargetPolicy("youtube"),
   entryInstruction: "Open YouTube search; prefer signed-in Chrome and use the in-app Browser for permitted public research.",
   semanticCheckpoints: [
     { id: "youtube-channel", purpose: "channel", description: "YouTube banner/navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },

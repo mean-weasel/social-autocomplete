@@ -9,6 +9,7 @@ import {
   assertQaManagerRunState,
   browserActionDescriptorHash,
   createQaManagerRunState,
+  dedicatedTargetLeaseHash,
   QA_BROWSER_ACTION,
   QA_BROWSER_ACTION_TIMEOUT_MS,
   QA_RECOVERY_RETRY_LIMIT,
@@ -130,7 +131,7 @@ function acceptAndStart(state) {
     actionHash: ACTION_HASH,
     timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
   });
-  return apply(state, {
+  state = apply(state, {
     type: "authorize_browser_action_start",
     actor: "manager",
     channel: state.protocol.pending.channel,
@@ -139,9 +140,29 @@ function acceptAndStart(state) {
     actionHash: ACTION_HASH,
     timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
   });
+  const leaseHash = dedicatedTargetLeaseHash({
+    runId: state.run.runId,
+    taskId: state.coordination.activeTask.taskId,
+    channel: state.protocol.pending.channel,
+    browser: state.run.browser,
+    actionHash: ACTION_HASH,
+  });
+  return apply(state, {
+    type: "record_target_created",
+    actor: "worker",
+    channel: state.protocol.pending.channel,
+    browser: state.run.browser,
+    officialRoot: "https://www.instagram.com/",
+    leaseHash,
+  });
 }
 
 function completeAndPersistResult(state) {
+  state = apply(state, {
+    type: "release_target",
+    actor: "worker",
+    leaseHash: state.protocol.pending.action.target.leaseHash,
+  });
   state = apply(state, {
     type: "complete_browser_action",
     actor: "worker",
@@ -596,6 +617,11 @@ test("failure after durable action completion resumes at result persistence", ()
     persistAndSend(observeChannel(executionState())),
   );
   state = apply(state, {
+    type: "release_target",
+    actor: "worker",
+    leaseHash: state.protocol.pending.action.target.leaseHash,
+  });
+  state = apply(state, {
     type: "complete_browser_action",
     actor: "worker",
     actionHash: ACTION_HASH,
@@ -607,6 +633,145 @@ test("failure after durable action completion resumes at result persistence", ()
     state.coordination.continuation.resumeAt,
     "persist_channel_result",
   );
+});
+
+test("dedicated target creation is acknowledged, typed, task-scoped, and released before completion", () => {
+  let state = persistAndSend(observeChannel(executionState()));
+  state = apply(state, {
+    type: "accept_response",
+    actor: "worker",
+    responseHash: HASH_B,
+  });
+  state = apply(state, {
+    type: "verify_browser_binding",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    bindingHash: HASH_D,
+  });
+  state = apply(state, {
+    type: "start_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  const leaseHash = dedicatedTargetLeaseHash({
+    runId: state.run.runId,
+    taskId: state.coordination.activeTask.taskId,
+    channel: "instagram",
+    browser: "chrome",
+    actionHash: ACTION_HASH,
+  });
+  assert.throws(
+    () => apply(state, {
+      type: "record_target_created",
+      actor: "worker",
+      channel: "instagram",
+      browser: "chrome",
+      officialRoot: "https://www.instagram.com/",
+      leaseHash,
+    }),
+    /action was not started/,
+  );
+  state = apply(state, {
+    type: "authorize_browser_action_start",
+    actor: "manager",
+    channel: "instagram",
+    browser: "chrome",
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+  });
+  assert.throws(
+    () => apply(state, {
+      type: "record_target_created",
+      actor: "worker",
+      channel: "instagram",
+      browser: "chrome",
+      officialRoot: "https://example.invalid/",
+      leaseHash,
+    }),
+    /typed official root/,
+  );
+  state = apply(state, {
+    type: "record_target_created",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    officialRoot: "https://www.instagram.com/",
+    leaseHash,
+  });
+  assert.equal(state.protocol.pending.action.target.state, "created");
+  assert.throws(
+    () => apply(state, {
+      type: "complete_browser_action",
+      actor: "worker",
+      actionHash: ACTION_HASH,
+      outcomeHash: HASH_D,
+    }),
+    /must be released/,
+  );
+  state = apply(state, {
+    type: "release_target",
+    actor: "worker",
+    leaseHash,
+  });
+  assert.equal(state.protocol.pending.action.target.state, "released");
+});
+
+test("manual authentication retains the lease only in-task and recreates it after a task boundary", () => {
+  let state = acceptAndStart(persistAndSend(observeChannel(executionState())));
+  const firstLease = state.protocol.pending.action.target.leaseHash;
+  state = apply(state, {
+    type: "mark_authentication_handoff",
+    actor: "worker",
+    leaseHash: firstLease,
+  });
+  assert.deepEqual(recoveryCheckpoint(state), {
+    ok: false,
+    reason: "ambiguous_browser_action",
+  });
+  state = terminalHostFailure(state);
+  assert.equal(state.protocol.pending.action.target.state, "recreation_required");
+  assert.equal(state.protocol.pending.action.target.leaseHash, null);
+  assert.deepEqual(recoveryCheckpoint(state), {
+    ok: true,
+    resumeAt: "recreate_target_from_official_root",
+  });
+  state = reserveRecovery(state);
+  const continuationKey = state.coordination.continuation.key;
+  state = apply(state, {
+    type: "begin_continuation_create",
+    actor: "manager",
+    leaseKey: continuationKey,
+  });
+  state = apply(state, {
+    type: "activate_continuation",
+    actor: "manager",
+    leaseKey: continuationKey,
+    taskId: "auth-recovery-1",
+  });
+  const secondLease = dedicatedTargetLeaseHash({
+    runId: state.run.runId,
+    taskId: "auth-recovery-1",
+    channel: "instagram",
+    browser: "chrome",
+    actionHash: ACTION_HASH,
+  });
+  assert.notEqual(secondLease, firstLease);
+  state = apply(state, {
+    type: "recreate_target_after_authentication",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    officialRoot: "https://www.instagram.com/",
+    leaseHash: secondLease,
+  });
+  assert.equal(state.protocol.pending.action.target.state, "created");
+  assert.equal(state.protocol.pending.action.target.leaseHash, secondLease);
 });
 
 test("failure after result persistence re-emits evidence without repeating the action", () => {

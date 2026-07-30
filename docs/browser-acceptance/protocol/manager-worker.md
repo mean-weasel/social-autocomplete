@@ -41,11 +41,12 @@ acknowledgement. Manager prose is never an acknowledgement.
 exact key order:
 
 ```json
-{"action":"bounded_autocomplete_research","browser":"chrome","channel":"instagram","timeoutMs":60000}
+{"action":"bounded_autocomplete_research","browser":"chrome","channel":"instagram","timeoutMs":60000,"targetAcquisition":"new_agent_tab","targetOfficialRoot":"https://www.instagram.com/","targetOwnership":"plugin_owned"}
 ```
 
-The manager reducer recomputes this hash from the declared fields before it
-persists or acknowledges the start intent.
+The manager reducer supplies the typed official root and fixed target fields
+from the declared channel, then recomputes this hash before it persists or
+acknowledges the start intent.
 
 Results use the same event prefix:
 
@@ -60,9 +61,11 @@ QA_EVENT {"protocol":"qa-manager-worker/v1","type":"interruption","runId":"qa_ex
 ```
 
 Payloads must contain only contract enums, booleans, counts, IDs created for
-the QA run, and sanitized structural labels. They must not contain creative
-text, suggestions, page text, URLs, browser target metadata, account
-identifiers, DOM, screenshots, credentials, tokens, or storage state.
+the QA run, deterministic hashes, the typed public official root when target
+creation is being validated, and sanitized structural labels. They must not
+contain creative text, suggestions, page text, current target URLs, raw browser
+target handles/IDs, tab titles, account identifiers, DOM, screenshots,
+credentials, tokens, or storage state.
 
 ## Transport and liveness
 
@@ -102,7 +105,9 @@ browser, ordered channels, one-time authorization ID, next sequence, completed
 channels, response and result hashes, active task, and continuation lease.
 Response checkpoints are `persisted`, `sent`, and `accepted`. A
 `channel_begin` action is separately `authorized`, `binding_verified`,
-`start_persisted`, `started`, and `completed`.
+`start_persisted`, `started`, and `completed`. Its dedicated target is
+`not_created`, `created`, `authentication_handoff`, `recreation_required`, or
+`released`.
 A result is `persisted` before it is `emitted`.
 
 The worker acknowledges each accepted response through a sanitized
@@ -118,11 +123,16 @@ manager applies `start_browser_action`, which records `start_persisted`, then
 applies `authorize_browser_action_start` before sending one exact
 `QA_CHECKPOINT_ACK`. Only after receiving the matching acknowledgement may the
 worker invoke the browser. The manager's conservative `started` state therefore
-precedes the external browser call. If acknowledgement delivery or manager
+precedes the external browser call. The worker then creates one new agent tab,
+navigates only to the channel's typed official root, keeps the raw handle in
+the host runtime, and records `record_target_created` with the deterministic
+task-scoped lease hash. It never lists, claims, inspects, or reuses user tabs.
+If acknowledgement delivery or manager
 state becomes uncertain after that transition, the run stops as
 `ambiguous_browser_action`; the manager never resends the acknowledgement. The
-worker then durably stores the sanitized outcome and records
-`browser_action_completed` with its hash. It
+worker records `release_target` before it durably stores the sanitized outcome
+and records `browser_action_completed` with its hash. Action completion is
+rejected unless target lifecycle is `released`. It
 persists the channel result from that stored outcome before emitting it. These
 checkpoint events contain only run IDs, sequence numbers, enumerated
 channel/action labels, bounded timeout, and hashes; they never contain browser
@@ -143,7 +153,12 @@ task is terminal and the durable checkpoint is unambiguous:
 - a completed channel advances only to the next selected channel.
 
 An action at `started` without durable `completed` is
-`ambiguous_browser_action` and stops. The manager persists a deterministic
+`ambiguous_browser_action` and stops, except when the target was durably marked
+`authentication_handoff` before the task ended. That one explicit state becomes
+`recreation_required`; the recovery task must create a new agent tab from the
+typed official root and derive a new task-scoped lease hash. It must never
+reuse a stale handle or rediscover a user tab. A same-task manual sign-in
+retains and resumes the exact live handle. The manager persists a deterministic
 continuation lease as `reserved`, then persists `creating` immediately before
 the one external task-creation call. Only that `creating` lease may be
 activated with the returned task identity. If the manager restarts with an
@@ -194,8 +209,9 @@ The worker emits:
   persisted for the selected channel and task turn, before the action-start
   checkpoint;
 - `browser_action_started` with `actionHash` and `timeoutMs:60000` before the
-  manager acknowledgement, and `browser_action_completed` after one bounded
-  authorized channel action;
+  manager acknowledgement; `target_created` and `target_released` lifecycle
+  results around one bounded authorized channel action; and
+  `browser_action_completed` only after release;
 - `channel_complete` after every completed channel, including a truthful
   `ui_change` or `not_applicable` result;
 - `authentication_required`, `challenge`, `locale_mismatch`, or

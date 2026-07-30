@@ -59,7 +59,8 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   assert.match(skill, /existing Chrome profile/i);
   assert.match(skill, /temporary, profile-less Playwright\/Chromium/i);
   assert.match(skill, /pause the same run/i);
-  assert.match(skill, /sign in manually in that browser/i);
+  assert.match(skill, /sign in manually in that dedicated target/i);
+  assert.doesNotMatch(skill, /sign in manually in that browser/i);
   assert.match(skill, /never request, receive, type, read, transmit, or store passwords/i);
   assert.match(skill, /Before creating a plan or opening any channel/i);
   assert.match(skill, /choose and confirm the browser/i);
@@ -72,11 +73,13 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   assert.match(skill, /append-only plan amendment/i);
   assert.match(skill, /Never switch browsers/i);
   assert.match(skill, /sanitized authentication preflight/i);
-  assert.match(skill, /filter to the expected channel target inside the browser-control process/i);
-  assert.match(skill, /Never return a complete open-tab list/i);
+  assert.match(skill, /create a new plugin-owned agent tab/i);
+  assert.match(skill, /typed official root/i);
+  assert.match(skill, /Never list, claim, inspect, or reuse user tabs/i);
+  assert.match(skill, /Never list or return a complete open-tab list/i);
   assert.match(skill, /full authenticated DOM snapshots/i);
   assert.match(skill, /`body` text, feed\s+content/i);
   assert.match(skill, /account identifiers/i);
-  assert.match(skill, /only structural booleans, sanitized status, and short expected\/observed semantic landmarks/i);
-  assert.match(skill, /must not trigger a broader tab or DOM\s+read/i);
+  assert.match(skill, /only structural booleans, sanitized lifecycle\/status values, a deterministic lease hash, and short expected\/observed semantic landmarks/i);
+  assert.match(skill, /must not\s+trigger a broader tab or DOM\s+read/i);
 });

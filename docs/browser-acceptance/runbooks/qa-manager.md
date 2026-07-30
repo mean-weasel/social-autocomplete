@@ -256,11 +256,17 @@ one matching `QA_CHECKPOINT_ACK`. The manager acknowledgement is the worker's
 only authority to invoke the browser; commentary is never sufficient. After
 the `authorize_browser_action_start` transition, never resend the
 acknowledgement; uncertain delivery is `ambiguous_browser_action`. After
-acknowledgement, require `browser_action_completed` and persisted-result
-checkpoints. A recovered worker re-establishes and verifies the binding before
+acknowledgement, require `record_target_created` for a new plugin-owned agent
+tab at the channel's typed official root, then `release_target` before
+`browser_action_completed` and persisted-result checkpoints. Reject user-tab
+listing, claiming, inspection, or reuse and reject any raw handle/ID in durable
+state. A recovered worker re-establishes and verifies the binding before
 an unacknowledged action; task termination invalidates `binding_verified` and
 `start_persisted`. It never repeats an accepted request, acknowledged/started
-or completed action, or completed channel.
+or completed action, or completed channel. A durable
+`authentication_handoff` is the only recoverable started state: the old handle
+is discarded and the recovery task creates a new dedicated tab from the typed
+official root.
 
 If the worker emits commentary without an envelope, wait. If it asks a
 question without a valid envelope, stop as `unexpected_request`.

@@ -8,6 +8,7 @@ description: Research YouTube hashtag and search-term autocomplete with current 
 Follow [the shared browser research contract](../_shared/browser-research-contract.md), then use the `youtube` playbook selected by the router.
 
 - Prefer signed-in Chrome. Codex may use the in-app browser for public completion.
+- Create a new plugin-owned agent tab at the typed official root `https://www.youtube.com/` in either supported host; never search for or reuse an existing YouTube tab.
 - Verify YouTube navigation, expanded Search combobox, and native video-result/filter landmarks.
 - Search terms use ordinary phrases; hashtags use `#` plus an unspaced phrase. Both native autocomplete forms are supported.
 - Capture roles/types as displayed and preserve suggestion order without treating it as popularity.

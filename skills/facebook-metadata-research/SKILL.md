@@ -8,6 +8,7 @@ description: Research Facebook hashtag and search-term suggestions with current 
 Follow [the shared browser research contract](../_shared/browser-research-contract.md), then use the `facebook` playbook selected by the router.
 
 - Require a user-controlled signed-in Chrome session; public completion is not allowed.
+- Create a new plugin-owned agent tab at the typed official root `https://www.facebook.com/`; never search for or reuse an existing Facebook tab.
 - Require `targetMatched=true`. Only `facebook_search` with expected and observed `facebook_native_search_entry` may proceed. `facebook_authenticated_shell` with `facebook_authenticated_navigation`, or `facebook_target_unavailable` with `target_unavailable`, is `ui_change`.
 - If authenticated navigation exposes an evidenced native Search navigation control, the shared contract permits exactly one in-origin activation and one repeat of the same bounded structural projection. Never guess a URL or selector.
 - Require permission-scoped result landmarks only after a query interaction begins.

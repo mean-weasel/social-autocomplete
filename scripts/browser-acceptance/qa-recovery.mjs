@@ -9,6 +9,17 @@ export const QA_RECOVERY_SCHEMA_VERSION = "qa-manager-run-state/v1";
 export const QA_RECOVERY_RETRY_LIMIT = 1;
 export const QA_BROWSER_ACTION = "bounded_autocomplete_research";
 export const QA_BROWSER_ACTION_TIMEOUT_MS = 60_000;
+export const QA_DEDICATED_TARGET_OWNERSHIP = "plugin_owned";
+
+const OFFICIAL_ROOTS = {
+  facebook: "https://www.facebook.com/",
+  instagram: "https://www.instagram.com/",
+  linkedin: "https://www.linkedin.com/",
+  x: "https://x.com/",
+  tiktok: "https://www.tiktok.com/",
+  youtube: "https://www.youtube.com/",
+  pinterest: "https://www.pinterest.com/",
+};
 
 export function browserActionDescriptorHash({
   channel,
@@ -17,7 +28,34 @@ export function browserActionDescriptorHash({
   timeoutMs = QA_BROWSER_ACTION_TIMEOUT_MS,
 }) {
   return createHash("sha256")
-    .update(JSON.stringify({ action, browser, channel, timeoutMs }))
+    .update(JSON.stringify({
+      action,
+      browser,
+      channel,
+      timeoutMs,
+      targetAcquisition: "new_agent_tab",
+      targetOfficialRoot: OFFICIAL_ROOTS[channel],
+      targetOwnership: QA_DEDICATED_TARGET_OWNERSHIP,
+    }))
+    .digest("hex");
+}
+
+export function dedicatedTargetLeaseHash({
+  runId,
+  taskId,
+  channel,
+  browser,
+  actionHash,
+}) {
+  return createHash("sha256")
+    .update(JSON.stringify({
+      actionHash,
+      browser,
+      channel,
+      contract: "dedicated-target-lease/v1",
+      runId,
+      taskId,
+    }))
     .digest("hex");
 }
 
@@ -126,6 +164,12 @@ function stopRun(state, reason) {
 function checkpointIsRecoverable(state) {
   const pending = state.protocol.pending;
   if (!pending) return { ok: true, resumeAt: "next_event" };
+  if (
+    pending.action?.state === "started" &&
+    pending.action.target?.state === "recreation_required"
+  ) {
+    return { ok: true, resumeAt: "recreate_target_from_official_root" };
+  }
   if (pending.action?.state === "started") {
     return { ok: false, reason: "ambiguous_browser_action" };
   }
@@ -264,6 +308,13 @@ function recordTaskTerminal(state, event) {
     state.protocol.pending.action.label = null;
     state.protocol.pending.action.hash = null;
     state.protocol.pending.action.timeoutMs = null;
+  }
+  if (
+    state.protocol.pending?.action?.state === "started" &&
+    state.protocol.pending.action.target?.state === "authentication_handoff"
+  ) {
+    state.protocol.pending.action.target.state = "recreation_required";
+    state.protocol.pending.action.target.leaseHash = null;
   }
   state.coordination.activeTask = null;
 }
@@ -464,6 +515,11 @@ function applyActiveEvent(state, event) {
           hash: null,
           timeoutMs: null,
           outcomeHash: null,
+          target: {
+            ownership: QA_DEDICATED_TARGET_OWNERSHIP,
+            state: "not_created",
+            leaseHash: null,
+          },
         },
         result: null,
       };
@@ -578,11 +634,98 @@ function applyActiveEvent(state, event) {
       pending.action.state = "started";
       break;
     }
+    case "record_target_created":
+    case "recreate_target_after_authentication": {
+      requireActor(event, "worker");
+      const pending = state.protocol.pending;
+      const active = requireActiveTask(state);
+      invariant(pending?.action.state === "started", "action was not started");
+      const expectedState =
+        event.type === "record_target_created"
+          ? "not_created"
+          : "recreation_required";
+      invariant(
+        pending.action.target.state === expectedState,
+        `target must be ${expectedState}`,
+      );
+      invariant(event.channel === pending.channel, "target channel mismatch");
+      invariant(event.browser === state.run.browser, "target browser mismatch");
+      invariant(
+        event.officialRoot === OFFICIAL_ROOTS[pending.channel],
+        "target root does not match the typed official root",
+      );
+      requireHash(event.leaseHash, "leaseHash");
+      invariant(
+        event.leaseHash === dedicatedTargetLeaseHash({
+          runId: state.run.runId,
+          taskId: active.taskId,
+          channel: pending.channel,
+          browser: state.run.browser,
+          actionHash: pending.action.hash,
+        }),
+        "lease hash does not match the task-scoped target descriptor",
+      );
+      pending.action.target.state = "created";
+      pending.action.target.leaseHash = event.leaseHash;
+      break;
+    }
+    case "mark_authentication_handoff": {
+      requireActor(event, "worker");
+      const pending = state.protocol.pending;
+      requireActiveTask(state);
+      invariant(pending?.action.state === "started", "action was not started");
+      invariant(
+        pending.action.target.state === "created",
+        "authentication handoff requires a live dedicated target",
+      );
+      invariant(
+        event.leaseHash === pending.action.target.leaseHash,
+        "authentication handoff lease mismatch",
+      );
+      pending.action.target.state = "authentication_handoff";
+      break;
+    }
+    case "resume_target_after_authentication": {
+      requireActor(event, "worker");
+      const pending = state.protocol.pending;
+      requireActiveTask(state);
+      invariant(pending?.action.state === "started", "action was not started");
+      invariant(
+        pending.action.target.state === "authentication_handoff",
+        "no same-task authentication handoff exists",
+      );
+      invariant(
+        event.leaseHash === pending.action.target.leaseHash,
+        "authentication resume lease mismatch",
+      );
+      pending.action.target.state = "created";
+      break;
+    }
+    case "release_target": {
+      requireActor(event, "worker");
+      const pending = state.protocol.pending;
+      requireActiveTask(state);
+      invariant(pending?.action.state === "started", "action was not started");
+      invariant(
+        pending.action.target.state === "created",
+        "only a live dedicated target may be released",
+      );
+      invariant(
+        event.leaseHash === pending.action.target.leaseHash,
+        "target release lease mismatch",
+      );
+      pending.action.target.state = "released";
+      break;
+    }
     case "complete_browser_action": {
       requireActor(event, "worker");
       const pending = state.protocol.pending;
       invariant(pending?.action.state === "started", "action was not started");
       invariant(event.actionHash === pending.action.hash, "action hash mismatch");
+      invariant(
+        pending.action.target.state === "released",
+        "dedicated target must be released before action completion",
+      );
       requireHash(event.outcomeHash, "outcomeHash");
       pending.action.state = "completed";
       pending.action.outcomeHash = event.outcomeHash;
@@ -769,6 +912,34 @@ export function assertQaManagerRunState(state) {
       invariant(
         action.timeoutMs === null,
         "unstarted action must not have a timeout",
+      );
+    }
+    invariant(
+      action.target?.ownership === QA_DEDICATED_TARGET_OWNERSHIP,
+      "dedicated target ownership mismatch",
+    );
+    invariant(
+      [
+        "not_created",
+        "created",
+        "authentication_handoff",
+        "recreation_required",
+        "released",
+      ].includes(action.target.state),
+      "invalid dedicated target lifecycle state",
+    );
+    if (["created", "authentication_handoff", "released"].includes(action.target.state)) {
+      requireHash(action.target.leaseHash, "leaseHash");
+    } else {
+      invariant(
+        action.target.leaseHash === null,
+        "inactive dedicated target must not retain a lease hash",
+      );
+    }
+    if (action.state === "completed") {
+      invariant(
+        action.target.state === "released",
+        "completed action retained an unreleased dedicated target",
       );
     }
   }

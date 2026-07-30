@@ -3,9 +3,16 @@ import type {
   ModuleProcedure,
   PlaybookStep,
 } from "../types.js";
+import type { Channel } from "../../contracts/index.js";
 import { getChannelModulePolicy } from "../policies/index.js";
 
 export const canonicalSteps: PlaybookStep[] = [
+  {
+    id: "create-dedicated-target",
+    instruction: "After the acknowledged action start, create one new plugin-owned agent tab and navigate it only to this playbook's typed official root.",
+    emits: null,
+    bound: "exactly one task-scoped target lease for the channel",
+  },
   {
     id: "verify-surface",
     instruction: "Verify the channel, access state, confirmed locale, and required semantic search landmarks.",
@@ -37,12 +44,42 @@ export const canonicalSteps: PlaybookStep[] = [
     bound: "at most three results per intended recommendation",
   },
   {
+    id: "release-dedicated-target",
+    instruction: "Release the plugin-owned target after all browser-dependent research and before validating the channel; retain it only for an explicit same-task manual-authentication handoff.",
+    emits: null,
+    bound: "one release after browser research and before a normal channel result",
+  },
+  {
     id: "validate",
     instruction: "Validate the channel receipt before advancing to the next channel.",
     emits: null,
     bound: "one channel receipt",
   },
 ];
+
+const officialRoots: Record<Channel, ChannelPlaybook["dedicatedTarget"]["officialRoot"]> = {
+  facebook: "https://www.facebook.com/",
+  instagram: "https://www.instagram.com/",
+  linkedin: "https://www.linkedin.com/",
+  x: "https://x.com/",
+  tiktok: "https://www.tiktok.com/",
+  youtube: "https://www.youtube.com/",
+  pinterest: "https://www.pinterest.com/",
+};
+
+export function dedicatedTargetPolicy(channel: Channel): ChannelPlaybook["dedicatedTarget"] {
+  return {
+    officialRoot: officialRoots[channel]!,
+    ownership: "plugin_owned",
+    scope: "task_channel",
+    acquisition: "new_agent_tab",
+    userTabPolicy: "never_list_claim_inspect_or_reuse",
+    rawHandlePolicy: "host_runtime_only",
+    taskBoundary: "recreate_from_official_root",
+    authenticationHandoff: "retain_same_task_handle",
+    completion: "release_required",
+  };
+}
 
 export function moduleProcedure(
   channel: Parameters<typeof getChannelModulePolicy>[0],

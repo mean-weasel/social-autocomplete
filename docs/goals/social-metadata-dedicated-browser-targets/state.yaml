@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: T003
+active_task: T005
 
 tasks:
   - id: T001
@@ -267,7 +267,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: medium
     objective: "Implement a typed plugin-owned dedicated-target lifecycle across channel playbooks, host contracts, browser skills, the QA acknowledgement/recovery protocol, sanitized receipts, fixtures, and deterministic tests."
     inputs:
@@ -347,13 +347,76 @@ tasks:
       - "A channel could complete before its plugin-created target is released, except an explicit manual-authentication handoff."
       - "A required change falls outside allowed_files."
       - "Verification fails twice for a task-introduced reason."
-    receipt: null
+    receipt:
+      result: blocked
+      changed_files:
+        - src/channels/types.ts
+        - src/channels/playbooks/shared.ts
+        - src/channels/playbooks/facebook.ts
+        - src/channels/playbooks/instagram.ts
+        - src/channels/playbooks/linkedin.ts
+        - src/channels/playbooks/x.ts
+        - src/channels/playbooks/tiktok.ts
+        - src/channels/playbooks/youtube.ts
+        - src/channels/playbooks/pinterest.ts
+        - skills/_shared/browser-research-contract.md
+        - skills/social-metadata-research/SKILL.md
+        - skills/facebook-metadata-research/SKILL.md
+        - skills/instagram-metadata-research/SKILL.md
+        - skills/linkedin-metadata-research/SKILL.md
+        - skills/x-metadata-research/SKILL.md
+        - skills/tiktok-metadata-research/SKILL.md
+        - skills/youtube-metadata-research/SKILL.md
+        - skills/pinterest-metadata-research/SKILL.md
+        - assets/host-contract.json
+        - fixtures/channels/scenarios.json
+        - scripts/browser-acceptance/harness.mjs
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - docs/browser-acceptance/README.md
+        - docs/browser-acceptance/channel-matrix.md
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/oracles/chrome-authenticated-research.yaml
+        - docs/browser-acceptance/oracles/in-app-public-research.yaml
+        - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+        - docs/browser-acceptance/schemas/qa-oracle.schema.json
+        - docs/browser-acceptance/templates/qa-receipt.v1.json
+        - tests/channels/playbooks.test.ts
+        - tests/channels/fixture-replay.test.ts
+        - tests/hosts/host-parity.ts
+        - tests/hosts/manifests.test.ts
+        - tests/browser-acceptance/harness.test.ts
+        - tests/browser-acceptance/qa-recovery.test.mjs
+      commands:
+        - command: "npm run typecheck"
+          result: failed
+          detail: "Initial TypeScript import and indexed-root errors; corrected afterward but not rerun before stop condition."
+        - command: "npm run test:qa-recovery"
+          result: passed
+        - command: "npm run test:browser-harness"
+          result: failed
+          detail: "Documentation regex did not tolerate a line break; corrected."
+        - command: "npm run test:browser-harness"
+          result: failed
+          detail: "Second documentation regex did not tolerate a line break."
+      summary: "Implemented most of the typed dedicated-target lifecycle, including official roots, plugin ownership, sanitized lease hashes, acknowledged creation, release-gated completion, authentication handoff/recreation, schemas, fixtures, host contracts, skills, documentation, and focused tests. Stopped immediately when browser-harness verification failed twice as required by T003."
+      deviations:
+        - "The full verification list was not completed because the explicit two-failure stop condition was reached."
+        - "The remaining failure is a test regex line-wrap mismatch, not a runtime lifecycle assertion."
+      remaining_blockers:
+        - "Update the user-tab prohibition assertion in tests/browser-acceptance/harness.test.ts to tolerate Markdown line wrapping, then rerun every T003 verification command."
+        - "Rerun npm run typecheck to confirm the corrected import and official-root lookup."
+      verification_attempts: 2
+      stopped_because: "T003 stop_if reached: verification failed twice for a task-introduced reason."
   - id: T004
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
-    objective: "Adversarially review the dedicated-target implementation for privacy leakage, target substitution, stale-handle reuse, unsafe recovery, and incomplete host parity."
+    objective: "Reorient after two tiny verification recoveries: audit the whole dedicated-target diff for correctness and specify one coherent recovery package that closes all remaining implementation and verification gaps."
     inputs:
       - "T002 approved contract"
       - "T003 implementation receipt and diff"
@@ -362,15 +425,59 @@ tasks:
       - "Reject fixture-only claims that do not establish a safe path to live proof."
       - "Reject any path that can touch an unrelated existing tab."
     expected_output:
-      - "approved | changes_required"
+      - "changes_required | approved"
       - "Requirement-to-test mapping"
-      - "Exact QA pin prerequisite"
-      - "Missing evidence and next task if changes are required"
-    receipt: null
+      - "Exact recovery Worker objective, allowed_files, verify commands, and stop conditions when changes are required"
+      - "Exact QA pin prerequisite only if the whole package is already verified"
+    receipt:
+      result: done
+      decision: rejected
+      full_outcome_complete: false
+      rationale: "The lifecycle reducer, privacy contract, typed roots, authentication recreation, and focused acceptance tests are coherent, and every exercised suite passes except the known stale host assertion. However, the canonical playbook orders release immediately after creation, before surface verification and browser research. That contradicts the approved lifecycle and could instruct a live worker to research a released target. One coherent four-file recovery must move release after browser-dependent work and before validation/completion, guard that order, and update the host assertion to require manual sign-in in the dedicated target. Only then may the full verification and QA pin proceed."
+      worker_package:
+        objective: "Correct the dedicated-target step order and stale host assertion, strengthen the ordering guard, and prove the complete implementation slice."
+        allowed_files:
+          - src/channels/playbooks/shared.ts
+          - tests/channels/lint-playbooks.ts
+          - tests/channels/playbooks.test.ts
+          - tests/hosts/manifests.test.ts
+        verify:
+          - "npm run typecheck"
+          - "npm run lint:playbooks"
+          - "npm run test:channels"
+          - "npm run test:hosts"
+          - "npm run test:host-parity"
+          - "npm run test:browser-harness"
+          - "npm run test:qa-recovery"
+          - "npm run test:qa-config"
+          - "npm run verify:offline"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "git diff --check"
+        stop_if:
+          - "A required fix falls outside the four allowed files."
+          - "Release would occur before browser-dependent research finishes or after normal channel completion."
+          - "The sign-in assertion would permit a browser-wide target instead of the exact dedicated target."
+          - "Verification fails twice for a task-introduced reason."
+      evidence:
+        - "Target creation after the manager acknowledgement, task-scoped lease hashing, release-gated browser completion, and task-boundary authentication recreation are covered by the passing 24-case qa-recovery suite."
+        - "No-user-tab access and sanitized output are covered by the passing browser-harness suite and host contract assertions."
+        - "Typed official roots and cross-host playbook parity are covered by passing typecheck, lint:playbooks, and channel suites."
+        - "The current host suite fails only because manifests.test.ts still expects manual sign-in in the browser instead of the stronger dedicated-target wording."
+        - "Whole-diff inspection found release-dedicated-target at index 1, before verify-surface, enter-prefix, capture-suggestions, record-decisions, and sample-results."
+        - "Fresh authenticated Chrome proof remains intentionally absent until an approved exact QA pin and one-time authorization."
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "T009 must pass the complete offline and release verification ladder."
+        - "T006 must produce fresh Instagram, Facebook, and LinkedIn dedicated-target evidence."
+      required_board_updates:
+        - "Activate T009 with this worker_package copied exactly."
+        - "Keep T005 queued until T009 is done and a read-only review approves the implementation."
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Pin the exact approved build into the isolated QA repository and prepare a fresh dedicated-target scenario without browser access."
     inputs:
@@ -421,6 +528,239 @@ tasks:
       - "Proof that unrelated existing tabs were not enumerated or touched"
       - "One terminal sanitized receipt with authorization consumed"
     receipt: null
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: "Correct the remaining harness assertion and prove the entire T003 dedicated-target vertical slice with the original verification suite."
+    inputs:
+      - "T003 blocked receipt"
+      - "Current T003 implementation diff"
+    constraints:
+      - "Do not operate a browser."
+      - "Change only the one approved test file."
+      - "Do not weaken the user-tab prohibition assertion; make it robust to Markdown wrapping."
+      - "Run every original T003 verification command."
+    expected_output:
+      - "Robust no-enumeration/no-claim assertion"
+      - "Fresh passing typecheck, focused suites, offline verification, and release verification"
+      - "Truthful remaining blockers if any out-of-scope failure remains"
+    allowed_files:
+      - "tests/browser-acceptance/harness.test.ts"
+    verify:
+      - "npm run typecheck"
+      - "npm run lint:playbooks"
+      - "npm run test:channels"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "A required fix falls outside tests/browser-acceptance/harness.test.ts."
+      - "The assertion would become weaker than the literal no tabs.list, user.openTabs, or user.claimTab contract."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: blocked
+      changed_files:
+        - tests/browser-acceptance/harness.test.ts
+      commands:
+        - command: "npm run typecheck"
+          result: passed
+        - command: "npm run lint:playbooks"
+          result: failed
+          detail: "tests/channels/lint-playbooks.ts still expects the pre-lifecycle canonical step list and rejects create-dedicated-target and release-dedicated-target."
+      summary: "Made the user-tab prohibition assertion Markdown-wrap-safe while explicitly binding it to tabs.list, user.openTabs, and user.claimTab. Typecheck passed. Verification then exposed an out-of-scope stale playbook-lint expectation, so work stopped under T007’s required-fix-outside-allowed-file rule."
+      deviations:
+        - "Remaining verification commands were not run because the explicit out-of-scope stop condition was reached."
+      remaining_blockers:
+        - "Update tests/channels/lint-playbooks.ts to include create-dedicated-target and release-dedicated-target in the canonical step expectation, then rerun the full T003 verification suite."
+      verification_attempts: 1
+      stopped_because: "T007 stop_if reached: the required lint expectation fix is outside tests/browser-acceptance/harness.test.ts."
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: "Align the canonical playbook lint expectation with the approved create/release target lifecycle and rerun the entire implementation verification suite."
+    inputs:
+      - "T003 and T007 blocked receipts"
+      - "Current dedicated-target implementation diff"
+    constraints:
+      - "Do not operate a browser."
+      - "Change only the canonical lint expectation."
+      - "Require both create-dedicated-target and release-dedicated-target; do not weaken existing step checks."
+      - "Run every original T003 verification command."
+    expected_output:
+      - "Canonical step lint recognizes the complete target lifecycle"
+      - "Fresh passing typecheck, focused suites, offline verification, and release verification"
+      - "Truthful remaining blockers if any out-of-scope failure remains"
+    allowed_files:
+      - "tests/channels/lint-playbooks.ts"
+    verify:
+      - "npm run typecheck"
+      - "npm run lint:playbooks"
+      - "npm run test:channels"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "A required fix falls outside tests/channels/lint-playbooks.ts."
+      - "The lint would stop requiring any pre-existing canonical step or either target-lifecycle step."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: blocked
+      changed_files:
+        - tests/channels/lint-playbooks.ts
+      commands:
+        - command: "npm run typecheck"
+          result: passed
+        - command: "npm run lint:playbooks"
+          result: passed
+        - command: "npm run test:channels"
+          result: passed
+        - command: "npm run test:hosts"
+          result: failed
+          detail: "tests/hosts/manifests.test.ts expects the obsolete phrase “sign in manually in that browser”; the updated skill correctly says “sign in manually in that dedicated target”."
+      summary: "Updated canonical playbook linting to require both dedicated-target lifecycle steps while retaining all six pre-existing steps. Typecheck, playbook lint, and channel tests passed. Host tests then exposed an out-of-scope stale sign-in wording assertion, so work stopped under T008’s required-fix-outside-allowed-file rule."
+      deviations:
+        - "Remaining verification commands were not run because the explicit out-of-scope stop condition was reached."
+      remaining_blockers:
+        - "Update tests/hosts/manifests.test.ts to accept the stronger dedicated-target sign-in wording, then rerun the full verification suite."
+      verification_attempts: 1
+      stopped_because: "T008 stop_if reached: the required host-manifest assertion fix is outside tests/channels/lint-playbooks.ts."
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Correct the dedicated-target step order and stale host assertion, strengthen the ordering guard, and prove the complete implementation slice."
+    inputs:
+      - "T002 approved target lifecycle"
+      - "T003, T007, and T008 implementation receipts"
+      - "T004 whole-diff audit"
+    constraints:
+      - "Do not operate a browser."
+      - "Change only the files approved by T004."
+      - "Creation must precede surface verification and research; release must follow all browser-dependent research and precede CLI validation/channel completion."
+      - "Keep the dedicated-target manual sign-in wording stronger than the obsolete browser-wide wording."
+    expected_output:
+      - "Canonical steps follow create, research, release, validate order"
+      - "Tests explicitly guard release ordering"
+      - "Host manifest tests accept and require dedicated-target sign-in"
+      - "Full offline and release verification passes"
+    allowed_files:
+      - "src/channels/playbooks/shared.ts"
+      - "tests/channels/lint-playbooks.ts"
+      - "tests/channels/playbooks.test.ts"
+      - "tests/hosts/manifests.test.ts"
+    verify:
+      - "npm run typecheck"
+      - "npm run lint:playbooks"
+      - "npm run test:channels"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "A required fix falls outside the four allowed files."
+      - "Release would occur before browser-dependent research finishes or after normal channel completion."
+      - "The sign-in assertion would permit a browser-wide target instead of the exact dedicated target."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - src/channels/playbooks/shared.ts
+        - tests/channels/lint-playbooks.ts
+        - tests/channels/playbooks.test.ts
+        - tests/hosts/manifests.test.ts
+      commands:
+        - command: "npm run typecheck"
+          status: pass
+        - command: "npm run lint:playbooks"
+          status: pass
+        - command: "npm run test:channels"
+          status: pass
+        - command: "npm run test:hosts"
+          status: pass
+        - command: "npm run test:host-parity"
+          status: pass
+        - command: "npm run test:browser-harness"
+          status: pass
+        - command: "npm run test:qa-recovery"
+          status: pass
+        - command: "npm run test:qa-config"
+          status: pass
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Canonical lifecycle now creates the dedicated target before surface verification, retains it through all browser research, releases it after result sampling, and validates afterward. Exact-order linting and explicit lifecycle assertions protect the sequence. Host tests require manual sign-in in the exact dedicated target, reject obsolete browser-wide wording, and tolerate Markdown line wrapping without weakening tab/DOM prohibitions. The complete verification ladder passes."
+      deviations: []
+      remaining_blockers: []
+      verification_attempts: 3
+      stopped_because: null
+  - id: T010
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the corrected complete dedicated-target diff and verification evidence, and approve or reject the exact build for isolated QA pinning."
+    inputs:
+      - "T002 approved lifecycle contract"
+      - "T003 through T009 implementation and recovery receipts"
+      - "Current full diff and passing verification ladder"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Reject any path that can enumerate, inspect, claim, or reuse user tabs."
+      - "Reject release before browser research or normal completion with a live target."
+      - "Do not treat offline evidence as the final live oracle."
+    expected_output:
+      - "approved | changes_required"
+      - "Requirement-to-test mapping"
+      - "Exact immutable-source and QA-pin prerequisites when approved"
+      - "Exact recovery Worker package when changes are required"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The corrected package implements the approved target lifecycle coherently across typed playbooks, host contracts, skills, manager recovery, sanitized acceptance, fixtures, and tests. Creation follows the exact action acknowledgement; raw handles remain host-local; user-tab enumeration, claiming, inspection, and reuse are prohibited; same-task authentication retains the live target while task-boundary recovery recreates from the official root; normal completion requires release. T009 corrected the only behavioral defect by moving release after browser research and before validation, with explicit ordering tests. The full focused, offline, install, and release-without-live-receipts verification ladder passes. The build is approved for an immutable isolated QA pin, not final completion."
+      worker_package: null
+      evidence:
+        - "Typed official roots and dedicated-target policies are exercised for all seven channel playbooks by typecheck, lint:playbooks, channel tests, and fixture replay."
+        - "The 24-case qa-recovery suite proves acknowledged creation, deterministic task-scoped lease hashes, release-gated completion, same-task authentication retention, task-boundary recreation, and fail-closed ambiguous actions."
+        - "Browser-harness tests prove sanitized lease output, prohibit raw handles/IDs and broad user-tab reads, and preserve authentication handoff as the sole unreleased receipt state."
+        - "Host manifest and parity tests require a new plugin-owned tab, typed official roots, no user-tab reuse, dedicated-target manual sign-in, and equivalent Codex/Claude contracts."
+        - "Canonical playbook lint and channel tests require create before verification, release after result sampling, and release before validation."
+        - "T009 reports typecheck, all focused suites, verify:offline, verify:release -- --allow-missing-live-receipts, and git diff --check passing."
+        - "Fresh authenticated Chrome evidence remains absent by design and is required from T006 before final completion."
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "An exact clean immutable product commit and isolated QA pin."
+        - "A fresh one-time-authorized Instagram, Facebook, and LinkedIn Chrome replay with dedicated-target and autocomplete evidence."
+      required_board_updates:
+        - "Mark T010 done and activate T005."
+        - "Commit the approved product source and current board state before copying any QA files."
+        - "T005 must pin that exact commit and verify all declared hashes without browser access."
+        - "Do not activate T006 until T005 returns a clean exact QA pin and its one-time authorization prerequisite."
   - id: T999
     type: judge
     assignee: Judge

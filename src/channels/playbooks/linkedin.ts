@@ -1,5 +1,5 @@
 import type { ChannelPlaybook } from "../types.js";
-import { moduleProcedure, sharedPlaybookFields } from "./shared.js";
+import { dedicatedTargetPolicy, moduleProcedure, sharedPlaybookFields } from "./shared.js";
 
 export const linkedinPlaybook: ChannelPlaybook = {
   ...sharedPlaybookFields(),
@@ -7,7 +7,8 @@ export const linkedinPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated",
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
-  entryInstruction: "Use the matched LinkedIn target in the signed-in Chrome session. Proceed only on linkedin_search with linkedin_native_search_entry; Feed/navigation or an unavailable target is ui_change.",
+  dedicatedTarget: dedicatedTargetPolicy("linkedin"),
+  entryInstruction: "Create a plugin-owned LinkedIn target at the typed official root in the signed-in Chrome session. Proceed only on linkedin_search with linkedin_native_search_entry; Feed/navigation or a lost dedicated target is ui_change.",
   semanticCheckpoints: [
     { id: "linkedin-channel", purpose: "channel", description: "LinkedIn navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "linkedin-auth", purpose: "access", description: "Authenticated LinkedIn navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },

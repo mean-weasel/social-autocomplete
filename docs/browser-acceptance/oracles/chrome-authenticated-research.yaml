@@ -46,6 +46,10 @@ invariants:
   credentialHandling: false
   temporaryBrowser: false
   publishing: false
+  dedicatedTargetOwnership: plugin_owned
+  userTabAccess: false
+  rawTargetPersistence: false
+  releaseBeforeCompletion: true
 channelOutcomes:
   facebook: &authenticated_outcomes
     - ready

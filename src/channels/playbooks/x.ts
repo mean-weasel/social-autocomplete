@@ -1,5 +1,5 @@
 import type { ChannelPlaybook } from "../types.js";
-import { moduleProcedure, sharedPlaybookFields } from "./shared.js";
+import { dedicatedTargetPolicy, moduleProcedure, sharedPlaybookFields } from "./shared.js";
 
 export const xPlaybook: ChannelPlaybook = {
   ...sharedPlaybookFields(),
@@ -7,6 +7,7 @@ export const xPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated",
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
+  dedicatedTarget: dedicatedTargetPolicy("x"),
   entryInstruction: "Open X search in the signed-in Chrome session and locate the Search query combobox.",
   semanticCheckpoints: [
     { id: "x-channel", purpose: "channel", description: "X primary navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },

@@ -15,7 +15,16 @@ for (const [channel, playbook] of entries) {
   assert.deepEqual(Object.keys(playbook.modules).sort(), ["hashtag", "search-term"]);
   assert.deepEqual(
     playbook.steps.map(({ id }) => id),
-    ["verify-surface", "enter-prefix", "capture-suggestions", "record-decisions", "sample-results", "validate"],
+    [
+      "create-dedicated-target",
+      "verify-surface",
+      "enter-prefix",
+      "capture-suggestions",
+      "record-decisions",
+      "sample-results",
+      "release-dedicated-target",
+      "validate",
+    ],
   );
   assert.equal(new Set(playbook.semanticCheckpoints.map(({ id }) => id)).size, playbook.semanticCheckpoints.length);
   assert.equal(playbook.resultSample.maxResultsPerCandidate, 3);

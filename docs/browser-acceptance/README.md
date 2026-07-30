@@ -27,8 +27,10 @@ unacknowledged start intent performs no browser work.
 
 Tracked receipts contain only channel/module, host/browser, locale, semantic
 checkpoint states, bounded interaction status, and the screenshot policy. They
-must never contain credentials, cookies, account identifiers, private creative
-assets, URLs containing queries, raw DOM, screenshots, or screenshot paths.
+may also contain the deterministic dedicated-target lease hash and lifecycle
+enums. They must never contain credentials, cookies, account identifiers,
+private creative assets, raw target handles or IDs, tab titles, current target
+URLs, URLs containing queries, raw DOM, screenshots, or screenshot paths.
 Authenticated acceptance prohibits screenshot capture, including for
 authentication, challenge, or UI-change outcomes; record the structural
 outcome instead.
@@ -41,18 +43,20 @@ facility, but it must remain the host-managed, user-visible session.
 
 ## Sanitized authentication preflight
 
-Run authenticated preflight as one bounded browser-control operation. Inside
-that operation, filter open targets to the expected channel origin and discard
-all non-matches before constructing a result. Never return a complete open-tab
-list, tab titles, tab URLs, or an unfiltered target collection to the agent or
-CLI.
+After the canonical hashed action start is acknowledged, create one new agent
+tab and navigate it only to the channel playbook's typed official root. The new
+tab is the task-scoped plugin-owned target lease. Never list, enumerate, claim,
+inspect, or reuse user tabs. Both Chrome and the Codex in-app Browser use this
+agent-tab creation contract.
 
-Inspect only the matched target's semantic structure. Never return or retain a
-full authenticated DOM snapshot, raw HTML, `body` text, feed content, account
-identifiers, or any other page content. The operation may return only this
-minimal sanitized projection:
+Keep the raw target handle in the host browser runtime and inspect only that
+exact plugin-created target's semantic structure. Never return or retain the
+handle, a target ID, current URL/title, full authenticated DOM snapshot, raw
+HTML, `body` text, feed content, account identifiers, or any other page
+content. The operation may return only this minimal sanitized projection:
 
-- structural booleans for target match, authentication required, challenge
+- a deterministic SHA-256 task/channel lease hash and lifecycle enum;
+- structural booleans for dedicated-target origin match, authentication required, challenge
   present, locale match, search landmark present, and results landmark present;
 - a sanitized status code;
 - an enumerated route class;
@@ -60,10 +64,11 @@ minimal sanitized projection:
 - the observed semantic landmark.
 
 Expected and observed landmarks must be short structural labels, not copied
-page text. If no target matches, return false booleans and a sanitized
-`target_unavailable` status without exposing the targets that were inspected.
-If a required landmark is missing, return `ui_change`; never broaden the read
-or substitute body text, feed content, or a DOM snapshot.
+page text. If the plugin-created target is lost, closed, or fails its expected
+origin check, return false booleans and a sanitized `target_unavailable`
+status without looking for a substitute tab. If a required landmark is
+missing, return `ui_change`; never broaden the read or substitute body text,
+feed content, or a DOM snapshot.
 
 Facebook, Instagram, LinkedIn, and Pinterest entry diagnostics use only these
 enumerated structural values:
@@ -107,9 +112,18 @@ begins; once an interaction begins, a missing results landmark is `ui_change`
 unless the native surface explicitly reports an empty state.
 
 If the session is signed out, acceptance stops with
-`authentication_required`. The user signs in manually in that same browser and
-then tells the host to resume. The plugin never accepts or enters passwords,
+`authentication_required` and an explicit `authentication_handoff`. The user
+signs in manually in that same dedicated target and then tells the host to
+resume. The live handle is retained only inside the same worker task. After a
+task/process boundary the stale handle is discarded and a new dedicated target
+is created from the typed official root; user tabs are never searched to
+rediscover it. An ordinary started-but-incomplete action still fails closed as
+`ambiguous_browser_action`. The plugin never accepts or enters passwords,
 one-time codes, cookies, tokens, or storage state.
+
+Release/finalize the dedicated target before browser action completion and a
+normal `channel_complete` result. Explicit manual-authentication handoff is the
+sole unreleased exception.
 
 Public acceptance is limited to Codex in-app Browser on TikTok, YouTube, and
 Pinterest search terms (Pinterest hashtags are not applicable). Authenticated

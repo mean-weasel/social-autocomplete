@@ -59,6 +59,9 @@
   },
   "sanitizedInspection": {
     "existingTargetsEnumerated": false,
+    "dedicatedTargetsCreated": 0,
+    "dedicatedTargetsReleased": 0,
+    "rawTargetHandlesPersisted": false,
     "broadBrowserOutputReturned": false,
     "privateBrowserContentPersisted": false,
     "screenshotsCaptured": false

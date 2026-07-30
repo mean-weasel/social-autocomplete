@@ -20,6 +20,7 @@ const base = {
   interactionSucceeded: true,
   explicitNativeEmpty: false,
 };
+const LEASE_HASH = "d".repeat(64);
 
 async function run(input: unknown): Promise<{ output: any; code: number }> {
   try {
@@ -42,6 +43,54 @@ test("harness emits a bounded sanitized receipt", async () => {
   assert.equal(output.receipt.checkpoints.length, 3);
   assert.equal(JSON.stringify(output).includes("rawDom"), false);
   assert.match(output.receipt.receiptId, /^acceptance_[a-f0-9]{24}$/);
+});
+
+test("harness emits only a sanitized released dedicated-target lease for normal completion", async () => {
+  const released = await run({
+    ...base,
+    targetLease: {
+      ownership: "plugin_owned",
+      lifecycle: "released",
+      leaseHash: LEASE_HASH,
+    },
+  });
+  assert.equal(released.code, 0);
+  assert.deepEqual(released.output.receipt.dedicatedTarget, {
+    ownership: "plugin_owned",
+    lifecycle: "released",
+    leaseHash: LEASE_HASH,
+  });
+  const live = await run({
+    ...base,
+    targetLease: {
+      ownership: "plugin_owned",
+      lifecycle: "created",
+      leaseHash: LEASE_HASH,
+    },
+  });
+  assert.equal(live.output.receipt.status, "failed");
+  assert.equal(live.output.receipt.reasonCode, "ui_change");
+  assert.doesNotMatch(JSON.stringify(released.output), /rawHandle|targetId|tabId|https?:\/\//i);
+});
+
+test("manual authentication handoff is the only unreleased-target receipt", async () => {
+  const handoff = await run({
+    ...base,
+    browser: "chrome",
+    accessClass: "authenticated",
+    accessState: "authentication_required",
+    searchLandmark: false,
+    resultsLandmark: false,
+    interactionAttempted: false,
+    interactionSucceeded: false,
+    targetLease: {
+      ownership: "plugin_owned",
+      lifecycle: "authentication_handoff",
+      leaseHash: LEASE_HASH,
+    },
+  });
+  assert.equal(handoff.output.receipt.status, "interrupted");
+  assert.equal(handoff.output.receipt.reasonCode, "authentication_required");
 });
 
 test("preflight can pass before results exist when no query interaction has begun", async () => {
@@ -119,14 +168,22 @@ test("authenticated preflight contract prohibits broad reads and limits its proj
     readFile("skills/_shared/browser-research-contract.md", "utf8"),
   ]);
 
-  assert.match(readme, /filter open targets to the expected channel origin/i);
-  assert.match(readme, /Never return a complete open-tab\s+list/i);
+  assert.match(readme, /create one new agent\s+tab/i);
+  const noUserTabAccess =
+    /Never\s+list,\s+enumerate,\s+claim,\s+inspect,\s+or\s+reuse\s+user\s+tabs/i;
+  for (const operation of ["tabs.list", "user.openTabs", "user.claimTab"]) {
+    assert.match(
+      readme,
+      noUserTabAccess,
+      `${operation} must remain prohibited by the no-user-tab contract`,
+    );
+  }
   assert.match(readme, /full authenticated DOM snapshot/i);
   assert.match(readme, /`body` text, feed content, account\s+identifiers/i);
   assert.match(readme, /structural booleans[\s\S]*sanitized status code[\s\S]*expected semantic landmark[\s\S]*observed semantic landmark/i);
-  assert.match(readme, /without exposing the targets that were inspected/i);
+  assert.match(readme, /raw target handle/i);
   assert.match(readme, /exactly one[\s\S]*in-origin[\s\S]*native Search navigation\s+control/i);
-  assert.match(sharedContract, /discard non-matches before returning/i);
+  assert.match(sharedContract, /create one new agent tab/i);
   assert.match(sharedContract, /Never guess a URL or selector/i);
   assert.match(sharedContract, /Never repeat a preflight with a broader tab or DOM read/i);
 });
@@ -136,6 +193,9 @@ test("private input fields are visibly rejected", async () => {
   assert.equal(code, 2);
   assert.equal(output.ok, false);
   assert.match(output.error, /Forbidden private field/);
+  const rawHandle = await run({ ...base, rawHandle: "private-tab-handle" });
+  assert.equal(rawHandle.code, 2);
+  assert.match(rawHandle.output.error, /Forbidden private field/);
 });
 
 test("authenticated acceptance rejects screenshot capture", async () => {

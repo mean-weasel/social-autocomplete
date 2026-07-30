@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 
-const forbiddenKeys = /credential|cookie|token|password|account|username|email|raw.?dom|screenshot.?path|creative.?asset|private.?asset/i;
+const forbiddenKeys = /credential|cookie|token|password|account|username|email|raw.?dom|raw.?handle|target.?id|tab.?id|(?:^|_)url$|title|profile.?identifier|screenshot.?path|creative.?asset|private.?asset/i;
+const targetLifecycleStates = new Set([
+  "created",
+  "authentication_handoff",
+  "recreation_required",
+  "released",
+]);
 
 const semanticDiagnostics = {
   facebook: {
@@ -77,6 +83,25 @@ function semanticDiagnostic(input) {
   };
 }
 
+function dedicatedTargetLifecycle(input) {
+  if (input.targetLease === undefined) return null;
+  const lease = input.targetLease;
+  if (
+    !lease ||
+    lease.ownership !== "plugin_owned" ||
+    !targetLifecycleStates.has(lease.lifecycle) ||
+    typeof lease.leaseHash !== "string" ||
+    !/^[a-f0-9]{64}$/.test(lease.leaseHash)
+  ) {
+    throw new Error("Invalid sanitized dedicated-target lifecycle.");
+  }
+  return {
+    ownership: lease.ownership,
+    lifecycle: lease.lifecycle,
+    leaseHash: lease.leaseHash,
+  };
+}
+
 export function classifyChecklist(input) {
   if (input.channel === "pinterest" && input.module === "hashtag") {
     return { status: "not_applicable", reasonCode: "pinterest_hashtag_not_applicable" };
@@ -87,13 +112,23 @@ export function classifyChecklist(input) {
   if (input.accessClass === "public" && input.host === "claude") {
     return { status: "interrupted", reasonCode: "capability_unavailable" };
   }
+  const target = dedicatedTargetLifecycle(input);
   if (input.accessState === "authentication_required") {
+    if (target && target.lifecycle !== "authentication_handoff") {
+      return { status: "failed", reasonCode: "ui_change" };
+    }
     return { status: "interrupted", reasonCode: "authentication_required" };
   }
   if (input.accessState === "challenge") {
     return { status: "interrupted", reasonCode: "challenge" };
   }
   if (!input.localeMatches) return { status: "interrupted", reasonCode: "locale_mismatch" };
+  if (
+    target &&
+    target.lifecycle !== "released"
+  ) {
+    return { status: "failed", reasonCode: "ui_change" };
+  }
   const diagnostic = semanticDiagnostic(input);
   if (
     !input.searchLandmark ||
@@ -116,6 +151,7 @@ export function makeReceipt(input) {
     throw new Error("Authenticated browser screenshots are prohibited.");
   }
   const diagnostic = semanticDiagnostic(input);
+  const target = dedicatedTargetLifecycle(input);
   const classification = classifyChecklist(input);
   const capturedAt = input.capturedAt ?? new Date().toISOString();
   const screenshotDefault =
@@ -168,6 +204,7 @@ export function makeReceipt(input) {
           },
         }
       : {}),
+    ...(target ? { dedicatedTarget: target } : {}),
   };
   assertSanitized(receiptBase);
   const receiptId = `acceptance_${createHash("sha256").update(JSON.stringify(receiptBase)).digest("hex").slice(0, 24)}`;

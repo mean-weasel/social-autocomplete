@@ -1,5 +1,5 @@
 import type { ChannelPlaybook } from "../types.js";
-import { moduleProcedure, sharedPlaybookFields } from "./shared.js";
+import { dedicatedTargetPolicy, moduleProcedure, sharedPlaybookFields } from "./shared.js";
 
 export const tiktokPlaybook: ChannelPlaybook = {
   ...sharedPlaybookFields(),
@@ -7,6 +7,7 @@ export const tiktokPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated_preferred",
   publicCompletion: true,
   supportedBrowsers: { codex: ["chrome", "in_app"], claude: ["chrome"] },
+  dedicatedTarget: dedicatedTargetPolicy("tiktok"),
   entryInstruction: "Open TikTok native search; prefer signed-in Chrome and permit public completion only while native search remains available.",
   semanticCheckpoints: [
     { id: "tiktok-channel", purpose: "channel", description: "TikTok identity/navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },

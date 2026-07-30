@@ -51,11 +51,12 @@ contract.
 - Never request, type, read, transmit, or persist passwords, one-time codes,
   cookies, tokens, storage state, account identifiers, or private creative
   content.
-- Never return a complete open-tab list, tab titles or URLs, an unfiltered
-  target collection, full DOM/HTML, `body` text, feed content, or screenshots.
-- Filter to the intended channel target inside one bounded browser-control
-  operation. Return only structural booleans, sanitized status, route class,
-  expected landmark, and observed landmark.
+- Never list or return user tabs, a complete open-tab list, tab titles or
+  current URLs, raw target handles/IDs, any target collection, full DOM/HTML,
+  `body` text, feed content, or screenshots.
+- Create a new agent tab after action acknowledgement and validate only that
+  plugin-owned target. Return only structural booleans, sanitized lifecycle and
+  status, the lease hash, route class, expected landmark, and observed landmark.
 - A missing landmark is `ui_change`, not native empty. A sign-in page is
   `authentication_required`, not `ui_change`. Do not broaden inspection to
   force a pass.
@@ -182,15 +183,22 @@ window.
   `browser_binding_unavailable` without persisting `browser_action_started`.
   Do not retry or switch browsers inside that channel turn.
 - [ ] Build the sanitized action descriptor with the selected channel and
-  browser, action `bounded_autocomplete_research`, and `timeoutMs:60000`.
+  browser, action `bounded_autocomplete_research`, `timeoutMs:60000`, and the
+  channel-derived `new_agent_tab` / typed-official-root / `plugin_owned`
+  target fields.
   Persist and emit `browser_action_started` with the descriptor's SHA-256
   `actionHash`. Do not invoke the browser yet.
 - [ ] Wait for one exact matching `QA_CHECKPOINT_ACK` containing the same run,
   sequence, channel, action hash, and timeout. Manager prose, a malformed ack,
   or silence is not authority to act.
-- [ ] Only after the exact acknowledgement, perform the one bounded channel
-  operation with the declared 60000 ms timeout and no retry, then persist
-  `browser_action_completed`.
+- [ ] Only after the exact acknowledgement, create one new agent tab and
+  navigate it only to the playbook's typed official root. Never list,
+  enumerate, claim, inspect, or reuse user tabs. Keep the raw handle only in
+  the host runtime and persist `record_target_created` with the deterministic
+  task-scoped lease hash.
+- [ ] Perform the bounded channel operation with the declared 60000 ms timeout
+  and no retry. Persist `release_target` before
+  `browser_action_completed`; completion with a live target is invalid.
 - [ ] Before `browser_action_completed`, durably store the sanitized outcome
   and include its hash; persist the channel result from that exact outcome
   before emitting `channel_complete`.
@@ -201,7 +209,10 @@ Never switch browsers silently.
 On a recovery continuation, read the manager-supplied durable checkpoint. A
 persisted response or result may be re-emitted exactly; it may not be
 recomputed. Continue an accepted action only when its state is `authorized`,
-`binding_verified`, or `start_persisted`, never `started`. A task boundary
+`binding_verified`, or `start_persisted`, never `started`. The sole exception
+is a durable `authentication_handoff`, which becomes `recreation_required` and
+must create a new agent tab from the typed official root with a new task-scoped
+lease hash. A task boundary
 invalidates any verified binding and unacknowledged start intent, so
 re-establish the selected browser binding and emit a fresh hashed intent in the
 recovery task. Never repeat an acknowledged action at `started` or `completed`,
@@ -217,13 +228,17 @@ Iterate `scenario.channels` exactly as recorded. Stop as an oracle
 contradiction if a request, browser action, result, or receipt would name an
 unselected channel.
 
-- [ ] Open or target only the intended channel surface.
-- [ ] Filter target matching inside the browser-control operation.
+- [ ] Use only the newly created plugin-owned channel target; never search open
+  tabs for an intended surface or substitute an existing user tab.
+- [ ] Validate expected origin and semantic structure inside that exact target.
 - [ ] Return only:
 
   ```json
   {
     "targetMatched": true,
+    "targetOwnership": "plugin_owned",
+    "targetLifecycle": "created",
+    "leaseHash": "<sha256>",
     "authenticationRequired": false,
     "challengePresent": false,
     "localeMatch": true,
@@ -236,12 +251,15 @@ unselected channel.
   }
   ```
 
-- [ ] If signed out, record `authentication_required`, pause the same run, and
-  ask the user to sign in manually in that browser.
+- [ ] If signed out, durably mark `authentication_handoff`, record
+  `authentication_required`, pause the same run, and ask the user to sign in
+  manually in that exact dedicated target.
 - [ ] In an unattended manager-driven run, emit the interruption and stop.
   Neither manager nor worker may attempt sign-in or request credentials.
-- [ ] Resume only after the user confirms readiness; repeat the same bounded
-  structural check.
+- [ ] Resume only after the user confirms readiness. In the same task, retain
+  the exact live handle. Across a task/process boundary, discard it and create
+  a new agent tab from the typed official root; never rediscover the old tab.
+  Repeat the same bounded structural check.
 - [ ] If a challenge is visible, record `challenge` and wait for the user.
 - [ ] If the target is matched and authenticated but its search entry is
   absent, allow exactly one recovery only when the same structural projection

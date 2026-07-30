@@ -9,6 +9,20 @@ import type { RecommendationRange } from "./policies/index.js";
 export type BrowserHost = "codex" | "claude";
 export type BrowserSurface = "chrome" | "in_app";
 export type AccessMode = "authenticated" | "public";
+export type OfficialChannelRoot =
+  | "https://www.facebook.com/"
+  | "https://www.instagram.com/"
+  | "https://www.linkedin.com/"
+  | "https://x.com/"
+  | "https://www.tiktok.com/"
+  | "https://www.youtube.com/"
+  | "https://www.pinterest.com/";
+export type DedicatedTargetLifecycleState =
+  | "not_created"
+  | "created"
+  | "authentication_handoff"
+  | "recreation_required"
+  | "released";
 export type PlaybookEvidenceStatus = "confirmed_live" | "official_only" | "acceptance_gap";
 export type SurfaceRouteClass =
   | "generic"
@@ -91,6 +105,17 @@ export interface ChannelPlaybook {
     codex: BrowserSurface[];
     claude: BrowserSurface[];
   };
+  dedicatedTarget: {
+    officialRoot: OfficialChannelRoot;
+    ownership: "plugin_owned";
+    scope: "task_channel";
+    acquisition: "new_agent_tab";
+    userTabPolicy: "never_list_claim_inspect_or_reuse";
+    rawHandlePolicy: "host_runtime_only";
+    taskBoundary: "recreate_from_official_root";
+    authenticationHandoff: "retain_same_task_handle";
+    completion: "release_required";
+  };
   entryInstruction: string;
   prohibitedActions: string[];
   semanticCheckpoints: SemanticCheckpoint[];
@@ -143,6 +168,11 @@ export interface SurfaceSnapshot {
   interactionSucceeded: boolean;
   explicitNativeEmpty: boolean;
   assistedResumeDiagnostic?: boolean;
+  targetLease?: {
+    ownership: "plugin_owned";
+    lifecycle: DedicatedTargetLifecycleState;
+    leaseHash: string | null;
+  };
   diagnostic?: {
     routeClass: SurfaceRouteClass;
     expectedLandmark: SurfaceExpectedLandmark;

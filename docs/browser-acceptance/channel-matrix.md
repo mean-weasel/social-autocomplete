@@ -4,6 +4,11 @@ Use this matrix with the
 [local Codex QA worker runbook](runbooks/qa-worker.md). Semantic landmarks are
 structural labels, not selectors or copied page text.
 
+Every browser-backed row uses one new task-scoped plugin-owned agent tab
+navigated only to its typed official root. User tabs are never listed, claimed,
+inspected, matched, or reused. Normal lifecycle is `created` → `released`;
+`created` → `authentication_handoff` is the sole unreleased exception.
+
 | Channel | Allowed browser/access | Search entry checkpoint | Hashtag expectation | Acceptable preflight outcomes |
 | --- | --- | --- | --- | --- |
 | Facebook | Existing visible Chrome; authenticated | `facebook_search` / `facebook_native_search_entry` with `targetMatched=true` | Supported when exact native evidence is available | `ready` only with the exact entry; authenticated shell or unavailable target is `ui_change` |
@@ -94,7 +99,7 @@ Observed landmarks:
 | `autocomplete_only` recommendation | Current exact channel-native suggestion matching the recommended value |
 | `results_sample` recommendation | Exact native suggestion plus a bounded relevance sample for every recommendation |
 | Zero recommendation | Planned bounded attempts, at most one refinement, current native empty/no-candidate evidence, and justification |
-| Authentication pause | `authentication_required`; same run and step preserved until manual user sign-in |
+| Authentication pause | `authentication_required` plus `authentication_handoff`; same-task live handle retained until manual user sign-in, task-boundary recovery recreates from the official root |
 | Challenge | Visible `challenge`; no bypass |
 | Missing UI | `ui_change` with enumerated expected and observed landmarks |
 | Pinterest hashtag | `not_applicable` without browser evidence |

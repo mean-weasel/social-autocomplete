@@ -8,6 +8,7 @@ description: Research X search terms and hashtags with current authenticated nat
 Follow [the shared browser research contract](../_shared/browser-research-contract.md), then use the `x` playbook selected by the router.
 
 - Require a user-controlled signed-in Chrome session; public completion is not allowed.
+- Create a new plugin-owned agent tab at the typed official root `https://x.com/`; never search for or reuse an existing X tab.
 - Verify X navigation, authenticated state, Search query combobox, and search-timeline landmarks.
 - Search terms use ordinary phrases; hashtags use `#` plus an unspaced keyword.
 - The exact “Search for …” row is a navigation action, not a recommendation. Accounts are also excluded.

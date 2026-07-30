@@ -39,19 +39,22 @@ Channel selection is immutable within a run. To research a different channel lis
 Use only a user-visible browser session owned by the host:
 
 - For authenticated research, attach to the user's existing Chrome profile. The user may already be signed in to the requested channels.
-- Before authenticated research, follow the canonical [sanitized authentication preflight](../../docs/browser-acceptance/README.md#sanitized-authentication-preflight): filter to the expected channel target inside the browser-control process, discard non-matches there, and return only structural booleans, sanitized status, and short expected/observed semantic landmarks.
-- If a channel is signed out, record `authentication_required`, pause the same run, and ask the user to sign in manually in that browser. Resume only after the user confirms sign-in and the channel checkpoints are re-verified.
+- After the acknowledged action start, create a new plugin-owned agent tab and navigate it only to the selected playbook's typed official root. Never list, claim, inspect, or reuse user tabs.
+- Before authenticated research, follow the canonical [sanitized authentication preflight](../../docs/browser-acceptance/README.md#sanitized-authentication-preflight) inside that exact plugin-created target and return only structural booleans, sanitized lifecycle/status values, a deterministic lease hash, and short expected/observed semantic landmarks. Raw tab handles remain in the host runtime only.
+- If a channel is signed out, record `authentication_required` and `authentication_handoff`, pause the same run, and ask the user to sign in manually in that dedicated target. Resume the live handle only in the same task. Across a task/process boundary discard it and create a new dedicated target from the typed official root; never rediscover an old tab.
 - For permitted public research, Codex may use its host-managed in-app Browser.
 
 Do not launch or fall back to a temporary, profile-less Playwright/Chromium instance. Even if such a browser could open the public site, it is not an approved plugin browser surface and cannot stand in for the user's authenticated session.
 
 The plugin and CLI never request, receive, type, read, transmit, or store passwords, one-time codes, cookies, access tokens, browser storage state, or account identifiers. Authentication and challenges are always completed by the user in the visible browser.
 
-Never return a complete open-tab list or unfiltered target collection. Never
+Never list or return a complete open-tab list or any target collection. Never
 return or retain full authenticated DOM snapshots, raw HTML, `body` text, feed
-content, tab titles or URLs, or account identifiers. A failed structural check
-must return a sanitized interruption; it must not trigger a broader tab or DOM
-read.
+content, tab titles or URLs, raw target identifiers, or account identifiers. A
+failed structural check must return a sanitized interruption; it must not
+trigger a broader tab or DOM read. Release the plugin-created target before a
+normal channel result; explicit manual-authentication handoff is the only
+unreleased state.
 
 ## Research channels
 
@@ -63,6 +66,9 @@ Pause before each channel, select its dedicated skill, and follow the [shared re
   in-app Browser runtime object survives a Codex turn, task, or process
   boundary. If reconnection fails, pause visibly as
   `browser_binding_unavailable` while the channel action remains unstarted.
+- Create exactly one task-scoped target lease per channel only after the
+  canonical action acknowledgement. Both supported Codex browser choices use
+  host agent-tab creation; neither path enumerates or claims user tabs.
 - Codex: Chrome for authenticated sessions; in-app Browser only for public TikTok or YouTube research, or Pinterest search-term research.
 - Claude: Claude in Chrome. If unavailable, return a visible capability interruption.
 

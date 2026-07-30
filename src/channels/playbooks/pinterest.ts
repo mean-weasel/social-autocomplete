@@ -1,5 +1,5 @@
 import type { ChannelPlaybook } from "../types.js";
-import { moduleProcedure, sharedPlaybookFields } from "./shared.js";
+import { dedicatedTargetPolicy, moduleProcedure, sharedPlaybookFields } from "./shared.js";
 
 export const pinterestPlaybook: ChannelPlaybook = {
   ...sharedPlaybookFields(),
@@ -7,6 +7,7 @@ export const pinterestPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated_preferred",
   publicCompletion: true,
   supportedBrowsers: { codex: ["chrome", "in_app"], claude: ["chrome"] },
+  dedicatedTarget: dedicatedTargetPolicy("pinterest"),
   entryInstruction: "Open Pinterest native search; proceed on personal/public routes only when the semantic Search control is present, and classify Business Hub or root-after-search-redirect without it as ui_change.",
   semanticCheckpoints: [
     { id: "pinterest-channel", purpose: "channel", description: "Pinterest search/result identity is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },

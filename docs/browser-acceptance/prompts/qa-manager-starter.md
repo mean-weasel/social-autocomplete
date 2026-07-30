@@ -88,6 +88,12 @@ SHA-256 `actionHash`, and `timeoutMs:60000`. Persist `start_browser_action`,
 then persist `authorize_browser_action_start` before sending one exact
 `QA_CHECKPOINT_ACK`. Never acknowledge a malformed start intent, and never use
 prose as the acknowledgement.
+After acknowledgement require one plugin-owned new-agent-tab creation at the
+channel's typed official root, a deterministic task-scoped lease hash, and
+target release before browser-action completion. Reject user-tab enumeration,
+claiming, inspection, reuse, and raw handle persistence. Treat
+`authentication_handoff` as the sole unreleased state; across a task boundary
+require recreation from the typed official root rather than rediscovery.
 Only the manager may create tasks. A bootstrap worker emits
 `worker_handoff`; the manager persists a post-install continuation lease
 before creating the genuinely fresh execution task.

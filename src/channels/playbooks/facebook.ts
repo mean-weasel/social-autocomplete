@@ -1,5 +1,5 @@
 import type { ChannelPlaybook } from "../types.js";
-import { moduleProcedure, sharedPlaybookFields } from "./shared.js";
+import { dedicatedTargetPolicy, moduleProcedure, sharedPlaybookFields } from "./shared.js";
 
 export const facebookPlaybook: ChannelPlaybook = {
   ...sharedPlaybookFields(),
@@ -7,7 +7,8 @@ export const facebookPlaybook: ChannelPlaybook = {
   defaultAccess: "authenticated",
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
-  entryInstruction: "Use the matched Facebook target in the user-controlled signed-in Chrome session. Proceed only on facebook_search with facebook_native_search_entry; an authenticated shell or unavailable target is ui_change.",
+  dedicatedTarget: dedicatedTargetPolicy("facebook"),
+  entryInstruction: "Create a plugin-owned Facebook target at the typed official root in the user-controlled signed-in Chrome session. Proceed only on facebook_search with facebook_native_search_entry; an authenticated shell or lost dedicated target is ui_change.",
   semanticCheckpoints: [
     { id: "facebook-channel", purpose: "channel", description: "Facebook identity is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "facebook-auth", purpose: "access", description: "The surface is not the Facebook login page.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },

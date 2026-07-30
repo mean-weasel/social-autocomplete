@@ -24,7 +24,30 @@ function request(
 test("all channel playbooks are addressable through the thin router", () => {
   assert.deepEqual(channels.map((channel) => getPlaybook(channel).channel), channels);
   for (const channel of channels) {
+    const playbook = getPlaybook(channel);
     assert.equal(routeChannel(request(channel)).status, "ready");
+    assert.equal(playbook.dedicatedTarget.ownership, "plugin_owned");
+    assert.equal(playbook.dedicatedTarget.acquisition, "new_agent_tab");
+    assert.equal(playbook.dedicatedTarget.userTabPolicy, "never_list_claim_inspect_or_reuse");
+    assert.equal(playbook.dedicatedTarget.rawHandlePolicy, "host_runtime_only");
+    assert.equal(playbook.dedicatedTarget.taskBoundary, "recreate_from_official_root");
+    assert.equal(playbook.dedicatedTarget.completion, "release_required");
+  }
+  assert.equal(getPlaybook("instagram").dedicatedTarget.officialRoot, "https://www.instagram.com/");
+});
+
+test("dedicated targets span all browser research and release before validation", () => {
+  for (const channel of channels) {
+    const stepIds = getPlaybook(channel).steps.map(({ id }) => id);
+    const createIndex = stepIds.indexOf("create-dedicated-target");
+    const verifyIndex = stepIds.indexOf("verify-surface");
+    const sampleIndex = stepIds.indexOf("sample-results");
+    const releaseIndex = stepIds.indexOf("release-dedicated-target");
+    const validateIndex = stepIds.indexOf("validate");
+
+    assert.ok(createIndex < verifyIndex, `${channel}: create must precede surface verification`);
+    assert.ok(releaseIndex > sampleIndex, `${channel}: release must follow browser-dependent research`);
+    assert.ok(releaseIndex < validateIndex, `${channel}: release must precede validation`);
   }
 });
 

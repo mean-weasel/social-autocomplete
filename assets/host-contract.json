@@ -29,6 +29,19 @@
       "signIn": "user_manual_same_session_pause_and_resume",
       "credentialHandling": "never_request_read_type_transmit_or_store"
     },
+    "dedicatedTarget": {
+      "ownership": "plugin_owned",
+      "scope": "task_channel",
+      "acquisition": "new_agent_tab_after_action_acknowledgement",
+      "navigation": "typed_official_root_only",
+      "userTabs": "never_list_claim_inspect_or_reuse",
+      "rawHandle": "host_runtime_only",
+      "sanitizedIdentity": "deterministic_sha256_lease_hash",
+      "sameTaskAuthentication": "retain_live_handle",
+      "taskBoundary": "discard_and_recreate_from_official_root",
+      "normalCompletion": "release_required",
+      "authenticationHandoff": "sole_release_exception"
+    },
     "channelSelection": {
       "selectionRequiredBeforePlan": true,
       "explicitPrompt": "Which channels should I research, and in what order?",
@@ -39,7 +52,7 @@
       "resume": "reuse_same_run_without_reprompt"
     },
     "authenticatedInspection": {
-      "targetFiltering": "in_process_expected_origin_before_projection",
+      "targetFiltering": "plugin_created_target_expected_origin_validation_before_projection",
       "completeOpenTabLists": "prohibited",
       "fullDomSnapshots": "prohibited",
       "bodyText": "prohibited",

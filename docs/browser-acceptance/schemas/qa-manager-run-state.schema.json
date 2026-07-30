@@ -267,7 +267,8 @@
             "label",
             "hash",
             "timeoutMs",
-            "outcomeHash"
+            "outcomeHash",
+            "target"
           ],
           "properties": {
             "state": {
@@ -310,6 +311,29 @@
                 { "type": "null" },
                 { "$ref": "#/$defs/sha256" }
               ]
+            },
+            "target": {
+              "type": "object",
+              "required": ["ownership", "state", "leaseHash"],
+              "properties": {
+                "ownership": { "const": "plugin_owned" },
+                "state": {
+                  "enum": [
+                    "not_created",
+                    "created",
+                    "authentication_handoff",
+                    "recreation_required",
+                    "released"
+                  ]
+                },
+                "leaseHash": {
+                  "oneOf": [
+                    { "type": "null" },
+                    { "$ref": "#/$defs/sha256" }
+                  ]
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

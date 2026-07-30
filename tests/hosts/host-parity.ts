@@ -26,6 +26,19 @@ interface HostContract {
       signIn: string;
       credentialHandling: string;
     };
+    dedicatedTarget: {
+      ownership: string;
+      scope: string;
+      acquisition: string;
+      navigation: string;
+      userTabs: string;
+      rawHandle: string;
+      sanitizedIdentity: string;
+      sameTaskAuthentication: string;
+      taskBoundary: string;
+      normalCompletion: string;
+      authenticationHandoff: string;
+    };
     channelSelection: {
       selectionRequiredBeforePlan: boolean;
       explicitPrompt: string;
@@ -86,6 +99,19 @@ export async function checkHostParity(): Promise<{ ok: true; hosts: number; skil
   assert.equal(contract.shared.browserSession.profilePersistence, "prohibited");
   assert.equal(contract.shared.browserSession.signIn, "user_manual_same_session_pause_and_resume");
   assert.equal(contract.shared.browserSession.credentialHandling, "never_request_read_type_transmit_or_store");
+  assert.deepEqual(contract.shared.dedicatedTarget, {
+    ownership: "plugin_owned",
+    scope: "task_channel",
+    acquisition: "new_agent_tab_after_action_acknowledgement",
+    navigation: "typed_official_root_only",
+    userTabs: "never_list_claim_inspect_or_reuse",
+    rawHandle: "host_runtime_only",
+    sanitizedIdentity: "deterministic_sha256_lease_hash",
+    sameTaskAuthentication: "retain_live_handle",
+    taskBoundary: "discard_and_recreate_from_official_root",
+    normalCompletion: "release_required",
+    authenticationHandoff: "sole_release_exception",
+  });
   assert.equal(contract.shared.channelSelection.selectionRequiredBeforePlan, true);
   assert.equal(contract.shared.channelSelection.explicitPrompt, "Which channels should I research, and in what order?");
   assert.deepEqual(contract.shared.channelSelection.supported, [
@@ -101,7 +127,7 @@ export async function checkHostParity(): Promise<{ ok: true; hosts: number; skil
   assert.equal(contract.shared.channelSelection.recordedInPlan, true);
   assert.equal(contract.shared.channelSelection.newRunInheritance, "prohibited");
   assert.equal(contract.shared.channelSelection.resume, "reuse_same_run_without_reprompt");
-  assert.equal(contract.shared.authenticatedInspection.targetFiltering, "in_process_expected_origin_before_projection");
+  assert.equal(contract.shared.authenticatedInspection.targetFiltering, "plugin_created_target_expected_origin_validation_before_projection");
   for (const prohibited of [
     "completeOpenTabLists",
     "fullDomSnapshots",

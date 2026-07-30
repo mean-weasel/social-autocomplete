@@ -64,13 +64,18 @@ task boundary. If binding setup fails, emit `browser_binding_unavailable`
 while the action remains `authorized`; do not record `browser_action_started`.
 If the start envelope is rejected or the acknowledgement is missing or
 mismatched, do not call the browser. After the acknowledgement, perform the
-one browser operation with the declared 60000 ms timeout and no retry, then
-durably store the sanitized outcome and record
+one browser operation with the declared 60000 ms timeout and no retry. First
+create one new agent tab, navigate only to the playbook's typed official root,
+and record its deterministic task-scoped lease hash. Never list, claim,
+inspect, or reuse user tabs and never persist its raw handle or ID. Release the
+target before durably storing the sanitized outcome and record
 `browser_action_completed` with its hash, and persist the result from that
 exact outcome before emission. On recovery, use the manager-supplied
 durable checkpoint. Never resend an accepted response, repeat an action at
 `started` or `completed`, or revisit a completed channel. Stop on any
-checkpoint contradiction.
+checkpoint contradiction. Explicit `authentication_handoff` retains the live
+handle only in the same task; after a task/process boundary discard it and
+recreate from the typed official root.
 
 Authenticated browser work may use only the user's existing visible Chrome
 profile. Never launch temporary or profile-less Chromium. Public browser work

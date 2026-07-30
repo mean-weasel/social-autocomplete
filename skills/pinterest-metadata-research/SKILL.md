@@ -8,6 +8,7 @@ description: Research Pinterest search-term suggestions and return explicit not-
 Follow [the shared browser research contract](../_shared/browser-research-contract.md), then use the `pinterest` playbook selected by the router.
 
 - Prefer signed-in Chrome. Codex may use the in-app browser for public search-term completion.
+- For `search-term`, create a new plugin-owned agent tab at the typed official root `https://www.pinterest.com/` in either supported host; never search for or reuse an existing Pinterest tab.
 - For `hashtag`, return `not_applicable` immediately without opening a browser.
 - For `search-term`, use ordinary topic phrases and verify Pinterest identity, a semantic Search control, Pins, and result/refinement landmarks. Personal/public routes may proceed when Search is present.
 - Record only the enumerated route class and sanitized landmark labels. `pinterest_public_search` or `pinterest_personal_search` with `pinterest_search_control` may proceed. `pinterest_business_hub` or `pinterest_root_after_search_redirect` without Search is `ui_change`, never challenge or native empty; do not guess a recovery control.

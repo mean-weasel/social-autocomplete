@@ -135,7 +135,11 @@
         "answerSource",
         "credentialHandling",
         "temporaryBrowser",
-        "publishing"
+        "publishing",
+        "dedicatedTargetOwnership",
+        "userTabAccess",
+        "rawTargetPersistence",
+        "releaseBeforeCompletion"
       ],
       "properties": {
         "exactlyOneTopLevelOrchestrator": { "const": true },
@@ -156,6 +160,11 @@
         "credentialHandling": { "const": false },
         "temporaryBrowser": { "const": false },
         "publishing": { "const": false }
+        ,
+        "dedicatedTargetOwnership": { "const": "plugin_owned" },
+        "userTabAccess": { "const": false },
+        "rawTargetPersistence": { "const": false },
+        "releaseBeforeCompletion": { "const": true }
       }
     },
     "channelOutcomes": {
