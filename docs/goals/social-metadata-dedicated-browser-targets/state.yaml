@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: T018
+active_task: T019
 
 tasks:
   - id: T001
@@ -1335,7 +1335,7 @@ tasks:
   - id: T018
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Commit the approved product package, pin that immutable commit into the isolated QA repository, refresh the worker artifacts and private unapproved scenario, and verify both repositories without browser access."
     inputs:
@@ -1374,6 +1374,62 @@ tasks:
       - "The QA pin differs from the committed product source."
       - "Browser access or credentials would be required."
       - "Private QA state, receipts, notes, or scenario data would be committed."
+    receipt:
+      result: done
+      changed_files:
+        - "/Users/neonwatty/Desktop/social-autocomplete/**"
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-8aea3b0/
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/scenarios/dedicated-targets-instagram-facebook-linkedin.yaml
+      commands:
+        - command: "Commit approved product package"
+          status: pass
+          detail: "8aea3b01e80c080247db64ef02fcb6f73dc18145"
+        - command: "Verify detached ignored QA source checkout"
+          status: pass
+          detail: "Clean detached checkout at 8aea3b01e80c080247db64ef02fcb6f73dc18145"
+        - command: "Verify all 4 worker-file source/QA hashes and 11 manager-source hashes"
+          status: pass
+        - command: "Validate private scenario against pinned schema and Chrome oracle without approval"
+          status: pass
+          detail: "Scenario SHA-256 27660d6c33e778d75a6e4c6ef42f885510fa1f5ce44e63a890f1fb8dc0b6590d; approved=false; browserAccessAuthorized=false"
+        - command: "Commit refreshed QA pin"
+          status: pass
+          detail: "259352c2232581ad6fbab98e8dde1954cec26e58"
+        - command: "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+          status: pass
+        - command: "Verify product and QA tracked worktrees are clean and private paths ignored"
+          status: pass
+      summary: "Committed the verified product package as 8aea3b01e80c080247db64ef02fcb6f73dc18145 and pinned that exact commit into a clean detached ignored QA checkout. Refreshed only the QA worker runbook, channel matrix, and source manifest, committed as 259352c2232581ad6fbab98e8dde1954cec26e58. All declared hashes match. The private exact-order Instagram→Facebook→LinkedIn Chrome scenario validates with both modules and autocomplete_only, remains unapproved, and cannot authorize browser access."
+      deviations:
+        - "The required GoalBuddy Worker made no visible progress within one wait window, so GoalBuddy PM fallback performed the same bounded commit and pin."
+      remaining_blockers:
+        - "Exact new human authorization: APPROVE QA BROWSER RUN."
+      verification_attempts: 1
+      stopped_because: null
+  - id: T019
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: high
+    objective: "Obtain a new exact one-time authorization and supervise the pinned Instagram→Facebook→LinkedIn Chrome replay through a terminal sanitized receipt."
+    inputs:
+      - "T018 exact product and QA pins"
+      - "Validated private unapproved scenario SHA-256 27660d6c33e778d75a6e4c6ef42f885510fa1f5ce44e63a890f1fb8dc0b6590d"
+    constraints:
+      - "Do not approve or begin browser work without the user's exact text: APPROVE QA BROWSER RUN."
+      - "Never reuse the consumed prior authorization."
+      - "Use only existing visible Chrome and plugin-created dedicated targets."
+      - "Never request or handle credentials."
+      - "Require the exact two-phase action acknowledgement for every channel."
+      - "Reject inconsistent target-match diagnostics before receipt creation."
+    expected_output:
+      - "Fresh terminal sanitized receipt for exactly Instagram, Facebook, and LinkedIn"
+      - "Native Search and both-module evidence or truthful current ui_change for each channel"
+      - "No user-tab enumeration, broad DOM scan, credential access, or action replay"
+      - "One-time authorization consumed"
     receipt: null
   - id: T999
     type: judge
