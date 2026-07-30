@@ -11,31 +11,31 @@ const targetLifecycleStates = new Set([
 const semanticDiagnostics = {
   facebook: {
     routes: {
-      facebook_search: { expected: "facebook_native_search_entry", observed: "facebook_native_search_entry", ready: true },
-      facebook_authenticated_shell: { expected: "facebook_native_search_entry", observed: "facebook_authenticated_navigation", ready: false },
-      facebook_target_unavailable: { expected: "facebook_native_search_entry", observed: "target_unavailable", ready: false },
+      facebook_search: { expected: "facebook_native_search_entry", observed: "facebook_native_search_entry", targetMatched: true, ready: true },
+      facebook_authenticated_shell: { expected: "facebook_native_search_entry", observed: "facebook_authenticated_navigation", targetMatched: true, ready: false },
+      facebook_target_unavailable: { expected: "facebook_native_search_entry", observed: "target_unavailable", targetMatched: false, ready: false },
     },
   },
   instagram: {
     routes: {
-      instagram_search: { expected: "instagram_native_search_entry", observed: "instagram_native_search_entry", ready: true },
-      instagram_authenticated_shell: { expected: "instagram_native_search_entry", observed: "instagram_authenticated_navigation", ready: false },
-      instagram_target_unavailable: { expected: "instagram_native_search_entry", observed: "target_unavailable", ready: false },
+      instagram_search: { expected: "instagram_native_search_entry", observed: "instagram_native_search_entry", targetMatched: true, ready: true },
+      instagram_authenticated_shell: { expected: "instagram_native_search_entry", observed: "instagram_authenticated_navigation", targetMatched: true, ready: false },
+      instagram_target_unavailable: { expected: "instagram_native_search_entry", observed: "target_unavailable", targetMatched: false, ready: false },
     },
   },
   linkedin: {
     routes: {
-      linkedin_search: { expected: "linkedin_native_search_entry", observed: "linkedin_native_search_entry", ready: true },
-      linkedin_authenticated_feed: { expected: "linkedin_native_search_entry", observed: "linkedin_authenticated_feed_navigation", ready: false },
-      linkedin_target_unavailable: { expected: "linkedin_native_search_entry", observed: "target_unavailable", ready: false },
+      linkedin_search: { expected: "linkedin_native_search_entry", observed: "linkedin_native_search_entry", targetMatched: true, ready: true },
+      linkedin_authenticated_feed: { expected: "linkedin_native_search_entry", observed: "linkedin_authenticated_feed_navigation", targetMatched: true, ready: false },
+      linkedin_target_unavailable: { expected: "linkedin_native_search_entry", observed: "target_unavailable", targetMatched: false, ready: false },
     },
   },
   pinterest: {
     routes: {
-      pinterest_public_search: { expected: "pinterest_search_control", observed: "pinterest_search_control", ready: true },
-      pinterest_personal_search: { expected: "pinterest_search_control", observed: "pinterest_search_control", ready: true },
-      pinterest_business_hub: { expected: "pinterest_search_control", observed: "pinterest_business_hub", ready: false },
-      pinterest_root_after_search_redirect: { expected: "pinterest_search_control", observed: "pinterest_root", ready: false },
+      pinterest_public_search: { expected: "pinterest_search_control", observed: "pinterest_search_control", targetMatched: true, ready: true },
+      pinterest_personal_search: { expected: "pinterest_search_control", observed: "pinterest_search_control", targetMatched: true, ready: true },
+      pinterest_business_hub: { expected: "pinterest_search_control", observed: "pinterest_business_hub", targetMatched: true, ready: false },
+      pinterest_root_after_search_redirect: { expected: "pinterest_search_control", observed: "pinterest_root", targetMatched: true, ready: false },
     },
   },
 };
@@ -70,7 +70,8 @@ function semanticDiagnostic(input) {
   if (
     !routeContract ||
     supplied.expectedLandmark !== routeContract.expected ||
-    supplied.observedLandmark !== routeContract.observed
+    supplied.observedLandmark !== routeContract.observed ||
+    input.targetMatched !== routeContract.targetMatched
   ) {
     throw new Error("Invalid semantic diagnostic.");
   }

@@ -153,6 +153,42 @@ test("semantic channel routes require a matched target and exact native search e
   }
 });
 
+test("surface classification fails inconsistent target-match diagnostics", () => {
+  const base = {
+    accessState: "ready" as const,
+    localeMatches: true,
+    expectedLandmarksPresent: false,
+    searchEntryPresent: false,
+    interactionAttempted: false,
+    interactionSucceeded: false,
+    explicitNativeEmpty: false,
+  };
+  const cases = [
+    ["facebook_search", "facebook_native_search_entry", "facebook_native_search_entry"],
+    ["instagram_search", "instagram_native_search_entry", "instagram_native_search_entry"],
+    ["linkedin_search", "linkedin_native_search_entry", "linkedin_native_search_entry"],
+  ] as const;
+  for (const [routeClass, expectedLandmark, observedLandmark] of cases) {
+    assert.equal(classifySurface({
+      ...base,
+      targetMatched: false,
+      diagnostic: { routeClass, expectedLandmark, observedLandmark },
+    }).reasonCode, "ui_change");
+    assert.equal(classifySurface({
+      ...base,
+      targetMatched: true,
+      diagnostic: {
+        routeClass: routeClass.replace("_search", "_target_unavailable") as
+          | "facebook_target_unavailable"
+          | "instagram_target_unavailable"
+          | "linkedin_target_unavailable",
+        expectedLandmark,
+        observedLandmark: "target_unavailable",
+      },
+    }).reasonCode, "ui_change");
+  }
+});
+
 test("channel caveats preserve observed limitations", () => {
   assert.match(getPlaybook("linkedin").modules.hashtag.zeroPolicy, /refinement/i);
   assert.equal(getPlaybook("linkedin").modules["search-term"].autocompleteEvidence, "acceptance_gap");
@@ -164,4 +200,17 @@ test("channel caveats preserve observed limitations", () => {
   assert.ok(getPlaybook("x").modules["search-term"].excludedCandidateKinds.includes("search_action"));
   assert.equal(getPlaybook("tiktok").modules.hashtag.autocompleteEvidence, "acceptance_gap");
   assert.equal(getPlaybook("youtube").modules.hashtag.autocompleteEvidence, "confirmed_live");
+});
+
+test("Instagram and LinkedIn use one finite accessible-name Search projection", () => {
+  for (const channel of ["instagram", "linkedin"] as const) {
+    const instruction = getPlaybook(channel).entryInstruction;
+    assert.match(instruction, /exact accessible-name Search roles/i);
+    for (const role of ["searchbox", "combobox", "textbox", "link", "button"]) {
+      assert.match(instruction, new RegExp(`\\b${role}\\b`, "i"));
+    }
+    assert.match(instruction, /one evidenced in-origin activation/i);
+    assert.match(instruction, /one identical repeat/i);
+    assert.match(instruction, /target_unavailable is reserved for an unmatched target/i);
+  }
 });

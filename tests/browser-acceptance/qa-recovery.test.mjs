@@ -895,6 +895,68 @@ test("run_complete requires the last result emission and closes active work", ()
   assert.equal(state.authorization.consumed, true);
 });
 
+test("a complete failing run preserves the product finding and consumes authorization", () => {
+  let state = completeAndPersistResult(
+    acceptAndStart(
+      persistAndSend(
+        observeChannel(
+          executionState({ ...spec(), channels: ["instagram"] }),
+        ),
+      ),
+    ),
+  );
+  state = apply(state, {
+    type: "emit_persisted_result",
+    actor: "worker",
+    resultHash: HASH_D,
+  });
+  state = apply(state, {
+    type: "run_complete",
+    actor: "manager",
+    disposition: "fail",
+    blockingProductFinding: true,
+  });
+  assert.equal(state.terminal.disposition, "fail");
+  assert.equal(state.terminal.blockingProductFinding, true);
+  assert.equal(state.authorization.browserAccessAuthorized, false);
+  assert.equal(state.authorization.consumed, true);
+  assert.throws(
+    () => apply(state, {
+      type: "run_complete",
+      actor: "manager",
+      disposition: "fail",
+      blockingProductFinding: true,
+    }),
+    /run is already terminal/,
+  );
+});
+
+test("blockingProductFinding is rejected on passing complete runs", () => {
+  let state = completeAndPersistResult(
+    acceptAndStart(
+      persistAndSend(
+        observeChannel(
+          executionState({ ...spec(), channels: ["instagram"] }),
+        ),
+      ),
+    ),
+  );
+  state = apply(state, {
+    type: "emit_persisted_result",
+    actor: "worker",
+    resultHash: HASH_D,
+  });
+  assert.throws(
+    () => apply(state, {
+      type: "run_complete",
+      actor: "manager",
+      disposition: "pass",
+      blockingProductFinding: true,
+    }),
+    /blockingProductFinding must be true only/,
+  );
+});
+
 test("CLI create, apply, and check atomically maintain ignored-state-compatible JSON", async () => {
   const directory = await mkdtemp(join(tmpdir(), "qa-recovery-"));
   const specPath = join(directory, "spec.json");

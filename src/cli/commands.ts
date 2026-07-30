@@ -327,7 +327,7 @@ export async function executeCommand(
     }), args.runId);
   }
 
-  return validateRun(store, args.runId);
+  return validateRun(store, args.runId, args.channelRunId);
 }
 
 function interruptionExit(observation: Observation): number {
@@ -340,7 +340,11 @@ function interruptionExit(observation: Observation): number {
   return 4;
 }
 
-async function validateRun(store: StateStore, runId: string): Promise<CommandResult> {
+async function validateRun(
+  store: StateStore,
+  runId: string,
+  requestedChannelRunId?: string,
+): Promise<CommandResult> {
   const plan = await store.readPlan(runId);
   const [amendments, observations, receiptChannelRunIds] = await Promise.all([
     store.readAmendments(runId),
@@ -358,6 +362,18 @@ async function validateRun(store: StateStore, runId: string): Promise<CommandRes
       nextAction: nextAction(plan, amendments, observations, receiptChannelRunIds),
     }), runId);
   }
+  if (
+    requestedChannelRunId !== undefined &&
+    requestedChannelRunId !== channelRun.channelRunId
+  ) {
+    throw new ContractError("Invalid channel run selection.", [
+      {
+        code: "invalid_channel_run",
+        message: `Expected the next unreceipted channel run ${channelRun.channelRunId}.`,
+        path: "--channel-run",
+      },
+    ], 2, runId);
+  }
   const channelObservations = observations.filter(
     (observation) => observation.channelRunId === channelRun.channelRunId,
   );
@@ -372,6 +388,71 @@ async function validateRun(store: StateStore, runId: string): Promise<CommandRes
   const interruption = latestUnresolvedInterruption(channelObservations, plan);
   if (interruption) {
     const exitCode = interruptionExit(interruption);
+    if (exitCode === 5 && requestedChannelRunId === channelRun.channelRunId) {
+      const validatedAt = new Date().toISOString();
+      const receipt: CoreReceipt = {
+        contractVersion: CONTRACT_VERSION,
+        receiptVersion: "1.0",
+        receiptId: `receipt_${digest({
+          runId,
+          channelRunId: channelRun.channelRunId,
+          interruption,
+          amendments,
+        }).slice(0, 24)}`,
+        runId,
+        channelRunId: channelRun.channelRunId,
+        planDigest: digest(plan),
+        amendmentReferences: amendments.map((item) => item.amendmentId),
+        channel: channelRun.channel,
+        enabledModules: channelRun.enabledModules,
+        createdAt: plan.createdAt,
+        capturedAt: {
+          first: channelObservations[0]!.capturedAt,
+          last: interruption.capturedAt,
+        },
+        validatedAt,
+        requestedLocale: plan.locale,
+        observedLocale: {
+          uiLocale: interruption.source.uiLocale,
+          region: interruption.source.region,
+          timezone: interruption.source.timezone,
+        },
+        browser: interruption.source.browser,
+        accessMode: interruption.source.accessMode,
+        personalizedSession: interruption.source.personalizedSession,
+        evidenceTier: channelRun.evidenceTier,
+        observationReferences: channelObservations.map((item) => item.observationId),
+        status: "failed",
+        warnings: [],
+        failures: [{
+          code: "platform_ui_change",
+          message: "The native UI no longer matches the expected semantic checkpoints.",
+        }],
+        moduleResults: {},
+      };
+      const receiptPath = await store.writeReceipt(
+        runId,
+        channelRun.channelRunId,
+        receipt,
+      );
+      await store.writeStatus({
+        contractVersion: CONTRACT_VERSION,
+        runId,
+        state: "interrupted",
+        updatedAt: validatedAt,
+        latestReceipt: receiptPath,
+      });
+      const completedReceiptIds = [...receiptChannelRunIds, channelRun.channelRunId];
+      return success("validate", asJsonValue({
+        status: "failed",
+        receipt,
+        interruptionObservationId: interruption.observationId,
+        resumable: false,
+        finalizedForRunProgression: true,
+        effectiveBrowserSelection: effectiveBrowserSelection(plan, amendments),
+        nextAction: nextAction(plan, amendments, observations, completedReceiptIds),
+      }), runId, [], exitCode);
+    }
     return success("validate", {
       status: exitCode === 5 ? "failed" : "interrupted",
       interruptionObservationId: interruption.observationId,

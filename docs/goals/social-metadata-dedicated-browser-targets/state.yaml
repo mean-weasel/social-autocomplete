@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: T006
+active_task: T018
 
 tasks:
   - id: T001
@@ -541,7 +541,7 @@ tasks:
   - id: T006
     type: pm
     assignee: PM
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: "Obtain exact one-time authorization and supervise a fresh Instagram→Facebook→LinkedIn dedicated-target Chrome replay."
     inputs:
@@ -560,7 +560,39 @@ tasks:
       - "Current hashtag and search-term autocomplete evidence or justified native-zero outcomes"
       - "Proof that unrelated existing tabs were not enumerated or touched"
       - "One terminal sanitized receipt with authorization consumed"
-    receipt: null
+    receipt:
+      result: blocked
+      blocked_reason: "The fresh authorized replay completed safely, but Instagram and LinkedIn did not expose the required native search-entry landmarks; the installed CLI was also not directly runnable, and validation could not advance past an earlier non-terminal ui_change."
+      summary: "Run qa_20260730T125821Z used three plugin-owned Chrome tabs and released all three without enumerating existing tabs. Facebook produced bounded native autocomplete with three supported hashtag and three supported search-term recommendations. Instagram and LinkedIn truthfully returned ui_change with targetMatched=true but missing native search landmarks. The worker receipt is fail with two product findings. The manager consumed the single-use authorization and stopped the run; T006’s all-channel oracle is not satisfied."
+      evidence:
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260730T125821Z.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_20260730T125821Z.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-runs/qa_20260730T125821Z-state.json
+      facts:
+        - "Exact product commit 41d31308665f0ee4c9de12e686c9efb7a705676d and scenario SHA-256 a9a4b3ded5a61af45b6f467f2a357cd7c88c5563f9eb062324214348918766f8 were validated before dispatch."
+        - "All three channel outcomes recorded targetMatched=true, plugin_owned target lifecycle, and released state; existingTargetsEnumerated=false."
+        - "Facebook status=ready with exact native search landmark and three recommendations for each requested module."
+        - "Instagram and LinkedIn status=ui_change with searchLandmarkPresent=false."
+        - "Authorization qa_20260730T125821Z:one-time-browser-access is consumed and browserAccessAuthorized=false."
+      contradictions:
+        - "T006 requires exact native search-entry landmarks and current module evidence for every channel, but Instagram and LinkedIn returned target_unavailable landmarks."
+        - "The worker emitted run_complete with disposition=fail, while qa-recovery currently accepts only pass or pass_with_findings for run_complete; the manager therefore closed the durable state as run_stopped."
+      ambiguity_requiring_judge:
+        - "Determine the largest safe follow-up slice spanning Instagram/LinkedIn live landmark recovery, installed CLI packaging, and channel-scoped validation without weakening fail-closed behavior."
+      commands:
+        - command: "Validate approved scenario and Chrome oracle with --require-approved"
+          status: pass
+        - command: "Supervise qa-manager-worker/v1 run qa_20260730T125821Z"
+          status: fail
+          detail: "Terminal QA receipt reports two blocking product findings and two channel ui_change outcomes."
+        - command: "qa-recovery check for qa_20260730T125821Z"
+          status: pass
+      remaining_blockers:
+        - "Instagram native search entry or an approved deterministic recovery path."
+        - "LinkedIn native search entry or an approved deterministic recovery path."
+        - "A directly runnable installed CLI."
+        - "Validation that can record later-channel evidence after a prior permitted ui_change."
+      note_needed: false
   - id: T007
     type: worker
     assignee: Worker
@@ -794,10 +826,559 @@ tasks:
         - "Commit the approved product source and current board state before copying any QA files."
         - "T005 must pin that exact commit and verify all declared hashes without browser access."
         - "Do not activate T006 until T005 returns a clean exact QA pin and its one-time authorization prerequisite."
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: high
+    objective: "Ship a directly runnable installed CLI and make permitted multi-channel UI-change outcomes first-class across validation receipts and the QA terminal reducer, without weakening fail-closed channel evidence."
+    inputs:
+      - "T006 fresh failing live receipt"
+      - "T999 not-complete audit"
+      - "Exact product commit 41d31308665f0ee4c9de12e686c9efb7a705676d"
+    constraints:
+      - "Do not operate a browser."
+      - "The installed CLI must not require network access, credentials, a global package, or a mutable developer checkout."
+      - "Preserve a truthful failing receipt for ui_change; never fabricate module evidence."
+      - "Preserve default same-channel assisted resume unless an explicit bounded channel-selection option is used."
+      - "A failing terminal transition must consume authorization and remain idempotent."
+    expected_output:
+      - "Fresh installed plugin CLI runs plan, record-observation, and validate without an ad hoc build."
+      - "Later selected channels can be validated after an earlier policy-permitted ui_change while preserving the earlier failure receipt."
+      - "qa-recovery accepts one truthful fail terminal with blockingProductFinding=true, consumes authorization, and rejects duplicates."
+      - "Focused, offline, install, recovery, and release verification passes."
+    allowed_files:
+      - "package.json"
+      - "bin/**"
+      - "scripts/build-cli-runtime.mjs"
+      - "scripts/install-smoke/run.mjs"
+      - "scripts/browser-acceptance/verify-release.mjs"
+      - "scripts/browser-acceptance/qa-recovery.mjs"
+      - "docs/browser-acceptance/protocol/manager-worker.md"
+      - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+      - "src/cli/arguments.ts"
+      - "src/cli/commands.ts"
+      - "src/contracts/receipt.ts"
+      - "src/state/store.ts"
+      - "schemas/receipt.schema.json"
+      - "tests/core/contracts.test.ts"
+      - "tests/integration/golden-replay.test.ts"
+      - "tests/browser-acceptance/qa-recovery.test.mjs"
+    verify:
+      - "npm run typecheck"
+      - "npm run test:core"
+      - "npm run test:integration"
+      - "npm run test:install"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The installed CLI would require network access, credentials, a global package, or a mutable developer checkout."
+      - "Advancing past ui_change would suppress the failing channel receipt, fabricate module evidence, or silently change default resume behavior."
+      - "A failing terminal transition would leave browser authorization unconsumed, permit a second terminal result, or broaden recovery."
+      - "A required change falls outside the declared runtime, CLI receipt, reducer, schema, documentation, and focused test files."
+    receipt:
+      result: blocked
+      changed_files:
+        - package.json
+        - bin/social-metadata.js
+        - "bin/runtime/**/*.js"
+        - scripts/build-cli-runtime.mjs
+        - scripts/install-smoke/run.mjs
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - src/cli/arguments.ts
+        - src/cli/commands.ts
+        - src/contracts/receipt.ts
+        - tests/core/contracts.test.ts
+        - tests/browser-acceptance/qa-recovery.test.mjs
+      commands:
+        - command: "npm run typecheck"
+          status: pass
+        - command: "npm run test:core"
+          status: pass
+        - command: "npm run test:integration"
+          status: pass
+        - command: "node scripts/install-smoke/run.mjs"
+          status: pass
+        - command: "npm run test:qa-recovery"
+          status: pass
+        - command: "npm run verify:offline"
+          status: fail
+          detail: "tests/hosts/manifests.test.ts still requires bin/social-metadata.js to import dist/src/cli/main.js instead of the new package-local bin/runtime/cli/main.js."
+        - command: "git diff --check"
+          status: pass
+      summary: "Implemented the T011 runtime and receipt slice: builds now generate a committed 28-file package-local CLI runtime; install smoke invokes the packed CLI directly; explicit --channel-run validation preserves the default assisted-resume path while writing a failed ui_change receipt and advancing; and qa-recovery accepts a blocking fail terminal only after all results, then consumes authorization. Focused tests pass. Full offline verification exposed one stale out-of-scope host assertion, so T011 stops blocked and T012 owns that single test correction."
+      deviations:
+        - "The required GoalBuddy Worker made no allowed-file changes within one wait window, so GoalBuddy PM fallback implemented the same bounded package."
+        - "No schema edit was needed because the existing receipt schema already permits a failed status and the manager-state schema already permits fail."
+      remaining_blockers:
+        - "Update tests/hosts/manifests.test.ts to require the package-local bin/runtime CLI entrypoint, then rerun the complete verification ladder."
+      verification_attempts: 1
+      stopped_because: "T011 stop_if reached: the required stale host assertion fix is outside the declared T011 allowed_files."
+  - id: T012
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Align the host package assertion with the committed self-contained CLI runtime and rerun the full T011 verification ladder."
+    inputs:
+      - "T011 blocked receipt"
+      - "Current T011 implementation diff"
+    constraints:
+      - "Do not operate a browser."
+      - "Change only the host manifest test."
+      - "Require the CLI to load its package-local bin/runtime entrypoint."
+      - "Retain the self-contained package and no upward traversal assertions."
+      - "Run every T011 verification command."
+    expected_output:
+      - "Host test requires bin/runtime/cli/main.js and the package-local runtime import."
+      - "Fresh passing typecheck, core, integration, install, recovery, offline, and release verification."
+      - "Truthful remaining blocker if another out-of-scope assertion fails."
+    allowed_files:
+      - "tests/hosts/manifests.test.ts"
+    verify:
+      - "npm run typecheck"
+      - "npm run test:core"
+      - "npm run test:integration"
+      - "npm run test:install"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "A required fix falls outside tests/hosts/manifests.test.ts."
+      - "The assertion would permit a CLI that depends on dist or a mutable developer checkout."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - tests/hosts/manifests.test.ts
+      commands:
+        - command: "npm run typecheck"
+          status: pass
+        - command: "npm run test:core"
+          status: pass
+        - command: "npm run test:integration"
+          status: pass
+        - command: "npm run test:install"
+          status: pass
+        - command: "npm run test:qa-recovery"
+          status: pass
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Updated the self-contained plugin assertion to require the committed bin/runtime/cli/main.js entrypoint and the package-local ./runtime/cli/main.js import while retaining the no-upward-traversal guard. All focused, install, recovery, offline, release, and diff-hygiene verification passed."
+      remaining_blockers: []
+      verification_attempts: 1
+      stopped_because: null
+  - id: T013
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the T011/T012 offline repairs and choose the next largest safe slice toward current Instagram and LinkedIn native-search evidence."
+    inputs:
+      - "T006 fresh live QA receipt"
+      - "T999 not-complete decision"
+      - "T011 and T012 implementation receipts"
+      - "Current product diff and verification"
+    constraints:
+      - "Read-only."
+      - "Do not authorize or operate a browser."
+      - "Do not guess selectors, private routes, target handles, or account state."
+      - "Separate locally provable adapter/playbook work from evidence that requires a new exact one-time browser authorization."
+      - "Prefer one largest safe vertical slice."
+    expected_output:
+      - "approved | rejected implementation audit"
+      - "full_outcome_complete=false until fresh Instagram and LinkedIn native-search evidence exists"
+      - "Exact next Worker or PM package"
+      - "Required repin and live-authorization sequence"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "T011/T012 are approved: the package now carries a runnable CLI runtime, explicit channel-run validation writes a truthful failed ui_change receipt without changing default assisted resume, and the reducer preserves a blocking fail terminal while consuming authorization. Verification is green. Live completion remains rejected because Instagram and LinkedIn lack native search evidence, and their receipt incorrectly paired targetMatched=true with target_unavailable. The next safe slice must tighten the privacy-safe semantic Search projection and diagnostic consistency before a clean commit, exact QA repin, and new one-time-authorized replay."
+      worker_package:
+        objective: "Codify a bounded exact-accessible-name search projection and one permitted in-origin activation for Instagram and LinkedIn, while enforcing consistent matched-target diagnostics."
+        allowed_files:
+          - skills/_shared/browser-research-contract.md
+          - skills/instagram-metadata-research/SKILL.md
+          - skills/linkedin-metadata-research/SKILL.md
+          - src/channels/playbooks/instagram.ts
+          - src/channels/playbooks/linkedin.ts
+          - docs/browser-acceptance/runbooks/qa-worker.md
+          - docs/browser-acceptance/channel-matrix.md
+          - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+          - tests/hosts/manifests.test.ts
+          - tests/channels/playbooks.test.ts
+          - tests/browser-acceptance/harness.test.ts
+          - tests/browser-acceptance/coverage.test.mjs
+        verify:
+          - "npm run typecheck"
+          - "npm run lint:playbooks"
+          - "npm run test:channels"
+          - "npm run test:hosts"
+          - "npm run test:host-parity"
+          - "npm run test:browser-harness"
+          - "npm run verify:offline"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "git diff --check"
+        stop_if:
+          - "The implementation would depend on a selector, route, account detail, or page-content assumption not present in the approved semantic contract."
+          - "The fallback would inspect an unbounded or arbitrary collection of browser elements."
+          - "More than one activation or projection retry would be possible."
+          - "A required change falls outside the declared playbook, QA contract, and focused test files."
+      evidence:
+        - "T012 records typecheck, core, integration, install, recovery, offline, release, and diff checks passing."
+        - "Packed install smoke invokes bin/runtime/cli/main.js directly and returns one stdout JSON envelope."
+        - "Core tests preserve default assisted resume and prove explicit --channel-run failed receipt progression."
+        - "Recovery tests prove a complete fail terminal requires blockingProductFinding=true and consumes one-time authorization."
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260730T125821Z.json
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks:
+        - T006
+      missing_evidence:
+        - "Fresh Instagram native Search entry or justified current ui_change after the tightened exact role/name projection."
+        - "Fresh LinkedIn native Search entry or justified current ui_change after the tightened exact role/name projection."
+        - "Both-module live evidence for Instagram and LinkedIn."
+        - "A clean exact product commit and refreshed QA pin containing T011/T012/T014."
+        - "A new exact one-time browser authorization after repinning."
+      required_board_updates:
+        - "Mark T013 done and activate T014."
+        - "Keep the goal active and full_outcome_complete=false."
+        - "After T014 passes, commit the verified product and board state, then create a fresh exact QA pin."
+        - "Only after repinning request a new exact one-time Chrome authorization for Instagram, Facebook, and LinkedIn."
+  - id: T014
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: high
+    objective: "Codify a bounded exact-accessible-name search projection and one permitted in-origin activation for Instagram and LinkedIn, while enforcing consistent matched-target diagnostics."
+    inputs:
+      - "T006 live Instagram and LinkedIn ui_change evidence"
+      - "T013 approved offline-repair audit"
+      - "Current shared browser-research and QA worker contracts"
+    constraints:
+      - "Do not operate a browser."
+      - "Use semantic role/name locators restricted to the exact native Search control; do not enumerate broad DOM collections, slice arbitrary element lists, or inspect page content."
+      - "Permit at most one in-origin activation and one repeat of the same bounded projection."
+      - "Never guess a route or selector and never navigate to a private search URL."
+      - "targetMatched=true must never pair with target_unavailable."
+      - "Preserve explicit ui_change when neither the direct entry nor exact Search activation is evidenced."
+    expected_output:
+      - "Shared and channel playbooks specify the deterministic privacy-safe search projection."
+      - "Instagram and LinkedIn contracts distinguish matched authenticated navigation from a lost target."
+      - "QA worker dispatch/runbook prohibit truncated bulk element scans and require exact role/name recovery."
+      - "Focused host, channel, harness, offline, and release verification passes."
+    allowed_files:
+      - "skills/_shared/browser-research-contract.md"
+      - "skills/instagram-metadata-research/SKILL.md"
+      - "skills/linkedin-metadata-research/SKILL.md"
+      - "src/channels/playbooks/instagram.ts"
+      - "src/channels/playbooks/linkedin.ts"
+      - "docs/browser-acceptance/runbooks/qa-worker.md"
+      - "docs/browser-acceptance/channel-matrix.md"
+      - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+      - "tests/hosts/manifests.test.ts"
+      - "tests/channels/playbooks.test.ts"
+      - "tests/browser-acceptance/harness.test.ts"
+      - "tests/browser-acceptance/coverage.test.mjs"
+    verify:
+      - "npm run typecheck"
+      - "npm run lint:playbooks"
+      - "npm run test:channels"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The implementation would depend on a selector, route, account detail, or page-content assumption not present in the approved semantic contract."
+      - "The fallback would inspect an unbounded or arbitrary collection of browser elements."
+      - "More than one activation or projection retry would be possible."
+      - "A required change falls outside the declared playbook, QA contract, and focused test files."
+    receipt:
+      result: blocked
+      changed_files:
+        - skills/_shared/browser-research-contract.md
+        - skills/instagram-metadata-research/SKILL.md
+        - skills/linkedin-metadata-research/SKILL.md
+        - src/channels/playbooks/instagram.ts
+        - src/channels/playbooks/linkedin.ts
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/channel-matrix.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - tests/hosts/manifests.test.ts
+        - tests/channels/playbooks.test.ts
+        - tests/browser-acceptance/harness.test.ts
+      commands:
+        - command: "npm run typecheck"
+          status: pass
+        - command: "npm run lint:playbooks"
+          status: pass
+        - command: "npm run test:channels"
+          status: pass
+        - command: "npm run test:hosts"
+          status: pass
+        - command: "npm run test:host-parity"
+          status: pass
+        - command: "npm run test:browser-harness"
+          status: pass
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "The shared contract, Instagram and LinkedIn playbooks, QA runbook, dispatch prompt, and focused tests now require one finite exact-accessible-name Search projection across searchbox, combobox, textbox, link, and button roles; exactly one visible match; at most one evidenced in-origin activation and one identical repeat; no broad DOM collections, page text, guessed routes, or selector fallback. Matched authenticated targets retain their shell/feed navigation diagnostics while target_unavailable is reserved for an unmatched target. All declared verification passes."
+      deviations:
+        - "The required GoalBuddy Worker produced no T014 changes within one bounded wait, so GoalBuddy PM fallback implemented the same allowed-file package."
+      remaining_blockers:
+        - "Runtime semantic validation still needs to reject targetMatched=true paired with *_target_unavailable or target_unavailable. The required source file src/channels/diagnostics.ts is outside T014 allowed_files."
+      verification_attempts: 3
+      stopped_because: "T014 stop_if reached: enforcing the diagnostic invariant in runtime code requires an out-of-scope source change."
+  - id: T015
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: "Enforce matched-target diagnostic invariants in runtime classification so authenticated shell/feed routes cannot be confused with unavailable targets."
+    inputs:
+      - "T014 blocked receipt"
+      - "T006 inconsistent Instagram and LinkedIn live diagnostics"
+      - "Current semantic diagnostic enumerations and harness validation"
+    constraints:
+      - "Do not operate a browser."
+      - "Preserve valid ready, authentication, challenge, locale, native-empty, and ui_change classifications."
+      - "Reject targetMatched=true with any *_target_unavailable route or target_unavailable landmark."
+      - "Reject targetMatched=false with a native-search or authenticated shell/feed route."
+      - "Do not add new route or landmark strings."
+    expected_output:
+      - "Runtime diagnostics reject inconsistent target-match, route, and landmark tuples."
+      - "Focused tests cover Instagram, LinkedIn, Facebook, and valid ui_change cases."
+      - "Offline and release verification remains green."
+    allowed_files:
+      - "src/channels/diagnostics.ts"
+      - "tests/channels/playbooks.test.ts"
+      - "tests/browser-acceptance/diagnostics.test.ts"
+      - "tests/browser-acceptance/harness.test.ts"
+      - "fixtures/diagnostics/surface-cases.json"
+    verify:
+      - "npm run typecheck"
+      - "npm run test:channels"
+      - "npm run test:diagnostics"
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The invariant requires a new diagnostic route or landmark outside the existing enumerations."
+      - "A valid matched authenticated shell/feed ui_change would become target_unavailable or native empty."
+      - "A required change falls outside the declared diagnostics and focused-test files."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: blocked
+      changed_files: []
+      commands: []
+      summary: "The runtime classifier already fails inconsistent target-match tuples as ui_change, but it preserves the inconsistent diagnostic. Preventing the live QA receipt defect requires the browser-acceptance harness to reject the tuple before receipt creation. That source file is outside T015 allowed_files, so no implementation edit was made."
+      deviations:
+        - "The required GoalBuddy Worker produced no allowed-file changes within one bounded wait and was interrupted according to the deterministic fallback rule."
+      remaining_blockers:
+        - "Add the acceptance harness source to a focused task and reject mismatched targetMatched, route, and observed-landmark tuples before receipt construction."
+      verification_attempts: 0
+      stopped_because: "T015 stop_if reached: the effective receipt invariant requires scripts/browser-acceptance/harness.mjs, outside the declared files."
+  - id: T016
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Reject inconsistent matched-target diagnostics before browser-acceptance receipt creation and make the same invariant explicit in channel classification."
+    inputs:
+      - "T014 and T015 blocked receipts"
+      - "T006 inconsistent Instagram and LinkedIn live diagnostics"
+      - "Current acceptance harness semantic diagnostic table"
+    constraints:
+      - "Do not operate a browser."
+      - "Preserve all enumerated diagnostic routes and landmarks."
+      - "A *_target_unavailable route or target_unavailable landmark requires targetMatched=false."
+      - "Every native-search or authenticated shell/feed route requires targetMatched=true."
+      - "Preserve valid matched authenticated shell/feed ui_change receipts."
+    expected_output:
+      - "Acceptance receipt construction throws on inconsistent target-match tuples."
+      - "Channel classification explicitly fails the same inconsistent tuples."
+      - "Focused tests cover Facebook, Instagram, LinkedIn, and valid ui_change receipts."
+      - "Offline and release verification remains green."
+    allowed_files:
+      - "scripts/browser-acceptance/harness.mjs"
+      - "src/channels/diagnostics.ts"
+      - "tests/channels/playbooks.test.ts"
+      - "tests/browser-acceptance/diagnostics.test.ts"
+      - "tests/browser-acceptance/harness.test.ts"
+      - "fixtures/diagnostics/surface-cases.json"
+    verify:
+      - "npm run typecheck"
+      - "npm run test:channels"
+      - "npm run test:diagnostics"
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The invariant requires a new diagnostic route or landmark."
+      - "A valid matched authenticated shell/feed ui_change receipt would be rejected."
+      - "A required change falls outside the declared classifier, harness, and focused-test files."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/harness.mjs
+        - src/channels/diagnostics.ts
+        - tests/channels/playbooks.test.ts
+        - tests/browser-acceptance/harness.test.ts
+      commands:
+        - command: "npm run typecheck"
+          status: pass
+        - command: "npm run test:channels"
+          status: pass
+        - command: "npm run test:diagnostics"
+          status: pass
+        - command: "npm run test:browser-harness"
+          status: pass
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Semantic route contracts now carry their required targetMatched value. Browser-acceptance receipt construction rejects inconsistent matched/unavailable tuples before emitting a receipt, while channel classification fails the same mismatch as ui_change. Cross-channel tests cover both mismatch directions for Facebook, Instagram, and LinkedIn and prove valid matched authenticated shell/feed diagnostics remain sanitized ui_change receipts. Full offline, clean-install, subprocess, release-without-live-receipts, and diff verification passes."
+      deviations:
+        - "The required Worker changes became visible immediately after its single wait window and interrupt; PM fallback retained those allowed-file changes and corrected two task-local test expectations."
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
+  - id: T017
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the complete offline repair package and decide whether it is safe to commit, pin into the isolated QA repository, and request a new one-time Chrome authorization."
+    inputs:
+      - "T011 through T016 receipts"
+      - "Current complete product diff"
+      - "T006 fresh live QA findings"
+      - "Passing focused, offline, install, and release verification"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Reject broad DOM scans, guessed selectors or routes, inconsistent diagnostic tuples, mutable-checkout CLI dependencies, suppressed ui_change receipts, or unconsumed fail terminals."
+      - "Do not mark the full outcome complete without a fresh exact-pin live replay."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Requirement-to-test mapping"
+      - "Exact commit, QA repin, and next-authorization prerequisites when approved"
+      - "One coherent recovery Worker package if changes are required"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The complete offline package is safe to commit and repin. The installed CLI is self-contained and exercised from the packed plugin; explicit channel-run progression preserves truthful failed ui_change receipts; fail terminals require a blocking product finding and consume authorization; Instagram and LinkedIn use a finite exact role/name Search projection with one activation/repeat; and receipt construction rejects inconsistent target-match diagnostics. Focused, offline, clean-install, subprocess, and release-without-live-receipts verification passes. Final completion remains rejected until a fresh exact-pin authenticated Chrome replay satisfies the three-channel oracle."
+      worker_package:
+        objective: "Commit the approved product package, pin that immutable commit into the isolated QA repository, refresh the worker artifacts and private unapproved scenario, and verify both repositories without browser access."
+        allowed_files:
+          - "/Users/neonwatty/Desktop/social-autocomplete/**"
+          - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+          - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md"
+          - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/templates/qa-receipt.v1.json"
+          - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+          - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/"
+          - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/scenarios/dedicated-targets-instagram-facebook-linkedin.yaml"
+        verify:
+          - "Verify the product commit is immutable and the product worktree is clean."
+          - "Verify the ignored QA product-source checkout is detached and clean at that exact commit."
+          - "Verify every declared source and QA SHA-256."
+          - "Validate the private scenario against the pinned schema and Chrome oracle without approval."
+          - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+          - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa status --short"
+        stop_if:
+          - "Any verification is not green before the product commit."
+          - "The QA pin differs from the committed product source."
+          - "Browser access or credentials would be required."
+          - "Private QA state, receipts, notes, or scenario data would be committed."
+      evidence:
+        - "T012 proves the installed package invokes bin/runtime/cli/main.js directly with one stdout JSON envelope."
+        - "T016 proves invalid targetMatched/route/landmark tuples are rejected before receipt construction across Facebook, Instagram, and LinkedIn."
+        - "T014 host and playbook tests prohibit querySelectorAll, generic collections, page text, guessed routes, and more than one activation/repeat."
+        - "T011 recovery tests prove complete fail terminals require blockingProductFinding=true and consume one-time authorization."
+        - "npm run verify:offline passed after T016."
+        - "npm run verify:release -- --allow-missing-live-receipts passed after T016, including clean install and subprocess consumption."
+        - "The required GoalBuddy Judge exceeded one wait window; this decision was completed through the documented PM fallback without browser access."
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks:
+        - T006
+      missing_evidence:
+        - "An exact immutable product commit and refreshed isolated QA pin."
+        - "Fresh current Instagram, Facebook, and LinkedIn Chrome evidence under a new exact one-time authorization."
+        - "Native Search entry and both-module evidence for Instagram and LinkedIn."
+      required_board_updates:
+        - "Mark T017 done and activate T018 with the exact worker_package."
+        - "Keep full_outcome_complete=false."
+        - "After T018, request a new exact APPROVE QA BROWSER RUN authorization; never reuse the consumed authorization."
+  - id: T018
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: "Commit the approved product package, pin that immutable commit into the isolated QA repository, refresh the worker artifacts and private unapproved scenario, and verify both repositories without browser access."
+    inputs:
+      - "T017 approved release audit"
+      - "Current verified product diff"
+      - "Dedicated QA repository /Users/neonwatty/Desktop/social-autocomplete-qa"
+    constraints:
+      - "Do not operate a browser."
+      - "Commit only the approved product package and GoalBuddy board."
+      - "Keep QA notes, receipts, run state, source checkout, and scenario ignored."
+      - "The scenario must remain unapproved with browserAccessAuthorized=false."
+      - "Verify all copied-file and source hashes."
+    expected_output:
+      - "Immutable clean product commit"
+      - "Committed QA pin for the exact product commit"
+      - "Clean detached ignored source checkout"
+      - "Validated unapproved three-channel scenario"
+      - "Exact one-time authorization prerequisite"
+    allowed_files:
+      - "/Users/neonwatty/Desktop/social-autocomplete/**"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/templates/qa-receipt.v1.json"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/scenarios/dedicated-targets-instagram-facebook-linkedin.yaml"
+    verify:
+      - "Verify the product commit is immutable and the product worktree is clean."
+      - "Verify the ignored QA product-source checkout is detached and clean at that exact commit."
+      - "Verify every declared source and QA SHA-256."
+      - "Validate the private scenario against the pinned schema and Chrome oracle without approval."
+      - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+      - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa status --short"
+    stop_if:
+      - "Any verification is not green before the product commit."
+      - "The QA pin differs from the committed product source."
+      - "Browser access or credentials would be required."
+      - "Private QA state, receipts, notes, or scenario data would be committed."
+    receipt: null
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Audit whether the implementation, exact QA pin, and fresh live evidence satisfy the dedicated-browser-target oracle."
     inputs:
@@ -814,8 +1395,66 @@ tasks:
       - "full_outcome_complete: true | false"
       - "Requirement-to-evidence mapping"
       - "Missing evidence and exact next task if incomplete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      rationale: "The exact pin, target isolation, action checkpoints, and authorization consumption passed, and Facebook produced bounded evidence. Completion is rejected because Instagram and LinkedIn lack the required native search-entry landmarks and module outcomes. The fresh task also proved the installed CLI is not independently runnable, earlier permitted ui_change blocks later-channel validation, and the durable reducer cannot represent a truthful failing run_complete. The next safe slice should fix those offline runtime and receipt-state defects before another one-time-authorized live adapter replay."
+      worker_package:
+        objective: "Ship a directly runnable installed CLI and make permitted multi-channel UI-change outcomes first-class across validation receipts and the QA terminal reducer, without weakening fail-closed channel evidence."
+        allowed_files:
+          - package.json
+          - "bin/**"
+          - scripts/build-cli-runtime.mjs
+          - scripts/install-smoke/run.mjs
+          - scripts/browser-acceptance/verify-release.mjs
+          - scripts/browser-acceptance/qa-recovery.mjs
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+          - src/cli/arguments.ts
+          - src/cli/commands.ts
+          - src/contracts/receipt.ts
+          - src/state/store.ts
+          - schemas/receipt.schema.json
+          - tests/core/contracts.test.ts
+          - tests/integration/golden-replay.test.ts
+          - tests/browser-acceptance/qa-recovery.test.mjs
+        verify:
+          - "npm run typecheck"
+          - "npm run test:core"
+          - "npm run test:integration"
+          - "npm run test:install"
+          - "npm run test:qa-recovery"
+          - "npm run verify:offline"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "git diff --check"
+        stop_if:
+          - "The installed CLI would require network access, credentials, a global package, or a mutable developer checkout."
+          - "Advancing past ui_change would suppress the failing channel receipt, fabricate module evidence, or change the default same-channel assisted-resume behavior without an explicit bounded option."
+          - "A failing terminal transition would leave browser authorization unconsumed, permit a second terminal result, or broaden recovery."
+          - "A required change falls outside the declared runtime, CLI receipt, reducer, schema, documentation, and focused test files."
+      evidence:
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260730T125821Z.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_20260730T125821Z.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-runs/qa_20260730T125821Z-state.json
+        - "Facebook: targetMatched=true, facebook_native_search_entry, 3 hashtag and 3 search-term recommendations."
+        - "Instagram and LinkedIn: targetMatched=true but searchLandmarkPresent=false and status=ui_change."
+        - "Manager state: all three targets released; existing targets not enumerated; one-time authorization consumed."
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks:
+        - T006
+      missing_evidence:
+        - "Fresh Instagram native search-entry and both-module autocomplete evidence or justified native-zero outcomes."
+        - "Fresh LinkedIn native search-entry and both-module autocomplete evidence or justified native-zero outcomes."
+        - "A clean fresh-task proof that the installed CLI runs without an ad hoc build."
+        - "A truthful per-channel receipt path after an earlier permitted ui_change."
+        - "A reducer-accepted terminal fail with blockingProductFinding=true and consumed authorization."
+      required_board_updates:
+        - "Mark T999 done with decision not_complete and full_outcome_complete=false."
+        - "Add and activate T011 using the exact worker_package."
+        - "Keep the goal active."
+        - "After T011 passes, audit the remaining Instagram/LinkedIn adapter evidence and require a new exact one-time browser authorization before any replay."
 checks:
   dirty_fingerprint: "New GoalBuddy prep files only; implementation worktree was clean at prep start."
   last_verification:

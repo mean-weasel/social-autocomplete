@@ -262,12 +262,23 @@ unselected channel.
   Repeat the same bounded structural check.
 - [ ] If a challenge is visible, record `challenge` and wait for the user.
 - [ ] If the target is matched and authenticated but its search entry is
-  absent, allow exactly one recovery only when the same structural projection
-  evidences an in-origin native Search navigation control. Activate that
-  control once and repeat the exact same bounded projection.
+  absent, use only the finite exact-accessible-name `Search` projection:
+  `searchbox`, `combobox`, or `textbox` for the entry and `link` or `button`
+  for the optional navigation control. Query those roles directly. Require
+  exactly one visible entry or exactly one visible navigation control; zero
+  or multiple matches fail closed.
+- [ ] Never use `querySelectorAll`, generic input/control collections, an
+  arbitrary element limit, or array slicing to discover Search. Do not inspect
+  page text. Allow exactly one recovery only when the finite projection
+  evidences the single in-origin native Search navigation control. Activate
+  it once and repeat that same finite projection once.
 - [ ] Never guess a URL or selector, inspect page text, broaden the target
   read, or attempt a second recovery. If the control is not evidenced or the
   repeated projection still lacks the exact entry, record `ui_change`.
+- [ ] Enforce diagnostic consistency: `targetMatched=true` uses the channel's
+  enumerated authenticated-shell/feed route and observed navigation landmark
+  when Search is absent. Only `targetMatched=false` may use a
+  `*_target_unavailable` route with `target_unavailable`.
 - [ ] If the expected search landmark is absent, record `ui_change` with
   expected and observed semantic landmarks.
 - [ ] Do not require a results landmark before query interaction begins.

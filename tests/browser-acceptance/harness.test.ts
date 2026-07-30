@@ -132,8 +132,9 @@ test("semantic diagnostics require an exact matched route and preserve only boun
   assert.doesNotMatch(JSON.stringify(ready.output.receipt.diagnostic), /https?:|@|body|dom|selector/i);
 
   const unmatched = await run({ ...facebookPreflight, targetMatched: false });
-  assert.equal(unmatched.output.receipt.status, "failed");
-  assert.equal(unmatched.output.receipt.reasonCode, "ui_change");
+  assert.equal(unmatched.code, 2);
+  assert.equal(unmatched.output.ok, false);
+  assert.match(unmatched.output.error, /Invalid semantic diagnostic/);
 
   const missingDiagnostic = await run({
     ...facebookPreflight,
@@ -151,6 +152,74 @@ test("semantic diagnostics require an exact matched route and preserve only boun
   assert.equal(invalid.code, 2);
   assert.equal(invalid.output.ok, false);
   assert.match(invalid.output.error, /Invalid semantic diagnostic/);
+});
+
+test("receipt creation rejects inconsistent target-match diagnostics", async () => {
+  const cases = [
+    ["facebook", "facebook_search", "facebook_native_search_entry", "facebook_native_search_entry"],
+    ["instagram", "instagram_search", "instagram_native_search_entry", "instagram_native_search_entry"],
+    ["linkedin", "linkedin_search", "linkedin_native_search_entry", "linkedin_native_search_entry"],
+  ] as const;
+  for (const [channel, routeClass, expectedLandmark, observedLandmark] of cases) {
+    const unmatchedRoute = await run({
+      ...base,
+      browser: "chrome",
+      channel,
+      accessClass: "authenticated",
+      targetMatched: false,
+      routeClass,
+      expectedLandmark,
+      observedLandmark,
+    });
+    assert.equal(unmatchedRoute.code, 2, channel);
+    assert.match(unmatchedRoute.output.error, /Invalid semantic diagnostic/);
+
+    const matchedUnavailable = await run({
+      ...base,
+      browser: "chrome",
+      channel,
+      accessClass: "authenticated",
+      targetMatched: true,
+      routeClass: `${channel}_target_unavailable`,
+      expectedLandmark,
+      observedLandmark: "target_unavailable",
+    });
+    assert.equal(matchedUnavailable.code, 2, channel);
+    assert.match(matchedUnavailable.output.error, /Invalid semantic diagnostic/);
+  }
+});
+
+test("matched authenticated shell and feed diagnostics remain valid ui_change receipts", async () => {
+  const cases = [
+    ["facebook", "facebook_authenticated_shell", "facebook_native_search_entry", "facebook_authenticated_navigation"],
+    ["instagram", "instagram_authenticated_shell", "instagram_native_search_entry", "instagram_authenticated_navigation"],
+    ["linkedin", "linkedin_authenticated_feed", "linkedin_native_search_entry", "linkedin_authenticated_feed_navigation"],
+  ] as const;
+  for (const [channel, routeClass, expectedLandmark, observedLandmark] of cases) {
+    const outcome = await run({
+      ...base,
+      browser: "chrome",
+      channel,
+      accessClass: "authenticated",
+      targetMatched: true,
+      searchLandmark: false,
+      resultsLandmark: false,
+      interactionAttempted: false,
+      interactionSucceeded: false,
+      routeClass,
+      expectedLandmark,
+      observedLandmark,
+    });
+    assert.equal(outcome.code, 0, channel);
+    assert.equal(outcome.output.receipt.status, "failed", channel);
+    assert.equal(outcome.output.receipt.reasonCode, "ui_change", channel);
+    assert.deepEqual(outcome.output.receipt.diagnostic, {
+      targetMatched: true,
+      routeClass,
+      expectedLandmark,
+      observedLandmark,
+    });
+  }
 });
 
 test("results remain mandatory after a successful query interaction begins", async () => {
@@ -186,6 +255,11 @@ test("authenticated preflight contract prohibits broad reads and limits its proj
   assert.match(sharedContract, /create one new agent tab/i);
   assert.match(sharedContract, /Never guess a URL or selector/i);
   assert.match(sharedContract, /Never repeat a preflight with a broader tab or DOM read/i);
+  assert.match(sharedContract, /finite accessibility query set/i);
+  assert.match(sharedContract, /exact accessible-name `Search`/i);
+  assert.match(sharedContract, /Never enumerate or slice `querySelectorAll`/i);
+  assert.match(sharedContract, /`targetMatched=true` must use the channel's authenticated-shell\/feed observed landmark/i);
+  assert.match(sharedContract, /only `targetMatched=false` may use `target_unavailable`/i);
 });
 
 test("private input fields are visibly rejected", async () => {

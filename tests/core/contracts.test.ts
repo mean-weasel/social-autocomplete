@@ -245,6 +245,71 @@ test("UI change requires an assisted-resume diagnostic before the run can contin
   );
 });
 
+test("an explicit channel-run selection finalizes a truthful UI-change receipt and advances", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-ui-finalize-"));
+  const request = JSON.parse(
+    await readFile(join(fixtureRoot, "plan-request.json"), "utf8"),
+  ) as Record<string, any>;
+  request.runId = "run_ui_finalize";
+  request.channels = ["youtube", "x"];
+  request.approvedPrefixes = {
+    youtube: { "search-term": ["remote work"] },
+    x: { "search-term": ["remote work"] },
+  };
+  const created = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(request)]),
+    cwd,
+  );
+  const plan = (created.envelope.data as Record<string, any>).plan;
+  const firstChannelRunId = plan.channelRuns[0].channelRunId as string;
+  const template = await readFile(join(fixtureRoot, "observation.template.json"), "utf8");
+  const interruption = JSON.parse(
+    template.replace("$CHANNEL_RUN_ID", firstChannelRunId),
+  ) as Record<string, any>;
+  interruption.runId = "run_ui_finalize";
+  interruption.observationId = "obs_ui_finalize";
+  interruption.capturedAt = new Date().toISOString();
+  interruption.kind = "interruption";
+  interruption.payload = { reason: "ui_change" };
+  await executeCommand(
+    parseArguments([
+      "record-observation",
+      "--run",
+      "run_ui_finalize",
+      "--json",
+      JSON.stringify(interruption),
+    ]),
+    cwd,
+  );
+
+  const defaultResult = await executeCommand(
+    parseArguments(["validate", "--run", "run_ui_finalize"]),
+    cwd,
+  );
+  assert.equal(defaultResult.exitCode, 5);
+  assert.equal(
+    (defaultResult.envelope.data as Record<string, any>).requiresAssistedResume,
+    true,
+  );
+
+  const finalized = await executeCommand(
+    parseArguments([
+      "validate",
+      "--run",
+      "run_ui_finalize",
+      "--channel-run",
+      firstChannelRunId,
+    ]),
+    cwd,
+  );
+  assert.equal(finalized.exitCode, 5);
+  assert.equal((finalized.envelope.data as Record<string, any>).receipt.status, "failed");
+  assert.equal(
+    (finalized.envelope.data as Record<string, any>).nextAction.channel,
+    "x",
+  );
+});
+
 test("channel progression is driven by durable receipts", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "social-metadata-channel-progress-"));
   const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;

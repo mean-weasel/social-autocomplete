@@ -21,7 +21,7 @@ export interface CoreReceipt {
   personalizedSession: boolean;
   evidenceTier: EvidenceTier;
   observationReferences: string[];
-  status: "complete";
+  status: "complete" | "failed";
   warnings: ContractIssue[];
   failures: ContractIssue[];
   moduleResults: Record<string, JsonValue>;

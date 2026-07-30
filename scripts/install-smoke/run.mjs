@@ -31,9 +31,41 @@ try {
     ".claude-plugin/plugin.json",
     "skills/social-metadata-research/SKILL.md",
     "bin/social-metadata.js",
-    "dist/src/cli/main.js",
+    "bin/runtime/cli/main.js",
   ]) {
     await readFile(join(pluginRoot, required), "utf8");
+  }
+
+  const cliStateRoot = join(scratch, "cli-state");
+  const cliRunId = `run_install_smoke_${process.pid}`;
+  const cliPlan = JSON.parse(run(process.execPath, [
+    join(pluginRoot, "bin/social-metadata.js"),
+    "plan",
+    "--state-root",
+    cliStateRoot,
+    "--json",
+    JSON.stringify({
+      contractVersion: "1.0",
+      runId: cliRunId,
+      creativeBrief: { summary: "A synthetic install-smoke creative brief." },
+      inputReferences: [],
+      channels: ["youtube"],
+      locale: { uiLocale: "en-US", region: "US", timezone: "America/Phoenix" },
+      orchestrationMode: "automatic",
+      enabledModules: ["search-term"],
+      defaultEvidenceTier: "autocomplete_only",
+      browserSelection: { browser: "chrome", confirmedByUser: true },
+      approvedPrefixes: { youtube: { "search-term": ["install smoke"] } },
+      interactionBounds: {
+        maxPrefixesPerModule: 3,
+        maxSuggestionsPerPrefix: 10,
+        maxResultsPerCandidate: 3,
+        maxRefinementRounds: 1,
+      },
+    }),
+  ], pluginRoot));
+  if (!cliPlan.ok || cliPlan.runId !== cliRunId) {
+    throw new Error("Packed plugin CLI did not create a plan through stdout JSON");
   }
 
   const codexManifest = JSON.parse(await readFile(join(pluginRoot, ".codex-plugin/plugin.json"), "utf8"));
@@ -92,6 +124,7 @@ try {
       topLevelSkills: ["social-metadata-research"],
       linkedChannelResources: linkedPlaybooks.length,
     },
+    cliSubprocess: "pass",
     claudePluginDirLoad: "pass",
   })}\n`);
 } finally {

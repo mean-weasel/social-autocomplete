@@ -795,16 +795,25 @@ function applyActiveEvent(state, event) {
       invariant(
         event.disposition === undefined ||
           event.disposition === "pass" ||
-          event.disposition === "pass_with_findings",
+          event.disposition === "pass_with_findings" ||
+          event.disposition === "fail",
         "invalid complete disposition",
+      );
+      const disposition = event.disposition ?? "pass";
+      invariant(
+        disposition === "fail"
+          ? event.blockingProductFinding === true
+          : event.blockingProductFinding === undefined ||
+            event.blockingProductFinding === false,
+        "blockingProductFinding must be true only for a failing complete run",
       );
       requireActiveTask(state);
       closeActiveTask(state, "run_complete");
       state.terminal = {
         resultId: "run_complete",
         reason: null,
-        disposition: event.disposition ?? "pass",
-        blockingProductFinding: false,
+        disposition,
+        blockingProductFinding: disposition === "fail",
         resumeSupported: false,
         emitted: false,
         checkpoint: null,

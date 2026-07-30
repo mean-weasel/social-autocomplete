@@ -18,6 +18,7 @@ function result(
 interface SemanticSearchContract {
   expectedLandmark: SurfaceExpectedLandmark;
   observedLandmark: SurfaceObservedLandmark;
+  targetMatched: boolean;
   readyRoute: boolean;
 }
 
@@ -25,66 +26,79 @@ const semanticSearchContracts: Partial<Record<SurfaceRouteClass, SemanticSearchC
   facebook_search: {
     expectedLandmark: "facebook_native_search_entry",
     observedLandmark: "facebook_native_search_entry",
+    targetMatched: true,
     readyRoute: true,
   },
   facebook_authenticated_shell: {
     expectedLandmark: "facebook_native_search_entry",
     observedLandmark: "facebook_authenticated_navigation",
+    targetMatched: true,
     readyRoute: false,
   },
   facebook_target_unavailable: {
     expectedLandmark: "facebook_native_search_entry",
     observedLandmark: "target_unavailable",
+    targetMatched: false,
     readyRoute: false,
   },
   instagram_search: {
     expectedLandmark: "instagram_native_search_entry",
     observedLandmark: "instagram_native_search_entry",
+    targetMatched: true,
     readyRoute: true,
   },
   instagram_authenticated_shell: {
     expectedLandmark: "instagram_native_search_entry",
     observedLandmark: "instagram_authenticated_navigation",
+    targetMatched: true,
     readyRoute: false,
   },
   instagram_target_unavailable: {
     expectedLandmark: "instagram_native_search_entry",
     observedLandmark: "target_unavailable",
+    targetMatched: false,
     readyRoute: false,
   },
   linkedin_search: {
     expectedLandmark: "linkedin_native_search_entry",
     observedLandmark: "linkedin_native_search_entry",
+    targetMatched: true,
     readyRoute: true,
   },
   linkedin_authenticated_feed: {
     expectedLandmark: "linkedin_native_search_entry",
     observedLandmark: "linkedin_authenticated_feed_navigation",
+    targetMatched: true,
     readyRoute: false,
   },
   linkedin_target_unavailable: {
     expectedLandmark: "linkedin_native_search_entry",
     observedLandmark: "target_unavailable",
+    targetMatched: false,
     readyRoute: false,
   },
   pinterest_public_search: {
     expectedLandmark: "pinterest_search_control",
     observedLandmark: "pinterest_search_control",
+    targetMatched: true,
     readyRoute: true,
   },
   pinterest_personal_search: {
     expectedLandmark: "pinterest_search_control",
     observedLandmark: "pinterest_search_control",
+    targetMatched: true,
     readyRoute: true,
   },
   pinterest_business_hub: {
     expectedLandmark: "pinterest_search_control",
     observedLandmark: "pinterest_business_hub",
+    targetMatched: true,
     readyRoute: false,
   },
   pinterest_root_after_search_redirect: {
     expectedLandmark: "pinterest_search_control",
     observedLandmark: "pinterest_root",
+    targetMatched: true,
     readyRoute: false,
   },
 };
@@ -97,7 +111,7 @@ function semanticSearchEntryMissing(snapshot: SurfaceSnapshot): boolean {
   if (!contract) return true;
 
   return (
-    snapshot.targetMatched !== true ||
+    snapshot.targetMatched !== contract.targetMatched ||
     snapshot.searchEntryPresent !== true ||
     !contract.readyRoute ||
     diagnostic.expectedLandmark !== contract.expectedLandmark ||

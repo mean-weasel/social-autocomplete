@@ -8,7 +8,7 @@ export const instagramPlaybook: ChannelPlaybook = {
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
   dedicatedTarget: dedicatedTargetPolicy("instagram"),
-  entryInstruction: "Create a plugin-owned Instagram target at the typed official root in the user-controlled signed-in Chrome session. Proceed only on instagram_search with instagram_native_search_entry; an authenticated shell or lost dedicated target is ui_change.",
+  entryInstruction: "Create a plugin-owned Instagram target at the typed official root in the user-controlled signed-in Chrome session. Project only exact accessible-name Search roles (searchbox, combobox, textbox, link, button), with at most one evidenced in-origin activation and one identical repeat. Proceed only on instagram_search with instagram_native_search_entry; a matched authenticated shell reports instagram_authenticated_navigation, while target_unavailable is reserved for an unmatched target.",
   semanticCheckpoints: [
     { id: "instagram-channel", purpose: "channel", description: "Instagram identity is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "instagram-auth", purpose: "access", description: "The surface is not the Instagram login page.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },

@@ -173,6 +173,12 @@ Terminal transition consumes the run's one-time browser authorization.
 Repeated terminal processing returns the existing terminal record and may not
 emit a second terminal result.
 
+`run_complete` may report `pass`, `pass_with_findings`, or `fail`. A `fail`
+terminal is valid only with `blockingProductFinding:true`; passing terminals
+must omit that field or set it to `false`. Every complete disposition still
+requires all selected channel results to be durably emitted, closes active
+coordination, and consumes the one-time browser authorization.
+
 ## Worker requests
 
 The worker may request only:

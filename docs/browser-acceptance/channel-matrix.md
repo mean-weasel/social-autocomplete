@@ -114,3 +114,11 @@ evidences an in-origin native Search navigation control. Activate that control
 once and repeat the same projection. Do not guess a URL or selector, broaden
 the read, inspect page text, or try a second recovery. Results landmarks are
 required after query interaction begins, not during entry preflight.
+
+That projection is a finite accessibility query, never a DOM scan. Query only
+the exact accessible name `Search` through `searchbox`, `combobox`, or
+`textbox` roles for the direct entry and `link` or `button` roles for the
+optional navigation control. Require exactly one visible match before using
+it. Never enumerate or slice generic element collections. A matched Instagram
+shell or LinkedIn Feed must retain its enumerated navigation landmark;
+`target_unavailable` is valid only when `targetMatched=false`.

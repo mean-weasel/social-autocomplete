@@ -4,6 +4,7 @@ import { ContractError } from "../contracts/index.js";
 export interface ParsedArguments {
   command: "plan" | "record-observation" | "validate" | "unknown";
   runId?: string;
+  channelRunId?: string;
   json?: string;
   stateRoot?: string;
 }
@@ -18,8 +19,17 @@ export function parseArguments(argv: string[]): ParsedArguments {
   for (let index = 1; index < argv.length; index += 1) {
     const token = argv[index];
     const value = argv[index + 1];
-    if ((token === "--run" || token === "--json" || token === "--state-root") && value !== undefined) {
+    if (
+      (
+        token === "--run" ||
+        token === "--channel-run" ||
+        token === "--json" ||
+        token === "--state-root"
+      ) &&
+      value !== undefined
+    ) {
       if (token === "--run") parsed.runId = value;
+      if (token === "--channel-run") parsed.channelRunId = value;
       if (token === "--json") parsed.json = value;
       if (token === "--state-root") parsed.stateRoot = value;
       index += 1;

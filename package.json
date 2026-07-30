@@ -21,7 +21,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node scripts/build-cli-runtime.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:core": "npm run build --silent && node --test dist/tests/core/*.test.js",
     "test:modules": "npm run build --silent && node --test dist/tests/modules/*.test.js",

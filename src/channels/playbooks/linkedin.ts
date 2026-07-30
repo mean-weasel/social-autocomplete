@@ -8,7 +8,7 @@ export const linkedinPlaybook: ChannelPlaybook = {
   publicCompletion: false,
   supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
   dedicatedTarget: dedicatedTargetPolicy("linkedin"),
-  entryInstruction: "Create a plugin-owned LinkedIn target at the typed official root in the signed-in Chrome session. Proceed only on linkedin_search with linkedin_native_search_entry; Feed/navigation or a lost dedicated target is ui_change.",
+  entryInstruction: "Create a plugin-owned LinkedIn target at the typed official root in the signed-in Chrome session. Project only exact accessible-name Search roles (searchbox, combobox, textbox, link, button), with at most one evidenced in-origin activation and one identical repeat. Proceed only on linkedin_search with linkedin_native_search_entry; a matched authenticated Feed reports linkedin_authenticated_feed_navigation, while target_unavailable is reserved for an unmatched target.",
   semanticCheckpoints: [
     { id: "linkedin-channel", purpose: "channel", description: "LinkedIn navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
     { id: "linkedin-auth", purpose: "access", description: "Authenticated LinkedIn navigation is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },

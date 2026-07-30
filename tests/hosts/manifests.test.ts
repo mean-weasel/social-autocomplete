@@ -23,8 +23,11 @@ test("plugin package is self-contained", async () => {
   for (const required of [".codex-plugin", ".claude-plugin", "assets", "bin", "dist/src", "schemas", "skills"]) {
     assert.ok(files.includes(required), required);
   }
-  const cli = await readFile("bin/social-metadata.js", "utf8");
-  assert.match(cli, /dist\/src\/cli\/main\.js/);
+  const [cli] = await Promise.all([
+    readFile("bin/social-metadata.js", "utf8"),
+    readFile("bin/runtime/cli/main.js", "utf8"),
+  ]);
+  assert.match(cli, /import "\.\/runtime\/cli\/main\.js";/);
   assert.doesNotMatch(cli, /\.\.\/\.\.\//);
 });
 
@@ -82,4 +85,28 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   assert.match(skill, /account identifiers/i);
   assert.match(skill, /only structural booleans, sanitized lifecycle\/status values, a deterministic lease hash, and short expected\/observed semantic landmarks/i);
   assert.match(skill, /must not\s+trigger a broader tab or DOM\s+read/i);
+});
+
+test("authenticated Search recovery is finite, accessible, and diagnostic-safe", async () => {
+  const documents = await Promise.all([
+    readFile("skills/_shared/browser-research-contract.md", "utf8"),
+    readFile("skills/instagram-metadata-research/SKILL.md", "utf8"),
+    readFile("skills/linkedin-metadata-research/SKILL.md", "utf8"),
+    readFile("docs/browser-acceptance/runbooks/qa-worker.md", "utf8"),
+    readFile("docs/browser-acceptance/prompts/qa-worker-dispatch.md", "utf8"),
+  ]);
+
+  for (const document of documents) {
+    assert.match(document, /accessible-name\s+`?Search`?/i);
+    for (const role of ["searchbox", "combobox", "textbox", "link", "button"]) {
+      assert.match(document, new RegExp(`\\b${role}\\b`, "i"));
+    }
+    assert.match(document, /exactly\s+one visible/i);
+    assert.match(document, /targetMatched=true/i);
+    assert.match(document, /target_unavailable/i);
+  }
+
+  for (const document of [documents[0], documents[3], documents[4]]) {
+    assert.match(document, /Never (?:use |enumerate or slice )`?querySelectorAll`?/i);
+  }
 });

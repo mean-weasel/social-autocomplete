@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-import "../dist/src/cli/main.js";
+import "./runtime/cli/main.js";

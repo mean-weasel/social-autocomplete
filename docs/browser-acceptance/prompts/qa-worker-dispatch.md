@@ -77,6 +77,16 @@ checkpoint contradiction. Explicit `authentication_handoff` retains the live
 handle only in the same task; after a task/process boundary discard it and
 recreate from the typed official root.
 
+For Instagram and LinkedIn Search readiness, use only exact accessible-name
+`Search` role locators: `searchbox`, `combobox`, or `textbox` for the entry
+and `link` or `button` for the optional navigation control. Require exactly
+one visible match. Never enumerate or slice `querySelectorAll`, generic input
+or control collections, or page text. If the direct entry is absent and
+exactly one navigation control exists, activate it once and repeat the same
+finite projection once. With `targetMatched=true`, report the channel's
+authenticated-shell/feed navigation landmark; reserve `target_unavailable`
+for `targetMatched=false`.
+
 Authenticated browser work may use only the user's existing visible Chrome
 profile. Never launch temporary or profile-less Chromium. Public browser work
 may use only surfaces permitted by the channel matrix. Never publish, enter a
