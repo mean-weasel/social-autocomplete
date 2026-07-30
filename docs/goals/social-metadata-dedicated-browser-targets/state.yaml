@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: T031
+active_task: T038
 
 tasks:
   - id: T001
@@ -2103,7 +2103,7 @@ tasks:
   - id: T031
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Obtain a new exact one-time authorization and supervise the corrected exact-pin Instagram→Facebook→LinkedIn Chrome replay through a terminal sanitized receipt."
     inputs:
@@ -2124,6 +2124,470 @@ tasks:
       - "Native Search and both-module evidence or truthful current ui_change for each channel"
       - "No user-tab enumeration, broad DOM scan, credential access, or action replay"
       - "One-time authorization consumed"
+    receipt:
+      result: done
+      run_id: qa_20260730T161113Z
+      product_commit: 111c4c0655bc0bcf18e730d418c77c94a9ace584
+      qa_commit: 034259e8a08e7ee92d614b27add4c574ede6dd2e
+      scenario_approved_sha256: 52e794523e9ee1b40a46311d06eb21f53a408ee5bc8c9e67a0093f00f69b0476
+      scenario_reset_sha256: 27660d6c33e778d75a6e4c6ef42f885510fa1f5ce44e63a890f1fb8dc0b6590d
+      disposition: blocked
+      terminal_reason: ambiguous_browser_action
+      blocking_product_finding: false
+      authorization_consumed: true
+      completed_channels:
+        - instagram
+      remaining_channels:
+        - facebook
+        - linkedin
+      channel_outcomes:
+        instagram:
+          status: ui_change
+          route_class: instagram_target_unavailable
+          expected_landmark: instagram_native_search_entry
+          observed_landmark: target_unavailable
+          target_created: true
+          target_released: true
+        facebook:
+          status: not_completed
+          target_created: false
+          finding: "The current-task Chrome binding was unavailable after the exact manager acknowledgement and before target creation; retry was correctly forbidden from durable started state."
+        linkedin:
+          status: not_started
+      evidence:
+        - "The bootstrap task verified, installed, and enabled the exact pinned build, then handed off to a genuinely fresh execution task without browser access."
+        - "The execution task accepted browser, ordered-channel, and plan responses from the approved scenario before creating any CLI plan or attempting browser work."
+        - "Instagram used the manager-issued canonical targetLeaseHash, created and released one plugin-owned target, exposed no user-tab or page content, and returned a truthful ui_change result."
+        - "Facebook accepted its manager-issued hash but lost the current-turn Chrome binding before tabs.new(); no target was created and the run stopped fail-closed as ambiguous_browser_action."
+        - "The reducer preserved the started Facebook checkpoint, consumed the one-time authorization, and emitted exactly one terminal run_stopped state."
+        - "The private scenario was reset to unapproved/browserAccessAuthorized=false after the run."
+      artifacts:
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_20260730T161113Z.json
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_20260730T161113Z.md
+        - /Users/neonwatty/Desktop/social-autocomplete/.social-metadata/qa/manager-runs/qa_20260730T161113Z-state.json
+      commands:
+        - command: "npm run qa:scenario:validate -- --scenario <scenario> --oracle <oracle> --require-approved"
+          status: pass
+        - command: "node scripts/browser-acceptance/qa-recovery.mjs check --state .social-metadata/qa/manager-runs/qa_20260730T161113Z-state.json"
+          status: pass
+          detail: "terminal=run_stopped; nextSequence=7"
+        - command: "Verify product, QA, and detached pinned-source tracked worktrees"
+          status: pass
+          detail: "all clean"
+      summary: "The corrected exact-pin replay proved atomic manager-owned lease issuance and a complete dedicated-target lifecycle on Instagram, then exposed a host-binding lifetime defect on Facebook. The run stopped safely before Facebook target creation; LinkedIn was not attempted. No browser secrets or unrelated-tab data were exposed, and the authorization is consumed."
+      remaining_blockers:
+        - "The browser binding used for target creation must be reliably available in the post-acknowledgement worker turn without weakening the no-replay gate."
+        - "A fresh one-time-authorized replay must still complete Facebook and LinkedIn and reach native Search with both-module evidence on all three channels."
+      stopped_because: null
+  - id: T032
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the fresh exact-pin replay, identify the smallest safe correction for post-acknowledgement browser-binding lifetime, and specify the next coherent Worker package."
+    inputs:
+      - "T031 terminal reducer state"
+      - "Sanitized qa_20260730T161113Z receipt and note"
+      - "Current browser-binding, acknowledgement, target-creation, and recovery contracts"
+      - "Exact product commit 111c4c0655bc0bcf18e730d418c77c94a9ace584"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Do not weaken exact one-time acknowledgement, canonical manager-owned lease hash, no-replay started state, mandatory target release, or terminal authorization consumption."
+      - "Do not enumerate, inspect, claim, or persist user-tab or private browser data."
+      - "Reject a design that depends on a browser runtime object surviving a Codex turn without explicit same-turn acquisition."
+    expected_output:
+      - "approved correction architecture or changes_required"
+      - "Exact explanation of why Instagram acquired a target while Facebook lost its binding"
+      - "One largest-safe Worker objective with allowed_files, verification, and stop conditions"
+      - "full_outcome_complete=false"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Retain browser_binding_verified as an availability probe, not a retained runtime object. After receiving and exact-comparing the manager ACK and lease hash, the worker must resolve the exact selected Chrome binding in that same continuation turn and immediately execute target creation, bounded work, and release without intermediate output. Instagram happened to retain its binding across the boundary; Facebook exposed the contract gap. A post-ACK acquisition failure remains started, ambiguous, and non-replayable. No reducer or schema change is needed."
+      evidence:
+        - "Instagram verified Chrome, received the canonical lease hash, created and released one plugin-owned target, then truthfully returned ui_change."
+        - "Facebook also verified Chrome and received an issued ACK but found no binding before target creation."
+        - "The terminal manager state preserves Facebook sequence 6 as started/issued/not_created with consumed authorization and ambiguous_browser_action; retry is correctly unavailable."
+        - "The shared contract forbids relying on runtime objects across a Codex turn but currently verifies binding before action start and waits for ACK before target creation, leaving an explicit lifetime gap."
+        - "Chrome can resolve the selected binding within the post-ACK turn without listing or claiming user tabs."
+        - "The reducer already represents the correction safely; no state-machine widening is justified."
+      worker_package:
+        objective: "Make selected-browser acquisition explicit inside the post-acknowledgement execution turn: preserve pre-ACK binding verification, then exact-compare the manager ACK and lease hash, resolve the exact selected host binding without intermediate output, and immediately perform the single bounded new-agent-tab lifecycle through mandatory release. Add regression assertions across the shared skill and QA contracts while leaving reducer semantics unchanged."
+        allowed_files:
+          - skills/_shared/browser-research-contract.md
+          - skills/social-metadata-research/SKILL.md
+          - docs/browser-acceptance/README.md
+          - docs/browser-acceptance/prompts/qa-manager-starter.md
+          - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/runbooks/qa-manager.md
+          - docs/browser-acceptance/runbooks/qa-worker.md
+          - tests/browser-acceptance/harness.test.ts
+          - tests/browser-acceptance/qa-manager-prompt.test.mjs
+        verify:
+          - "npm run test:channels"
+          - "npm run test:browser-harness"
+          - "npm run test:qa-config"
+          - "npm run test:qa-recovery"
+          - "npm run verify:offline"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "git diff --check"
+        stop_if:
+          - "The exact selected host binding and tabs.new cannot be resolved and invoked within one post-ACK worker continuation without an intermediate manager/worker message."
+          - "The correction would move target creation, navigation, or page/tab inspection before the exact acknowledgement."
+          - "The correction would alter manager-owned targetLeaseHash derivation, single-use issue-ack semantics, started-state recovery, mandatory release, or terminal authorization consumption."
+          - "A post-ACK acquisition failure would become retryable, re-acknowledgeable, or recoverable from started/not_created."
+          - "The design would enumerate, inspect, claim, or reuse existing tabs, or persist a raw browser binding, target handle, URL, title, or private browser data."
+          - "A required change falls outside allowed_files."
+          - "Verification fails twice for a task-introduced reason."
+      missing_evidence:
+        - "A verified implementation commit containing the post-ACK same-turn acquisition contract and regression coverage."
+        - "A refreshed exact QA pin for that immutable implementation."
+        - "A fresh one-time-authorized three-channel replay satisfying the full oracle."
+  - id: T033
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: "Make selected-browser acquisition explicit inside the post-acknowledgement execution turn: preserve pre-ACK binding verification, then exact-compare the manager ACK and lease hash, resolve the exact selected host binding without intermediate output, and immediately perform the single bounded new-agent-tab lifecycle through mandatory release. Add regression assertions across the shared skill and QA contracts while leaving reducer semantics unchanged."
+    inputs:
+      - "T031 fresh terminal live evidence"
+      - "T032 approved correction architecture"
+      - "Current exact manager/worker and browser research contracts"
+    constraints:
+      - "Do not operate a browser."
+      - "Do not change reducer or schema semantics."
+      - "Keep pre-ACK verification as an availability probe and post-ACK acquisition as a same-turn runtime operation."
+      - "Preserve exact one-time ACK issuance, manager-owned targetLeaseHash, non-replayable started state, mandatory release, and terminal authorization consumption."
+      - "Never enumerate, inspect, claim, or reuse user tabs or persist private browser state."
+    expected_output:
+      - "Explicit post-ACK same-turn selected-browser acquisition contract"
+      - "No intermediate worker output between acquisition and tabs.new lifecycle"
+      - "Regression coverage for the ordering and lifetime boundary"
+      - "Focused, offline, and release verification pass"
+    allowed_files:
+      - skills/_shared/browser-research-contract.md
+      - skills/social-metadata-research/SKILL.md
+      - docs/browser-acceptance/README.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - tests/browser-acceptance/harness.test.ts
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+    verify:
+      - "npm run test:channels"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-config"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The exact selected host binding and tabs.new cannot be resolved and invoked within one post-ACK worker continuation without an intermediate manager/worker message."
+      - "The correction would move browser work before the exact ACK."
+      - "The correction would weaken lease derivation, ACK single-use, started-state ambiguity, mandatory release, authorization consumption, or privacy."
+      - "A post-ACK acquisition failure becomes retryable or recoverable."
+      - "A required change falls outside allowed_files or verification fails twice for a task-introduced reason."
+    receipt:
+      result: blocked
+      changed_files:
+        - skills/_shared/browser-research-contract.md
+        - skills/social-metadata-research/SKILL.md
+        - docs/browser-acceptance/README.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - tests/browser-acceptance/harness.test.ts
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - command: "npm run test:channels"
+          status: pass
+        - command: "npm run test:browser-harness"
+          status: fail
+          detail: "Attempt 1: README wrapping fixed; attempt 2: an existing shared-contract assertion still requires the literal phrase create one new agent tab."
+      summary: "Implemented the approved pre-ACK availability-probe and post-ACK same-continuation binding-acquisition contract across shared skills, QA documentation, and regression assertions. Reducer and schema semantics remain untouched. Stopped after the second task-introduced browser-harness failure as required."
+      remaining_blockers:
+        - "Align the shared contract wording with the existing literal new-agent-tab assertion without weakening the T033 contract, then rerun the full verification ladder."
+      verification_attempts: 2
+      stopped_because: "npm run test:browser-harness failed twice for the same task-introduced contract-text assertion."
+  - id: T034
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: "Align the shared post-ACK contract wording with the existing exact new-agent-tab assertion, then prove the complete T033 correction package."
+    inputs:
+      - "T033 implementation diff"
+      - "Browser-harness failure requiring the literal phrase create one new agent tab"
+    constraints:
+      - "Do not operate a browser."
+      - "Preserve the approved post-ACK same-continuation acquisition contract exactly."
+      - "Do not change reducer or schema semantics."
+      - "Do not weaken privacy, lease-hash, acknowledgement, non-replay, release, or authorization rules."
+    expected_output:
+      - "Shared contract contains an accurate literal create-one-new-agent-tab statement tied to immediate tabs.new."
+      - "Every T033 verification command passes."
+    allowed_files:
+      - skills/_shared/browser-research-contract.md
+    verify:
+      - "npm run test:channels"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-config"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The wording change weakens or contradicts post-ACK same-continuation binding acquisition."
+      - "A required change falls outside the one allowed file."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: blocked
+      changed_files:
+        - skills/_shared/browser-research-contract.md
+      commands:
+        - command: "npm run test:channels"
+          status: pass
+        - command: "npm run test:browser-harness"
+          status: fail
+          detail: "The shared contract now satisfies its literal assertion; the next failure is README wording split between host and binding, outside T034 allowed_files."
+      summary: "Added the accurate literal create one new agent tab phrase to the immediate post-ACK tabs.new requirement and stopped when the next required change fell outside the one-file scope."
+      remaining_blockers:
+        - "Keep exact selected host binding contiguous in README so the existing same-continuation assertion recognizes the already-approved contract."
+      verification_attempts: 1
+      stopped_because: "A required README formatting correction falls outside T034 allowed_files."
+  - id: T035
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: "Align the README post-ACK same-continuation wording with the existing contract assertion, then prove the complete T033/T034 package."
+    inputs:
+      - "T033 and T034 implementation diff"
+      - "Browser-harness assertion requiring contiguous exact selected host binding wording"
+    constraints:
+      - "Do not operate a browser."
+      - "Preserve the approved contract exactly; make only the necessary README wording/line-wrap correction."
+      - "Do not change reducer or schema semantics."
+    expected_output:
+      - "README accurately states exact selected host binding again in the same post-acknowledgement worker continuation."
+      - "Every original T033 verification command passes."
+    allowed_files:
+      - docs/browser-acceptance/README.md
+    verify:
+      - "npm run test:channels"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-config"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "The wording change weakens or contradicts post-ACK same-continuation binding acquisition."
+      - "A required change falls outside the one allowed file."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: blocked
+      changed_files:
+        - docs/browser-acceptance/README.md
+      commands:
+        - command: "npm run test:channels"
+          status: pass
+        - command: "npm run test:browser-harness"
+          status: fail
+          detail: "Same-continuation wording is now recognized; the remaining README assertion requires an exact no-intermediate-worker-output phrase."
+        - command: "npm run test:qa-config"
+          status: fail
+          detail: "One or more manager/worker documents use semantically correct but regex-incompatible immediate-tabs.new wording."
+        - command: "npm run test:qa-recovery"
+          status: pass
+        - command: "npm run verify:offline"
+          status: fail
+          detail: "Inherits the focused contract failures."
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: fail
+          detail: "Inherits the focused contract failures."
+        - command: "git diff --check"
+          status: pass
+      summary: "Made the assigned README same-continuation clause contiguous without weakening the contract. The remaining failures span other original T033 contract/test files and exceed the one-file scope."
+      remaining_blockers:
+        - "Reconcile the semantic post-ACK contract assertions with the approved wording across the complete original T033 file set."
+      verification_attempts: 3
+      stopped_because: "Remaining focused failures require changes outside T035 allowed_files."
+  - id: T036
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Reconcile the post-ACK same-continuation contract prose and its semantic regression assertions across the complete T033 file set, then prove the entire correction package."
+    inputs:
+      - "T033 implementation diff"
+      - "T034 and T035 focused failure evidence"
+      - "Approved T032 architecture"
+    constraints:
+      - "Do not operate a browser."
+      - "Preserve the approved availability-probe and post-ACK same-continuation acquisition architecture."
+      - "Prefer semantic assertions that tolerate harmless Markdown wrapping while still requiring every safety clause."
+      - "Do not change reducer or schema semantics."
+      - "Do not weaken ACK, lease-hash, non-replay, mandatory-release, authorization, or privacy rules."
+    expected_output:
+      - "Every shared skill, manager/worker prompt, protocol, and runbook expresses the same post-ACK contract."
+      - "Regression assertions enforce the safety semantics without brittle line-wrap dependence."
+      - "Every original T033 verification command passes."
+    allowed_files:
+      - skills/_shared/browser-research-contract.md
+      - skills/social-metadata-research/SKILL.md
+      - docs/browser-acceptance/README.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - tests/browser-acceptance/harness.test.ts
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+    verify:
+      - "npm run test:channels"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-config"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    stop_if:
+      - "A safety assertion must be weakened rather than made semantically robust."
+      - "The correction would change reducer or schema semantics."
+      - "A required change falls outside allowed_files."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - skills/_shared/browser-research-contract.md
+        - skills/social-metadata-research/SKILL.md
+        - docs/browser-acceptance/README.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - tests/browser-acceptance/harness.test.ts
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - command: "npm run test:channels"
+          status: pass
+        - command: "npm run test:browser-harness"
+          status: pass
+        - command: "npm run test:qa-config"
+          status: pass
+        - command: "npm run test:qa-recovery"
+          status: pass
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Reconciled the complete post-ACK same-continuation contract across shared skills, prompts, protocol, and runbooks. Regression checks normalize harmless Markdown wrapping while requiring ACK/lease-hash gating, exact selected-host binding reacquisition, same-continuation execution, output-free immediate tabs.new acquisition, non-replayable started ambiguity, and mandatory release. Reducer and schema semantics remain unchanged."
+      remaining_blockers: []
+      verification_attempts: 2
+      stopped_because: null
+  - id: T037
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the complete post-ACK browser-binding correction and approve or reject it for immutable commit and exact QA repinning."
+    inputs:
+      - "T032 approved architecture"
+      - "T033 through T036 implementation and verification receipts"
+      - "Current complete working-tree diff"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Reject any weakening of ACK/lease-hash gating, started-state non-replay, mandatory release, authorization consumption, or privacy."
+      - "Verify the prose and tests require runtime binding acquisition after ACK in the same output-free continuation as tabs.new."
+      - "Keep full_outcome_complete=false pending exact commit, QA repin, and fresh live proof."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Requirement-to-diff and verification evidence"
+      - "Exact commit/repin Worker package when approved"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "All shared and QA contracts now treat pre-ACK verification as an availability probe, require exact manager ACK and lease-hash comparison, reacquire the exact selected host binding post-ACK, and invoke tabs.new immediately in the same output-free continuation. Post-ACK acquisition failure remains started, ambiguous, and non-replayable. No reducer or schema changed; existing hash, ACK, release, authorization, and privacy guarantees remain intact."
+      evidence:
+        - "Only the ten T032-approved implementation/test files plus PM-owned state.yaml changed."
+        - "README, shared contract, and primary skill explicitly require post-ACK selected-host binding reacquisition with no output before immediate tabs.new."
+        - "Manager starter, worker dispatch, protocol, and both QA runbooks impose the same ordering and fail-closed semantics."
+        - "Semantic tests cover every changed contract while tolerating harmless Markdown wrapping."
+        - "Independent verification passed: channels 11/11, browser-harness 16/16, qa-config 24/24, qa-recovery 37/37, offline, release, and diff checks."
+        - "Reducer/schema semantics and privacy prohibitions are unchanged."
+      missing_evidence:
+        - "Immutable product commit and exact QA repin."
+        - "Fresh one-time-authorized three-channel live replay satisfying the full oracle."
+  - id: T038
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: "Commit the exact T037-approved product correction and board bookkeeping, pin that immutable commit into the isolated QA repository, refresh the copied worker artifact, source manifest, detached ignored checkout, and private unapproved scenario, then verify both repositories without browser access."
+    inputs:
+      - "T037 approved diff and audit receipt"
+      - "Current product and QA repositories"
+      - "Consumed qa_20260730T161113Z authorization"
+    constraints:
+      - "Do not operate a browser."
+      - "Do not alter the approved product diff except PM-owned board bookkeeping."
+      - "Keep private QA state, receipts, notes, scenario data, and ignored source checkout out of commits."
+      - "The private scenario must remain unapproved with browserAccessAuthorized=false."
+      - "Never reuse the consumed qa_20260730T161113Z authorization."
+    expected_output:
+      - "Immutable clean product commit containing the exact approved correction."
+      - "Committed QA source manifest and worker artifact pinned to that commit."
+      - "Clean detached ignored checkout at the exact product commit."
+      - "All declared hashes and private unapproved scenario verified."
+    allowed_files:
+      - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/README.md
+      - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/prompts/qa-manager-starter.md
+      - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/protocol/manager-worker.md
+      - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/runbooks/qa-manager.md
+      - /Users/neonwatty/Desktop/social-autocomplete/docs/browser-acceptance/runbooks/qa-worker.md
+      - /Users/neonwatty/Desktop/social-autocomplete/docs/goals/social-metadata-dedicated-browser-targets/state.yaml
+      - /Users/neonwatty/Desktop/social-autocomplete/skills/_shared/browser-research-contract.md
+      - /Users/neonwatty/Desktop/social-autocomplete/skills/social-metadata-research/SKILL.md
+      - /Users/neonwatty/Desktop/social-autocomplete/tests/browser-acceptance/harness.test.ts
+      - /Users/neonwatty/Desktop/social-autocomplete/tests/browser-acceptance/qa-manager-prompt.test.mjs
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/scenarios/dedicated-targets-instagram-facebook-linkedin.yaml
+    verify:
+      - "npm run test:channels"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-config"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+      - "Verify product and QA tracked worktrees are clean."
+      - "Verify the ignored QA source checkout is detached and clean at the exact product commit."
+      - "Verify every declared source and QA SHA-256 hash."
+      - "Validate the private scenario with approved=false and browserAccessAuthorized=false."
+    stop_if:
+      - "The approved product diff changes except PM-owned board bookkeeping."
+      - "Any pre-commit verification is not green."
+      - "The QA pin differs from the immutable product commit, the detached checkout is dirty, or any declared hash mismatches."
+      - "Browser access, credentials, or prior authorization reuse would be required."
+      - "Private QA state, receipts, notes, scenario contents, authorization data, or ignored source checkout contents would enter a commit."
+      - "A required change falls outside allowed_files."
     receipt: null
   - id: T999
     type: judge

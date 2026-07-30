@@ -178,7 +178,9 @@ window.
   selected host browser binding while the action is still `authorized`.
   Verify the binding is available for the selected browser and channel, then
   persist `verify_browser_binding` and emit `browser_binding_verified`. Never
-  assume a runtime object from an earlier Codex turn still exists.
+  assume a runtime object from an earlier Codex turn still exists. This is an
+  availability probe only; do not retain or rely on its runtime binding across
+  the manager acknowledgement.
 - [ ] If binding setup fails before `verify_browser_binding`, record
   `browser_binding_unavailable` without persisting `browser_action_started`.
   Do not retry or switch browsers inside that channel turn.
@@ -194,11 +196,18 @@ window.
   exact-compare that copy with the acknowledgement before browser invocation.
   Never invent or recompute it. Manager prose, a missing or mismatched hash, a
   malformed ack, or silence is not authority to act.
-- [ ] Only after the exact acknowledgement, create one new agent tab and
-  navigate it only to the playbook's typed official root. Never list,
-  enumerate, claim, inspect, or reuse user tabs. Keep the raw handle only in
-  the host runtime and persist `record_target_created` with the exact
-  manager-supplied task-scoped lease hash.
+- [ ] Only after the exact acknowledgement and hash comparison, in that same
+  post-acknowledgement worker continuation, resolve the exact selected host
+  browser binding again. Emit no commentary, protocol event, manager/worker
+  message, or other worker output between resolution and the immediate
+  `tabs.new` call. Create one new agent tab and navigate it only to the
+  playbook's typed official root. Never list, enumerate, claim, inspect, or
+  reuse user tabs. Keep the raw binding and handle only in the host runtime and
+  persist `record_target_created` with the exact manager-supplied task-scoped
+  lease hash. If binding resolution or `tabs.new` fails after acknowledgement,
+  the action remains non-replayable `started`; stop as
+  `ambiguous_browser_action` without retry, re-acknowledgement, or recovery
+  from `not_created`.
 - [ ] Perform the bounded channel operation with the declared 60000 ms timeout
   and no retry. Persist `release_target` before
   `browser_action_completed`; completion with a live target is invalid.

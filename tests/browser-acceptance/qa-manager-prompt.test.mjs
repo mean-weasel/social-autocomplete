@@ -12,6 +12,55 @@ const managerRunbookPath =
 const protocolPath =
   "docs/browser-acceptance/protocol/manager-worker.md";
 
+function assertPostAcknowledgementAcquisitionContract(contract) {
+  const normalized = contract
+    .replace(/[`*]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const bindingPhrase = /exact selected host (?:browser )?binding again/i;
+  const bindingMatch = bindingPhrase.exec(normalized);
+
+  assert.match(
+    normalized,
+    /availability probe(?: only)?|only (?:as )?an availability probe/i,
+  );
+  assert.ok(bindingMatch, "requires exact selected-host binding re-resolution");
+
+  const bindingIndex = bindingMatch.index;
+  const acknowledgementScope = normalized.slice(
+    Math.max(0, bindingIndex - 400),
+    bindingIndex,
+  );
+  const continuationScope = normalized.slice(
+    Math.max(0, bindingIndex - 200),
+    bindingIndex + 1400,
+  );
+  const acquisitionScope = normalized.slice(bindingIndex, bindingIndex + 1400);
+  const tabsNewIndex = acquisitionScope.search(/tabs\.new/i);
+
+  assert.match(acknowledgementScope, /acknowledg|ACK\/hash/i);
+  assert.match(normalized, /lease(?:-| )hash|targetLeaseHash/i);
+  assert.match(
+    continuationScope,
+    /same (?:post-acknowledgement )?(?:worker )?continuation/i,
+  );
+  assert.match(
+    acquisitionScope,
+    /(?:emit |with )?no[^.]{0,220}(?:intermediate |other )worker output|without[^.]{0,220}(?:intermediate |other )worker output/i,
+  );
+  assert.match(
+    acquisitionScope,
+    /immediate(?:ly)?[^.]{0,80}tabs\.new|tabs\.new[^.]{0,80}immediate(?:ly)?/i,
+  );
+  assert.ok(tabsNewIndex > 0, "requires tabs.new after binding re-resolution");
+  assert.match(acquisitionScope, /started/i);
+  assert.match(acquisitionScope, /ambiguous_browser_action/i);
+  assert.match(
+    acquisitionScope,
+    /non-replayable|never retr(?:y|ied)|cannot be retried|do not retry|without retry/i,
+  );
+}
+
 test("saved manager starter is directly executable and self-resolving", async () => {
   const starter = await readFile(managerStarterPath, "utf8");
 
@@ -190,7 +239,9 @@ test("manager runbook defines cursor and timeout behavior without status polling
 });
 
 test("protocol and runbooks define fail-closed single-owner host recovery", async () => {
-  const [manager, worker, protocol] = await Promise.all([
+  const [starter, dispatch, manager, worker, protocol] = await Promise.all([
+    readFile(managerStarterPath, "utf8"),
+    readFile(workerDispatchPath, "utf8"),
     readFile(managerRunbookPath, "utf8"),
     readFile("docs/browser-acceptance/runbooks/qa-worker.md", "utf8"),
     readFile(protocolPath, "utf8"),
@@ -217,6 +268,9 @@ test("protocol and runbooks define fail-closed single-owner host recovery", asyn
   assert.match(protocol, /Missing,\s+malformed, or unequal values stop the run before browser access/);
   assert.match(protocol, /durable single-use transition/);
   assert.match(protocol, /QA_AUTHENTICATION_RECOVERY_LEASE/);
+  for (const contract of [starter, dispatch, manager, worker, protocol]) {
+    assertPostAcknowledgementAcquisitionContract(contract);
+  }
 });
 
 test("manager-worker protocol excludes omitted capability channels", async () => {

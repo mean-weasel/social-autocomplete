@@ -248,7 +248,8 @@ Persist the response before sending it and require the worker's
 `response_accepted` acknowledgement. For `channel_begin`, do not resend the
 response after acceptance. Require a persisted `verify_browser_binding` and
 emitted `browser_binding_verified` for the selected browser and channel in the
-current task turn before `browser_action_started`. Require that start envelope
+current task turn before `browser_action_started`; this is an availability
+probe only, not a runtime binding retained across acknowledgement. Require that start envelope
 to contain the exact channel, browser, bounded action label, SHA-256
 `actionHash`, and `timeoutMs:60000`. Apply `start_browser_action` to persist
 `start_persisted`, then apply `authorize_browser_action_start`. That transition
@@ -280,12 +281,18 @@ retry through the claim. Send the exact winner output.
 Reject a second issuance, issuance after task termination, and regeneration
 after manager recovery; never resend the acknowledgement; uncertain delivery
 is `ambiguous_browser_action`. After
-acknowledgement, require `record_target_created` for a new plugin-owned agent
-tab at the channel's typed official root with the exact persisted lease hash,
-then `release_target` before
+acknowledgement and exact hash comparison, require the worker to resolve the
+exact selected host binding again in that same continuation and immediately
+invoke `tabs.new` without commentary, a protocol event, a manager/worker
+message, or any other intermediate worker output. Then require
+`record_target_created` for that new plugin-owned agent tab at the channel's
+typed official root with the exact persisted lease hash, followed by
+`release_target` before
 `browser_action_completed` and persisted-result checkpoints. Reject user-tab
 listing, claiming, inspection, or reuse and reject any raw handle/ID in durable
-state. A recovered worker re-establishes and verifies the binding before
+state. If post-acknowledgement binding resolution or `tabs.new` fails, keep the
+action `started` and stop as non-replayable `ambiguous_browser_action`; never
+retry, re-acknowledge, or recover it from `not_created`. A recovered worker re-establishes and verifies the binding before
 an unacknowledged action; task termination invalidates `binding_verified` and
 `start_persisted`. It never repeats an accepted request, acknowledged/started
 or completed action, or completed channel. A durable

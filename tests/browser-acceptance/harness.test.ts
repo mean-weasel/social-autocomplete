@@ -22,6 +22,55 @@ const base = {
 };
 const LEASE_HASH = "d".repeat(64);
 
+function assertPostAcknowledgementAcquisitionContract(contract: string): void {
+  const normalized = contract
+    .replace(/[`*]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const bindingPhrase = /exact selected host (?:browser )?binding again/i;
+  const bindingMatch = bindingPhrase.exec(normalized);
+
+  assert.match(
+    normalized,
+    /availability probe(?: only)?|only (?:as )?an availability probe/i,
+  );
+  assert.ok(bindingMatch, "requires exact selected-host binding re-resolution");
+
+  const bindingIndex = bindingMatch.index;
+  const acknowledgementScope = normalized.slice(
+    Math.max(0, bindingIndex - 400),
+    bindingIndex,
+  );
+  const continuationScope = normalized.slice(
+    Math.max(0, bindingIndex - 200),
+    bindingIndex + 1400,
+  );
+  const acquisitionScope = normalized.slice(bindingIndex, bindingIndex + 1400);
+  const tabsNewIndex = acquisitionScope.search(/tabs\.new/i);
+
+  assert.match(acknowledgementScope, /acknowledg|ACK\/hash/i);
+  assert.match(normalized, /lease(?:-| )hash|targetLeaseHash/i);
+  assert.match(
+    continuationScope,
+    /same (?:post-acknowledgement )?(?:worker )?continuation/i,
+  );
+  assert.match(
+    acquisitionScope,
+    /(?:emit |with )?no[^.]{0,220}(?:intermediate |other )worker output|without[^.]{0,220}(?:intermediate |other )worker output/i,
+  );
+  assert.match(
+    acquisitionScope,
+    /immediate(?:ly)?[^.]{0,80}tabs\.new|tabs\.new[^.]{0,80}immediate(?:ly)?/i,
+  );
+  assert.ok(tabsNewIndex > 0, "requires tabs.new after binding re-resolution");
+  assert.match(acquisitionScope, /started/i);
+  assert.match(acquisitionScope, /ambiguous_browser_action/i);
+  assert.match(
+    acquisitionScope,
+    /non-replayable|never retr(?:y|ied)|cannot be retried|do not retry|without retry/i,
+  );
+}
+
 async function run(input: unknown): Promise<{ output: any; code: number }> {
   try {
     const { stdout } = await execFileAsync(process.execPath, [
@@ -232,9 +281,10 @@ test("results remain mandatory after a successful query interaction begins", asy
 });
 
 test("authenticated preflight contract prohibits broad reads and limits its projection", async () => {
-  const [readme, sharedContract] = await Promise.all([
+  const [readme, sharedContract, researchSkill] = await Promise.all([
     readFile("docs/browser-acceptance/README.md", "utf8"),
     readFile("skills/_shared/browser-research-contract.md", "utf8"),
+    readFile("skills/social-metadata-research/SKILL.md", "utf8"),
   ]);
 
   assert.match(readme, /create one new agent\s+tab/i);
@@ -260,6 +310,9 @@ test("authenticated preflight contract prohibits broad reads and limits its proj
   assert.match(sharedContract, /Never enumerate or slice `querySelectorAll`/i);
   assert.match(sharedContract, /`targetMatched=true` must use the channel's authenticated-shell\/feed observed landmark/i);
   assert.match(sharedContract, /only `targetMatched=false` may use `target_unavailable`/i);
+  for (const contract of [readme, sharedContract, researchSkill]) {
+    assertPostAcknowledgementAcquisitionContract(contract);
+  }
 });
 
 test("private input fields are visibly rejected", async () => {

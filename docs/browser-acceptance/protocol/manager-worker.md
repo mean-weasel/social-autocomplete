@@ -149,7 +149,9 @@ task turn, persists `verify_browser_binding`, and emits
 `browser_binding_verified` with the selected browser, channel, and a sanitized
 binding-check hash. It must repeat this verification for every channel and
 after every task or process boundary; prior verification is invalidated by a
-host continuation. Only then may the worker emit `browser_action_started` with
+host continuation. This verification is an availability probe only; its
+runtime binding is neither retained nor relied on across manager
+acknowledgement. Only then may the worker emit `browser_action_started` with
 the SHA-256 of its sanitized action descriptor and `timeoutMs:60000`. The
 manager applies `start_browser_action`, which records `start_persisted`, then
 applies `authorize_browser_action_start`, which derives and durably stores the
@@ -157,11 +159,17 @@ canonical task-scoped target lease hash before sending one exact
 `QA_CHECKPOINT_ACK` containing that hash. Only after receiving the matching
 acknowledgement and exact-comparing its copied `targetLeaseHash` may the worker
 invoke the browser. The manager's conservative `started` state therefore
-precedes the external browser call. The worker then creates one new agent tab,
-navigates only to the channel's typed official root, keeps the raw handle in
-the host runtime, and records `record_target_created` with the unchanged
-manager-supplied lease hash. The reducer compares it with the persisted
-canonical value. It never lists, claims, inspects, or reuses user tabs.
+precedes the external browser call. In that same post-acknowledgement worker
+continuation, the worker resolves the exact selected host binding again and,
+without commentary, a protocol event, a manager/worker message, or any other
+intermediate worker output, immediately invokes `tabs.new` on it. The worker
+then navigates only to the channel's typed official root, keeps the raw binding
+and handle in the host runtime, and records `record_target_created` with the
+unchanged manager-supplied lease hash. The reducer compares it with the
+persisted canonical value. A post-acknowledgement binding-resolution or
+`tabs.new` failure remains `started`, stops as `ambiguous_browser_action`, and
+cannot be retried, re-acknowledged, or recovered from `not_created`. It never
+lists, claims, inspects, or reuses user tabs.
 If acknowledgement delivery or manager
 state becomes uncertain after that transition, the run stops as
 `ambiguous_browser_action`; the manager never resends the acknowledgement. The

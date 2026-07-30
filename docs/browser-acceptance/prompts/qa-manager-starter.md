@@ -103,7 +103,13 @@ acknowledge a malformed start intent, or use prose as the acknowledgement.
 After acknowledgement require one plugin-owned new-agent-tab creation at the
 channel's typed official root, the worker's unchanged copy of the
 manager-supplied lease hash, and target release before browser-action
-completion. A missing or mismatched hash must stop before browser invocation.
+completion. Treat the earlier `browser_binding_verified` as an availability
+probe only. Require the worker, after exact ACK/hash comparison, to resolve the
+exact selected host binding again in the same post-acknowledgement continuation
+and invoke `tabs.new` immediately with no intermediate worker output. A missing
+or mismatched hash must stop before browser invocation. A binding-resolution or
+`tabs.new` failure after acknowledgement remains a non-replayable `started`
+action and stops as `ambiguous_browser_action`; never retry or re-acknowledge it.
 Reject user-tab enumeration,
 claiming, inspection, reuse, and raw handle persistence. Treat
 `authentication_handoff` as the sole unreleased state; across a task boundary

@@ -20,6 +20,8 @@ Establish and verify the selected host binding anew for every channel and
 after every task or process boundary. This check happens before the durable
 action-start checkpoint; a missing binding is
 `browser_binding_unavailable`, not an ambiguous started action.
+It is an availability probe only: its runtime object is not retained or relied
+on across the manager acknowledgement boundary.
 The worker next emits a hashed start intent with the fixed 60000 ms action
 bound. It may call the browser only after the manager durably accepts that
 intent and returns the matching `QA_CHECKPOINT_ACK`. A malformed or
@@ -43,11 +45,19 @@ facility, but it must remain the host-managed, user-visible session.
 
 ## Sanitized authentication preflight
 
-After the canonical hashed action start is acknowledged, create one new agent
-tab and navigate it only to the channel playbook's typed official root. The new
-tab is the task-scoped plugin-owned target lease. Never list, enumerate, claim,
-inspect, or reuse user tabs. Both Chrome and the Codex in-app Browser use this
-agent-tab creation contract.
+After the canonical hashed action start is acknowledged and the copied
+manager-supplied lease hash exact-matches, resolve the
+exact selected host binding again in that same post-acknowledgement worker continuation.
+Emit no
+commentary, protocol event, manager/worker message, or other worker output
+between that resolution and the immediate `tabs.new` call. Create one new agent
+tab, navigate it only to the channel playbook's typed official root, and
+perform the bounded lifecycle through mandatory release. The new tab is the
+task-scoped plugin-owned target lease. A binding-resolution or `tabs.new`
+failure after acknowledgement remains `started`, stops as
+`ambiguous_browser_action`, and is never retried or re-acknowledged. Never
+list, enumerate, claim, inspect, or reuse user tabs. Both Chrome and the Codex
+in-app Browser use this agent-tab creation contract.
 
 Keep the raw target handle in the host browser runtime and inspect only that
 exact plugin-created target's semantic structure. Never return or retain the

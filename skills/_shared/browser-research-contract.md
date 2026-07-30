@@ -8,8 +8,10 @@ Use this contract with the channel-specific instructions in the calling skill.
 4. Create the run with `social-metadata plan`, including the confirmed `browserSelection` and ordered `channels`. In automatic mode the agent chooses prefixes and candidates; in guided mode it asks before those choices. The CLI does not drive the browser or choose recommendations.
 5. Pause before each channel. Read the effective `nextAction.browserSelection`
    and establish that exact host browser binding in the current task turn
-   before marking the channel action started. Never assume a browser runtime
-   object survives a Codex turn, task, or process boundary. Use the user's
+   before marking the channel action started. This pre-acknowledgement check is
+   an availability probe only, not a retained runtime object or authority for
+   later target creation. Never assume a browser runtime object survives a
+   Codex turn, task, process, or manager acknowledgement boundary. Use the user's
    existing, visible Chrome profile for authenticated work. Use the Codex
    host-managed in-app Browser only for a public surface allowed by that
    channel's playbook. Never launch or fall back to standalone, temporary, or
@@ -17,7 +19,23 @@ Use this contract with the channel-specific instructions in the calling skill.
    unavailable, or disconnected, record `browser_binding_unavailable` while
    the action remains unstarted; do not choose another browser unless the user
    confirms it and the CLI records an amendment.
-6. Only after the canonical browser-action start is persisted and the manager returns the exact acknowledgement, create one new agent tab with the selected browser host and navigate that new tab only to the channel playbook's typed official root. This is the task-scoped plugin-owned target lease. Never list, enumerate, claim, inspect, match, or reuse user tabs. Keep the raw tab object or identifier only in the host browser runtime. Derive the durable lease identity from the run, current task, channel, selected browser, and acknowledged action descriptor; emit only its deterministic SHA-256 hash and lifecycle enums.
+6. Only after the canonical browser-action start is persisted, the manager
+   returns the exact acknowledgement, and the worker exact-compares its copied
+   manager-supplied lease hash, resolve the exact selected host browser binding
+   again in that same post-acknowledgement worker continuation. With no
+   commentary, protocol event, manager/worker message, or other intermediate
+   worker output after that resolution, immediately call `tabs.new` on that
+   binding to create one new agent tab, then perform that tab's one bounded
+   lifecycle through mandatory release. Navigate the new tab only to the channel
+   playbook's typed official root. This is the task-scoped plugin-owned target lease. A
+   post-acknowledgement binding-resolution or `tabs.new` failure is a
+   non-replayable `started` action and stops as `ambiguous_browser_action`; do
+   not retry, request another acknowledgement, or return to the earlier
+   availability probe. Never list, enumerate, claim, inspect, match, or reuse
+   user tabs. Keep the raw binding, tab object, or identifier only in the host
+   browser runtime. Derive the durable lease identity from the run, current
+   task, channel, selected browser, and acknowledged action descriptor; emit
+   only its deterministic SHA-256 hash and lifecycle enums.
 7. Verify channel identity, access, locale, and semantic search landmarks in that exact plugin-created target using the [sanitized authentication preflight](../../docs/browser-acceptance/README.md#sanitized-authentication-preflight). Return only structural booleans, sanitized lifecycle/status values, the lease hash, and the enumerated route, expected landmark, and observed landmark. Never return a complete open-tab list or any target collection. Never return or retain a full authenticated DOM snapshot, raw HTML, `body` text, feed content, tab titles or URLs, raw target identifiers, or account identifiers. For the native search projection, use only this finite accessibility query set with the exact accessible-name `Search`: `searchbox`, `combobox`, or `textbox` for the entry, then `link` or `button` for the optional in-origin navigation control. Require exactly one visible matching entry or exactly one visible matching navigation control; zero or multiple matches fail closed. Use role/name locator APIs directly. Never enumerate or slice `querySelectorAll`, generic input/control collections, or page text to discover a candidate. If sign-in is required, record the explicit `authentication_handoff` lifecycle, preserve the live target handle in the same task, ask the user to sign in manually in that target, and resume only after confirmation. Never ask for, type, read, or store credentials, one-time codes, cookies, tokens, or browser storage state. If the task or process ends during that explicit handoff, discard the stale handle and create a new agent tab from the same typed official root in the recovery task; never rediscover the old tab. Every other started-but-incomplete browser action remains ambiguous and fails closed without replay. When the dedicated target is authenticated but the native search entry is absent, one bounded recovery is allowed only if the same structural projection evidences exactly one in-origin native Search navigation control. Activate that evidenced control once and repeat the exact same finite projection once. Never guess a URL or selector, inspect page text, broaden reads, or make a second recovery attempt. If the expected landmark is still absent or an interaction fails, record `ui_change` with the enumerated route and expected/observed landmarks. `targetMatched=true` must use the channel's authenticated-shell/feed observed landmark; only `targetMatched=false` may use `target_unavailable`. Never reinterpret failure as an empty result.
 8. Enter each planned prefix exactly. Capture up to ten visible native suggestions, preserving displayed order, type, and auxiliary text. Order is evidence of what appeared, not proof of popularity or performance.
 9. Record selected and rejected candidates with contextual rationales and evidence references. Do not use accounts, typed entities, navigation actions, or refinement chips unless the channel/module playbook accepts that candidate kind.

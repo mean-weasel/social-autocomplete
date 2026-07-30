@@ -55,7 +55,8 @@ After installation, emit `worker_handoff` with
 execution or recovery task, acknowledge a persisted response before using it.
 For `channel_begin`, establish and record `verify_browser_binding` and emit
 `browser_binding_verified` for the selected channel and browser in the current
-task turn. Then hash the sanitized action descriptor and emit exactly one
+task turn. This is an availability probe only; do not retain or rely on its
+runtime binding across acknowledgement. Then hash the sanitized action descriptor and emit exactly one
 `browser_action_started` containing `channel`, `browser`, `action`,
 `actionHash`, and `timeoutMs:60000`. Do not call the browser until the manager
 returns an exact matching `QA_CHECKPOINT_ACK` for that start intent. Manager
@@ -68,11 +69,17 @@ boundary. If binding setup fails, emit `browser_binding_unavailable`
 while the action remains `authorized`; do not record `browser_action_started`.
 If the start envelope is rejected or the acknowledgement is missing or
 mismatched, do not call the browser. After the acknowledgement, perform the
-one browser operation with the declared 60000 ms timeout and no retry. First
-create one new agent tab, navigate only to the playbook's typed official root,
-and record the exact manager-supplied task-scoped lease hash. Never list, claim,
-inspect, or reuse user tabs and never persist its raw handle or ID. Release the
-target before durably storing the sanitized outcome and record
+one bounded browser lifecycle with the declared 60000 ms timeout and no retry.
+In that same post-acknowledgement continuation, resolve the exact selected host
+binding again. Emit no commentary, protocol event, manager/worker message, or
+other worker output between that resolution and the immediate `tabs.new` call.
+Create one new agent tab, navigate only to the playbook's typed official root,
+and record the exact manager-supplied task-scoped lease hash. If binding
+resolution or `tabs.new` fails now, the action remains non-replayable `started`
+and stops as `ambiguous_browser_action`; do not retry, request another
+acknowledgement, or reuse the pre-ACK probe. Never list, claim, inspect, or reuse
+user tabs and never persist its raw binding, handle, or ID. Release the target
+before durably storing the sanitized outcome and record
 `browser_action_completed` with its hash, and persist the result from that
 exact outcome before emission. On recovery, use the manager-supplied
 durable checkpoint. Never resend an accepted response, repeat an action at
