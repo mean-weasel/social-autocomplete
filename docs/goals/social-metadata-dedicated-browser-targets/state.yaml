@@ -68,13 +68,13 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: T001
+active_task: T003
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: low
     objective: "Map the current browser-target lifecycle, host capability seams, private-state rules, recovery checkpoints, and the exact causes of target_unavailable."
     inputs:
@@ -91,11 +91,78 @@ tasks:
       - "Host capability comparison"
       - "Turn, task, sign-in, and recovery boundary analysis"
       - "Candidate implementation seams and verification commands"
-    receipt: null
+    receipt:
+      result: done
+      summary: "Current research discovers an already-open matching channel target inside one bounded operation; it never creates or owns one, so absence from the controllable target set becomes channel-specific target_unavailable. Host APIs expose browser bindings, new agent tabs, agent-tab listing, user-tab listing, and Chrome-only-by-default user-tab claiming, but runtime capability confirmation remains live-only. Browser and tab bindings have distinct lifetimes. QA recovery safely checkpoints authorization, current-task binding, action acknowledgement, completion, results, continuation leases, and terminal authorization consumption. The main implementation seam is a privacy-safe task-scoped dedicated-tab lease using plugin-created tabs, never broad user-tab enumeration or persisted raw target IDs."
+      evidence:
+        - source: "skills/_shared/browser-research-contract.md:5-6"
+          finding: "Each channel must verify the selected host binding in the current task turn; target matching occurs inside one bounded operation, nonmatches are discarded, and only a sanitized structural projection may escape."
+        - source: "docs/browser-acceptance/README.md:45-64"
+          finding: "target_unavailable is defined exactly as no target matching the expected channel origin; it returns false booleans without exposing inspected targets."
+        - source: skills/social-metadata-research/SKILL.md
+          finding: "Authenticated Facebook, Instagram, and LinkedIn require the existing visible Chrome profile. In-app Browser is restricted to permitted public TikTok, YouTube, and Pinterest search-term research."
+        - source: "Chrome and in-app control skills, Bootstrap/Browser selection"
+          finding: "Browser binding and tab binding are separate. Missing, stale, closed, or session-foreign tabs require discarding the tab binding and obtaining or creating a fresh tab; only an explicit disconnected error invalidates the browser binding."
+        - source: "openai-bundled browser docs/api.json"
+          finding: "Core API exposes tabs.new(), tabs.list(), tabs.get(), tabs.selected(), user.openTabs(), and user.claimTab(); claimTab is unsupported by default in IAB/CDP, while tabs.new() has no listed default host exclusion."
+        - source: "docs/browser-acceptance/protocol/manager-worker.md:90-158"
+          finding: "Durable states are response persisted/sent/accepted; action authorized/binding_verified/start_persisted/started/completed; result persisted/emitted. Task boundaries invalidate binding verification and unacknowledged start intent."
+        - source: "scripts/browser-acceptance/qa-recovery.mjs:126-148"
+          finding: "Recovery stops at started-without-completed as ambiguous_browser_action; completed actions resume at result persistence, persisted results resume at emission, and accepted responses resume without resending."
+        - source: "docs/browser-acceptance/protocol/manager-worker.md:132-158"
+          finding: "Only the manager owns recovery. Exactly one continuation is allowed; unresolved creation is continuation_creation_ambiguous; terminal transition consumes one-time authorization."
+        - source: "sanitized qa_20260730T010847Z receipt in docs/goals/social-metadata-browser-adapter-polish/state.yaml:883-929"
+          finding: "All three Chrome actions passed current-turn binding verification and one acknowledgement, yet each returned *_target_unavailable. LinkedIn first failed binding before action intent, then recovered once without replay. No URLs, DOM, screenshots, profile data, or target metadata persisted."
+        - source: "docs/browser-acceptance/runbooks/qa-worker.md:220-252"
+          finding: "The worker protocol says open or target only the intended surface, but supplies no lifecycle for creating, retaining, revalidating, or closing a plugin-owned channel target."
+      facts:
+        - category: lifecycle
+          value: "Existing lifecycle is select browser -> accept channel_begin -> verify browser binding -> announce/ack bounded action -> search controllable targets for expected origin -> inspect matched target -> persist/emit outcome. There is no create/own/retain/release target phase."
+        - category: ownership
+          value: "Manager owns authorization, durable state, task creation, recovery leases, and terminalization. Worker owns bounded browser execution only after acknowledgement. Host owns browser session; current contracts assign no durable dedicated-tab owner."
+        - category: target_unavailable_causes
+          value: "The diagnostic has one exact semantic cause: no expected-origin target was found in the bounded controllable target set. Practical antecedents include no channel tab, a user tab not claimed/controllable, tab closure, stale/session-foreign tab binding, or loss across task/process continuation."
+        - category: host_comparison
+          value: "Both hosts expose plugin-created agent tabs and agent-tab listing. Chrome supports the authenticated existing-profile requirement and user-tab claiming by default; IAB does not support claimTab by default and is disallowed for the three oracle channels regardless."
+        - category: privacy
+          value: "Tracked receipts/state may contain only sanitized IDs, enums, booleans, hashes, and landmarks. Raw target identifiers, URLs, titles, full tab lists, DOM/page text, credentials, storage, account identity, and screenshots are forbidden."
+        - category: sign_in_boundary
+          value: "Authentication pauses preserve the same product run and require manual sign-in in the same selected browser. Resume requires user confirmation and repeated bounded preflight; unattended execution stops. A terminal prior run requires fresh browser authorization."
+        - category: recovery_boundary
+          value: "A fresh task may recover authorized, binding_verified, or start_persisted work only after invalidating binding/start intent and re-verifying. started is never replayable; completed and persisted-result states advance without browser repetition."
+        - category: candidate_seams
+          value: "Relevant seams are the router/shared contract, three channel playbooks, QA worker/manager protocol, recovery schema/reducer, sanitized harness diagnostics, and host-specific fixtures/tests. A lease can be represented only by sanitized ownership/lifecycle state; the live tab object must remain host-local and non-persisted."
+        - category: verification_commands
+          value: "npm run test:channels,npm run test:hosts,npm run test:host-parity,npm run test:browser-harness,npm run test:qa-recovery,npm run test:qa-config,npm run verify:offline,npm run verify:release -- --allow-missing-live-receipts,node scripts/browser-acceptance/qa-recovery.mjs check --state <ignored-manager-state>"
+      contradictions:
+        - claim_a: "The browser-control skill says a new user turn does not invalidate a browser binding and existing bindings should be reused."
+          claim_b: "The social research contract says never assume a browser runtime object survives a Codex turn and requires current-task-turn binding establishment before every channel."
+          impact: "Implementation must distinguish host browser-binding continuity from mandatory policy re-verification; treating either statement as tab-lease persistence would be unsafe."
+        - claim_a: "QA runbook says to open or target only the intended channel surface."
+          claim_b: "Its implemented preflight only filters existing targets and has no dedicated target creation/ownership lifecycle."
+          impact: "The present contract can truthfully diagnose target_unavailable but cannot ensure the intended target exists."
+      ambiguity_requiring_judge:
+        - issue: "Static API metadata proves tabs.new() exists on both hosts, but browser operation was forbidden, so actual Chrome/IAB runtime capability details, navigation semantics, and task-boundary handle behavior were not live-confirmed."
+        - issue: "The safe lease lifetime is unspecified: per channel, per product run, per worker task, or across sign-in continuations. Raw tab IDs cannot be durable state, yet recovery needs an explicit lost-target outcome and reacquisition rule."
+        - issue: "Whether a user-navigated dedicated tab remains owned, must be re-navigated to the official origin, or must be abandoned/recreated is not defined; guessed routes and unrelated-tab substitution are forbidden."
+        - issue: "Cleanup authority is unspecified, including whether plugin-owned tabs should close after channel completion, remain for sign-in pauses, or be released at terminal state."
+      commands:
+        - "pwd && rg --files -g 'AGENTS.md' -g '!node_modules' -g '!vendor' | head -20"
+        - "sed -n '1,240p' docs/goals/social-metadata-dedicated-browser-targets/state.yaml && rg -n '<target terms>' ."
+        - "rg --files skills src docs/browser-acceptance scripts/browser-acceptance | rg '<browser files>'"
+        - "sed -n '<targeted ranges>' skills/_shared/browser-research-contract.md skills/social-metadata-research/SKILL.md skills/{instagram,facebook,linkedin}-metadata-research/SKILL.md"
+        - "sed -n '1,260p' <chrome-control-skill> <in-app-control-skill>"
+        - "rg -n '<tab/target APIs>' <chrome-plugin> <browser-plugin>"
+        - "jq '<browser/tab interfaces>' <chrome-plugin>/docs/api.json"
+        - "rg -n '<checkpoint terms>' scripts/browser-acceptance/qa-recovery.mjs docs/browser-acceptance/{protocol,runbooks}"
+        - "sed -n '<sanitized receipt and checkpoint ranges>' docs/goals/social-metadata-browser-adapter-polish/state.yaml docs/browser-acceptance/protocol/manager-worker.md scripts/browser-acceptance/qa-recovery.mjs"
+        - "sed -n '<preflight ranges>' docs/browser-acceptance/README.md docs/browser-acceptance/runbooks/qa-worker.md && git status --short && jq '<core tab declarations>' <chrome-plugin>/docs/api.json"
+        - "jq '.scripts' package.json && rg -n '<diagnostic/checkpoint terms>' tests scripts/browser-acceptance"
+      note_needed: false
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Choose the smallest safe dedicated-target architecture and specify one coherent vertical Worker package."
     inputs:
@@ -110,13 +177,99 @@ tasks:
       - "Authentication pause/resume contract"
       - "Task-boundary and recovery contract"
       - "Exact Worker objective, allowed_files, verify commands, and stop conditions"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Use one task-scoped plugin-owned target lease per channel. After the existing hashed action acknowledgement, create a new agent tab and navigate only to the playbook's typed official root; never list, claim, or reuse user tabs. Keep the raw handle host-local, emit only a deterministic sanitized lease hash, retain the handle through same-task manual sign-in, recreate from the official root after a task boundary, and release it before channel completion. Extend the QA reducer so target creation is recorded between acknowledged start and completion, with release required before a result. This is one coherent cross-host contract package; live authenticated proof remains Chrome-first."
+      worker_package:
+        objective: "Implement a typed plugin-owned dedicated-target lifecycle across channel playbooks, host contracts, browser skills, the QA acknowledgement/recovery protocol, sanitized receipts, fixtures, and deterministic tests."
+        allowed_files:
+          - src/channels/types.ts
+          - src/channels/playbooks/shared.ts
+          - src/channels/playbooks/facebook.ts
+          - src/channels/playbooks/instagram.ts
+          - src/channels/playbooks/linkedin.ts
+          - src/channels/playbooks/x.ts
+          - src/channels/playbooks/tiktok.ts
+          - src/channels/playbooks/youtube.ts
+          - src/channels/playbooks/pinterest.ts
+          - skills/_shared/browser-research-contract.md
+          - skills/social-metadata-research/SKILL.md
+          - skills/facebook-metadata-research/SKILL.md
+          - skills/instagram-metadata-research/SKILL.md
+          - skills/linkedin-metadata-research/SKILL.md
+          - skills/x-metadata-research/SKILL.md
+          - skills/tiktok-metadata-research/SKILL.md
+          - skills/youtube-metadata-research/SKILL.md
+          - skills/pinterest-metadata-research/SKILL.md
+          - assets/host-contract.json
+          - fixtures/channels/scenarios.json
+          - scripts/browser-acceptance/harness.mjs
+          - scripts/browser-acceptance/qa-recovery.mjs
+          - docs/browser-acceptance/README.md
+          - docs/browser-acceptance/channel-matrix.md
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/prompts/qa-manager-starter.md
+          - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+          - docs/browser-acceptance/runbooks/qa-manager.md
+          - docs/browser-acceptance/runbooks/qa-worker.md
+          - docs/browser-acceptance/oracles/chrome-authenticated-research.yaml
+          - docs/browser-acceptance/oracles/in-app-public-research.yaml
+          - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+          - docs/browser-acceptance/schemas/qa-oracle.schema.json
+          - docs/browser-acceptance/templates/qa-receipt.v1.json
+          - tests/channels/playbooks.test.ts
+          - tests/channels/fixture-replay.test.ts
+          - tests/hosts/host-parity.ts
+          - tests/hosts/manifests.test.ts
+          - tests/browser-acceptance/harness.test.ts
+          - tests/browser-acceptance/coverage.test.mjs
+          - tests/browser-acceptance/qa-config.test.mjs
+          - tests/browser-acceptance/qa-manager-prompt.test.mjs
+          - tests/browser-acceptance/qa-recovery.test.mjs
+        verify:
+          - "npm run typecheck"
+          - "npm run lint:playbooks"
+          - "npm run test:channels"
+          - "npm run test:hosts"
+          - "npm run test:host-parity"
+          - "npm run test:browser-harness"
+          - "npm run test:qa-recovery"
+          - "npm run test:qa-config"
+          - "npm run verify:offline"
+          - "npm run verify:release -- --allow-missing-live-receipts"
+          - "git diff --check"
+        stop_if:
+          - "A required host cannot create a new agent-owned tab without enumerating existing user tabs."
+          - "A raw target ID, URL, title, profile identifier, or browser state would enter a receipt or tracked state."
+          - "The design would claim, reuse, enumerate, or inspect an unrelated existing tab."
+          - "A task boundary could reuse a stale live handle or replay an acknowledged action."
+          - "A channel could complete before its plugin-created target is released, except an explicit manual-authentication handoff."
+          - "A required change falls outside allowed_files."
+          - "Verification fails twice for a task-introduced reason."
+      evidence:
+        - "T001 proves current behavior filters pre-existing controllable targets and has no create/own/retain/release lifecycle."
+        - "Both Codex browser hosts expose tabs.new(); authenticated research remains existing-profile Chrome and public research may use the in-app browser."
+        - "The existing reducer already provides a safe acknowledged browser-action boundary and fail-closed started-action recovery."
+        - "Typed channel playbooks can carry canonical official roots without changing the stable CLI/JSON observation contract."
+        - "The required GoalBuddy Judge exceeded one wait window; this decision was completed through the documented PM fallback without implementation edits."
+      subgoal_contract: null
+      parallel_safety: null
+      blocked_tasks: []
+      missing_evidence:
+        - "T003 must prove the lease lifecycle and no-enumeration contract through focused, offline, and release verification."
+        - "T006 must prove real dedicated-target acquisition and autocomplete evidence in existing Chrome."
+      required_board_updates:
+        - "Copy worker_package exactly onto T003 before activation."
+        - "Keep T003 as one coherent vertical write package."
+        - "Do not operate a live browser before T005 pins the reviewed commit and T006 receives fresh exact authorization."
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Implement the Judge-approved dedicated-target lifecycle as one tested vertical slice."
+    objective: "Implement a typed plugin-owned dedicated-target lifecycle across channel playbooks, host contracts, browser skills, the QA acknowledgement/recovery protocol, sanitized receipts, fixtures, and deterministic tests."
     inputs:
       - "T001 evidence map"
       - "T002 approved contract"
@@ -130,13 +283,69 @@ tasks:
       - "Safe target retention through channel work and sign-in pauses"
       - "Explicit task-boundary recovery and target-loss outcomes"
       - "Host parity, fixtures, tests, and operator documentation"
-    allowed_files: []
-    verify: []
+    allowed_files:
+      - "src/channels/types.ts"
+      - "src/channels/playbooks/shared.ts"
+      - "src/channels/playbooks/facebook.ts"
+      - "src/channels/playbooks/instagram.ts"
+      - "src/channels/playbooks/linkedin.ts"
+      - "src/channels/playbooks/x.ts"
+      - "src/channels/playbooks/tiktok.ts"
+      - "src/channels/playbooks/youtube.ts"
+      - "src/channels/playbooks/pinterest.ts"
+      - "skills/_shared/browser-research-contract.md"
+      - "skills/social-metadata-research/SKILL.md"
+      - "skills/facebook-metadata-research/SKILL.md"
+      - "skills/instagram-metadata-research/SKILL.md"
+      - "skills/linkedin-metadata-research/SKILL.md"
+      - "skills/x-metadata-research/SKILL.md"
+      - "skills/tiktok-metadata-research/SKILL.md"
+      - "skills/youtube-metadata-research/SKILL.md"
+      - "skills/pinterest-metadata-research/SKILL.md"
+      - "assets/host-contract.json"
+      - "fixtures/channels/scenarios.json"
+      - "scripts/browser-acceptance/harness.mjs"
+      - "scripts/browser-acceptance/qa-recovery.mjs"
+      - "docs/browser-acceptance/README.md"
+      - "docs/browser-acceptance/channel-matrix.md"
+      - "docs/browser-acceptance/protocol/manager-worker.md"
+      - "docs/browser-acceptance/prompts/qa-manager-starter.md"
+      - "docs/browser-acceptance/prompts/qa-worker-dispatch.md"
+      - "docs/browser-acceptance/runbooks/qa-manager.md"
+      - "docs/browser-acceptance/runbooks/qa-worker.md"
+      - "docs/browser-acceptance/oracles/chrome-authenticated-research.yaml"
+      - "docs/browser-acceptance/oracles/in-app-public-research.yaml"
+      - "docs/browser-acceptance/schemas/qa-manager-run-state.schema.json"
+      - "docs/browser-acceptance/schemas/qa-oracle.schema.json"
+      - "docs/browser-acceptance/templates/qa-receipt.v1.json"
+      - "tests/channels/playbooks.test.ts"
+      - "tests/channels/fixture-replay.test.ts"
+      - "tests/hosts/host-parity.ts"
+      - "tests/hosts/manifests.test.ts"
+      - "tests/browser-acceptance/harness.test.ts"
+      - "tests/browser-acceptance/coverage.test.mjs"
+      - "tests/browser-acceptance/qa-config.test.mjs"
+      - "tests/browser-acceptance/qa-manager-prompt.test.mjs"
+      - "tests/browser-acceptance/qa-recovery.test.mjs"
+    verify:
+      - "npm run typecheck"
+      - "npm run lint:playbooks"
+      - "npm run test:channels"
+      - "npm run test:hosts"
+      - "npm run test:host-parity"
+      - "npm run test:browser-harness"
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
     stop_if:
-      - "A required capability cannot be implemented without broad existing-tab enumeration."
-      - "A raw browser target identifier or private route would enter a receipt or tracked file."
-      - "Recovery could repeat an acknowledged browser action."
-      - "The implementation requires files outside T002 allowed_files."
+      - "A required host cannot create a new agent-owned tab without enumerating existing user tabs."
+      - "A raw target ID, URL, title, profile identifier, or browser state would enter a receipt or tracked state."
+      - "The design would claim, reuse, enumerate, or inspect an unrelated existing tab."
+      - "A task boundary could reuse a stale live handle or replay an acknowledged action."
+      - "A channel could complete before its plugin-created target is released, except an explicit manual-authentication handoff."
+      - "A required change falls outside allowed_files."
       - "Verification fails twice for a task-introduced reason."
     receipt: null
   - id: T004
