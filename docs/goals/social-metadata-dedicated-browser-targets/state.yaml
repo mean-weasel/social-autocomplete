@@ -1,0 +1,244 @@
+version: 2
+
+goal:
+  title: "Social Metadata Dedicated Browser Targets"
+  slug: "social-metadata-dedicated-browser-targets"
+  kind: specific
+  tranche: "Implement and prove privacy-preserving dedicated browser targets for authenticated channel-native research."
+  status: active
+  oracle:
+    signal: "Fresh sanitized Chrome evidence proves plugin-created dedicated targets reach native search and produce bounded autocomplete evidence on Instagram, Facebook, and LinkedIn."
+    cadence: "after the implementation package and at final live audit"
+    final_proof: "Exact QA pin plus a fresh authorized three-channel receipt with targetMatched=true, native search-entry landmarks, and both module outcomes for every channel."
+  intake:
+    original_request: "Plan reliable bounded target acquisition using a dedicated official channel tab."
+    interpreted_outcome: "The plugin safely creates, owns, retains, and researches through a dedicated channel target without inspecting unrelated tabs."
+    input_shape: specific
+    audience: "Codex and Claude users of browser-first social metadata research"
+    authority: requested
+    proof_type: demo
+    completion_proof: "A fresh authenticated Chrome replay succeeds on Instagram, Facebook, and LinkedIn with current autocomplete evidence or justified native-zero outcomes."
+    likely_misfire: "Suppressing target_unavailable through broad tab enumeration, private target persistence, guessed navigation, or weaker diagnostics."
+    blind_spots_considered:
+      - "Browser handle lifetime across agent turns and task boundaries"
+      - "Authentication pause and resume in the same dedicated target"
+      - "User-closing, duplicating, or navigating the dedicated target"
+      - "Chrome and in-app browser capability differences"
+      - "Safe cleanup and recovery without action replay"
+    existing_plan_facts:
+      - "Authenticated research uses the existing visible Chrome profile."
+      - "Public research may use the Codex in-app browser."
+      - "Browser selection and ordered channels are confirmed before research."
+      - "The user is prompted before each channel."
+      - "No credentials or unrelated browser content may be stored."
+      - "Every browser action requires the existing two-phase acknowledgement gate."
+      - "The live proof order is Instagram, Facebook, LinkedIn."
+      - "Both hashtag and search-term modules use autocomplete_only evidence."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
+    command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: low
+    objective: "Map the current browser-target lifecycle, host capability seams, private-state rules, recovery checkpoints, and the exact causes of target_unavailable."
+    inputs:
+      - "Current browser research skills and shared contract"
+      - "Chrome and in-app host adapters"
+      - "QA manager/worker protocol and recovery reducer"
+      - "Sanitized qa_20260730T010847Z receipt"
+    constraints:
+      - "Read-only."
+      - "Do not operate a browser."
+      - "Do not expose ignored private artifacts beyond sanitized fields."
+    expected_output:
+      - "Target lifecycle and ownership map"
+      - "Host capability comparison"
+      - "Turn, task, sign-in, and recovery boundary analysis"
+      - "Candidate implementation seams and verification commands"
+    receipt: null
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Choose the smallest safe dedicated-target architecture and specify one coherent vertical Worker package."
+    inputs:
+      - "T001 receipt"
+      - "Existing privacy, authorization, and evidence contracts"
+    constraints:
+      - "Read-only."
+      - "Reject broad tab enumeration, unrelated-tab reuse, raw target persistence, guessed private routes, silent browser switching, and recovery that can replay acknowledged actions."
+      - "Account for both Chrome and in-app browser choices while keeping authenticated live proof Chrome-first."
+    expected_output:
+      - "Approved target lease and ownership contract"
+      - "Authentication pause/resume contract"
+      - "Task-boundary and recovery contract"
+      - "Exact Worker objective, allowed_files, verify commands, and stop conditions"
+    receipt: null
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the Judge-approved dedicated-target lifecycle as one tested vertical slice."
+    inputs:
+      - "T001 evidence map"
+      - "T002 approved contract"
+    constraints:
+      - "Do not operate a live browser."
+      - "Preserve the stable CLI/JSON observation contract."
+      - "Preserve current privacy, authorization, evidence, and fail-closed diagnostics."
+      - "Change only files approved by T002."
+    expected_output:
+      - "Dedicated official-channel target creation and ownership"
+      - "Safe target retention through channel work and sign-in pauses"
+      - "Explicit task-boundary recovery and target-loss outcomes"
+      - "Host parity, fixtures, tests, and operator documentation"
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "A required capability cannot be implemented without broad existing-tab enumeration."
+      - "A raw browser target identifier or private route would enter a receipt or tracked file."
+      - "Recovery could repeat an acknowledged browser action."
+      - "The implementation requires files outside T002 allowed_files."
+      - "Verification fails twice for a task-introduced reason."
+    receipt: null
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Adversarially review the dedicated-target implementation for privacy leakage, target substitution, stale-handle reuse, unsafe recovery, and incomplete host parity."
+    inputs:
+      - "T002 approved contract"
+      - "T003 implementation receipt and diff"
+    constraints:
+      - "Read-only."
+      - "Reject fixture-only claims that do not establish a safe path to live proof."
+      - "Reject any path that can touch an unrelated existing tab."
+    expected_output:
+      - "approved | changes_required"
+      - "Requirement-to-test mapping"
+      - "Exact QA pin prerequisite"
+      - "Missing evidence and next task if changes are required"
+    receipt: null
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Pin the exact approved build into the isolated QA repository and prepare a fresh dedicated-target scenario without browser access."
+    inputs:
+      - "T004 approval"
+      - "Dedicated QA repository /Users/neonwatty/Desktop/social-autocomplete-qa"
+    constraints:
+      - "Do not operate a browser."
+      - "Use an immutable clean source checkout."
+      - "Keep QA notes, receipts, and run state ignored and uncommitted."
+      - "Verify every copied-file and source SHA-256."
+    expected_output:
+      - "Exact immutable product source"
+      - "Committed QA pin"
+      - "Validated unapproved scenario"
+      - "Exact one-time authorization prerequisite"
+    allowed_files:
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md"
+      - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+    verify:
+      - "Verify every declared source and QA SHA-256."
+      - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa diff --check"
+      - "git -C /Users/neonwatty/Desktop/social-autocomplete-qa status --short"
+    stop_if:
+      - "The source checkout is mutable or does not match the approved commit."
+      - "QA packaging requires browser access."
+      - "Private QA artifacts would be committed."
+    receipt: null
+  - id: T006
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: high
+    objective: "Obtain exact one-time authorization and supervise a fresh Instagram→Facebook→LinkedIn dedicated-target Chrome replay."
+    inputs:
+      - "T005 exact QA pin"
+      - "Validated private scenario"
+    constraints:
+      - "Do not begin browser work before exact human approval."
+      - "Use existing visible Chrome only."
+      - "Create and touch only plugin-dedicated official-channel targets."
+      - "Pause for user sign-in in the same target if authentication is required."
+      - "Require current-turn binding verification and the exact two-phase action acknowledgement for every browser operation."
+      - "Never retry an acknowledged action."
+    expected_output:
+      - "targetMatched=true for Instagram, Facebook, and LinkedIn"
+      - "Exact native search-entry landmark for every channel"
+      - "Current hashtag and search-term autocomplete evidence or justified native-zero outcomes"
+      - "Proof that unrelated existing tabs were not enumerated or touched"
+      - "One terminal sanitized receipt with authorization consumed"
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether the implementation, exact QA pin, and fresh live evidence satisfy the dedicated-browser-target oracle."
+    inputs:
+      - "All done receipts"
+      - "Final product and QA commits"
+      - "Offline and release verification"
+      - "Fresh sanitized T006 receipt"
+    constraints:
+      - "Read-only."
+      - "Reject completion for target_unavailable, generic landmarks, fixture-only evidence, unrelated-tab access, recommendation fabrication, or unconsumed authorization."
+      - "If live evidence reveals a locally fixable defect, specify the next largest safe Worker slice."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Requirement-to-evidence mapping"
+      - "Missing evidence and exact next task if incomplete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "New GoalBuddy prep files only; implementation worktree was clean at prep start."
+  last_verification:
+    result: pending
+    task: null
+    commands:
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
