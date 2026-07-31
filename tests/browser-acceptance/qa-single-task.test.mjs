@@ -16,10 +16,8 @@ test("single-task Instagram example is bounded and validates", async () => {
   assert.deepEqual(result.selectedChannels, ["instagram"]);
   assert.equal(result.approved, false);
   const scenario = parse(await readFile(scenarioPath, "utf8"));
-  assert.deepEqual(scenario.modules, ["hashtag", "search-term"]);
-  assert.deepEqual(scenario.queryPrefixes, {
-    hashtag: ["#productivity"], "search-term": ["productivity app"],
-  });
+  assert.deepEqual(scenario.modules, ["hashtag"]);
+  assert.deepEqual(scenario.queryPrefixes, { hashtag: ["#productivity"] });
   assert.equal(scenario.bounds.maxPrefixesPerModule, 1);
   assert.equal(scenario.bounds.maxSuggestionsPerPrefix, 5);
 });
@@ -51,6 +49,6 @@ test("single-task contracts retain browser ownership", async () => {
     assert.doesNotMatch(contract, /APPROVE QA BROWSER CAMPAIGN|ambiguous_browser_action/i);
   }
   assert.match(runbook, /There is no `QA_EVENT`, `QA_CHECKPOINT_ACK`/i);
-  assert.match(runbook, /passes only when both configured modules capture/i);
+  assert.match(runbook, /passes only when every configured module captures/i);
   assert.match(starter, /Do not create a manager,\s+worker, child task/i);
 });

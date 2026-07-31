@@ -14,7 +14,7 @@ Metadata Research plugin, create the CLI plan, connect once to the user's
 existing visible Chrome session, and retain that binding. Create exactly one
 new plugin-owned Instagram tab from it. Never enumerate or claim existing user
 tabs.
-Run the scenario's exact hashtag and search-term prefixes through Instagram's
+Run the scenario's exact configured prefixes through Instagram's
 native Search surface. Capture only bounded, input-owned autocomplete evidence.
 If authentication, a challenge, a browser failure, or a UI mismatch blocks the
 run, stop with that explicit status. Never broaden inspection, handle
@@ -22,4 +22,4 @@ credentials, publish, enter a composer, scrape, or substitute headless
 Chromium. Release the tab unless it is waiting for the user to sign in.
 Record observations through the CLI, run `social-metadata validate`, and write
 one ignored, sanitized receipt. A pass requires current native suggestions for
-both modules and successful CLI validation.
+every configured module and successful CLI validation.

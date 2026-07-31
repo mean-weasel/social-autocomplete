@@ -119,7 +119,7 @@ test("authenticated Search recovery is finite, accessible, and diagnostic-safe",
     assert.match(document, /Never (?:use |enumerate or slice )`?querySelectorAll`?/i);
   }
 
-  for (const document of [documents[0], documents[1], documents[2], documents[4], documents[5]]) {
+  for (const document of [documents[0], documents[2], documents[4], documents[5]]) {
     assert.match(document, /`aria-controls` or `aria-owns`/i);
     assert.match(document, /runtime-private|inside the browser runtime/i);
     assert.match(document, /exactly one visible (?:owned|related) popup/i);
@@ -127,5 +127,12 @@ test("authenticated Search recovery is finite, accessible, and diagnostic-safe",
     assert.match(document, /page-wide|page-global/i);
     assert.match(document, /native empty/i);
   }
+  assert.match(documents[1], /`aria-controls` or `aria-owns`/i);
+  assert.match(documents[1], /at most six element ancestors/i);
+  assert.match(documents[1], /unique sibling/i);
+  assert.match(documents[1], /candidate URLs runtime-private/i);
+  assert.match(documents[1], /at most ten candidates/i);
+  assert.match(documents[1], /page-wide/i);
+  assert.match(documents[1], /native empty/i);
   assert.doesNotMatch(documents[3], /`aria-controls`|`aria-owns`/i);
 });

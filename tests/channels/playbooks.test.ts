@@ -225,18 +225,20 @@ test("authenticated channels use closed finite accessible-name Search allowlists
   }
 });
 
-test("Instagram and Facebook scope autocomplete to one entry-owned popup", () => {
-  for (const channel of ["instagram", "facebook"] as const) {
-    const instruction = getPlaybook(channel).entryInstruction;
-    assert.match(instruction, /aria-controls or aria-owns/i);
-    assert.match(instruction, /relationship value runtime-private/i);
-    assert.match(instruction, /exactly one visible owned popup/i);
-    for (const role of ["option", "listitem", "link", "button"]) {
-      assert.match(instruction, new RegExp(`\\b${role}\\b`, "i"));
-    }
-    assert.match(instruction, /at most ten visible/i);
-    assert.match(instruction, /scoped inside it/i);
-    assert.match(instruction, /Missing, multiple, or conflicting ownership is ui_change, never native empty/i);
-  }
+test("Instagram scopes its current autocomplete to a bounded input sibling", () => {
+  const instruction = getPlaybook("instagram").entryInstruction;
+  assert.match(instruction, /prefer aria-controls or aria-owns/i);
+  assert.match(instruction, /at most six element ancestors/i);
+  assert.match(instruction, /nearest ancestor/i);
+  assert.match(instruction, /exactly one direct child containing the input/i);
+  assert.match(instruction, /exactly one other direct child containing visible link candidates/i);
+  assert.match(instruction, /at most ten candidates inside that unique sibling/i);
+  assert.match(instruction, /candidate URLs runtime-private/i);
+  assert.match(instruction, /derive an exact hashtag slug/i);
+  assert.match(instruction, /empty bounded ownership is ui_change, never native empty/i);
+
+  const facebook = getPlaybook("facebook").entryInstruction;
+  assert.match(facebook, /aria-controls or aria-owns/i);
+  assert.match(facebook, /exactly one visible owned popup/i);
   assert.doesNotMatch(getPlaybook("linkedin").entryInstruction, /aria-controls|aria-owns/i);
 });

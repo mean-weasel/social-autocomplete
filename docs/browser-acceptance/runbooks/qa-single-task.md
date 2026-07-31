@@ -51,6 +51,6 @@ There is no `QA_EVENT`, `QA_CHECKPOINT_ACK`, manager lease, campaign, timer, or 
 
 ## Result rule
 
-The smoke passes only when both configured modules capture at least one current native suggestion and CLI validation succeeds. `authentication_required`,
+The smoke passes only when every configured module captures at least one current native suggestion and CLI validation succeeds. `authentication_required`,
 `challenge`, `browser_binding_unavailable`, `ui_change`, and
 `validation_failed` are explicit non-passing outcomes.
