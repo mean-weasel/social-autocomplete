@@ -19,8 +19,11 @@ test("single-task Instagram example is bounded and validates", async () => {
   assert.equal(result.approved, false);
   assert.equal(result.completedResearchTabs, "close");
   const scenario = parse(await readFile(scenarioPath, "utf8"));
-  assert.deepEqual(scenario.modules, ["hashtag"]);
-  assert.deepEqual(scenario.queryPrefixes, { hashtag: ["#productivity"] });
+  assert.deepEqual(scenario.modules, ["hashtag", "search-term"]);
+  assert.deepEqual(scenario.queryPrefixes, {
+    hashtag: ["#productivity"],
+    "search-term": ["productivity app"],
+  });
   assert.equal(scenario.completedResearchTabs, "close");
   assert.equal(scenario.bounds.maxPrefixesPerModule, 1);
   assert.equal(scenario.bounds.maxSuggestionsPerPrefix, 5);
@@ -45,9 +48,11 @@ test("single-task prefixes cover enabled modules and bounds", async () => {
   const oracle = parse(await readFile(oraclePath, "utf8"));
   const errorCodes = (value) =>
     checkQaCompatibility(value, oracle).map((error) => error.code);
-  const missing = structuredClone(scenario);
-  delete missing.queryPrefixes.hashtag;
-  assert.ok(errorCodes(missing).includes("query_prefix_module_coverage"));
+  for (const moduleName of scenario.modules) {
+    const missing = structuredClone(scenario);
+    delete missing.queryPrefixes[moduleName];
+    assert.ok(errorCodes(missing).includes("query_prefix_module_coverage"));
+  }
   const overBound = structuredClone(scenario);
   overBound.queryPrefixes.hashtag.push("#productivityapp");
   assert.ok(errorCodes(overBound).includes("query_prefix_bound_exceeded"));
