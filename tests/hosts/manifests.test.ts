@@ -68,6 +68,10 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   assert.match(skill, /Before creating a plan or opening any channel/i);
   assert.match(skill, /choose and confirm the browser/i);
   assert.match(skill, /Which channels should I research, and in what order\?/i);
+  assert.match(skill, /Should completed research tabs stay open\? The default is no\./i);
+  assert.match(skill, /completedResearchTabs/i);
+  assert.match(skill, /finalize that exact tab as a deliverable/i);
+  assert.match(skill, /Never rediscover or reuse it/i);
   assert.match(skill, /On every new run, ask again and create a new `runId`/i);
   assert.match(skill, /never inherit channels from a previous run/i);
   assert.match(skill, /resuming an existing `runId`, reuse its recorded channels without asking again/i);

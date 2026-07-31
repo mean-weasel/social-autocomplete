@@ -393,6 +393,8 @@ export async function validateQaConfig({
     requireHumanBeforeBrowserAccess:
       scenarioDocument.value?.authorization?.requireHumanBeforeBrowserAccess ??
       null,
+    completedResearchTabs:
+      scenarioDocument.value?.completedResearchTabs ?? "close",
     selectedChannels: Array.isArray(scenarioDocument.value?.channels)
       ? [...scenarioDocument.value.channels]
       : null,

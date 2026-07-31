@@ -1,5 +1,6 @@
 import { CHANNELS, CONTRACT_VERSION, EVIDENCE_TIERS, MODULES, ORCHESTRATION_MODES, ContractError, isRecord, requireString, } from "./common.js";
 export const RUN_BROWSERS = ["chrome", "in_app"];
+export const COMPLETED_RESEARCH_TABS = ["close", "keep_open"];
 export function effectiveBrowserSelection(plan, amendments) {
     let selection = plan.browserSelection;
     for (const amendment of amendments) {
@@ -8,6 +9,9 @@ export function effectiveBrowserSelection(plan, amendments) {
             selection = candidate;
     }
     return selection;
+}
+export function effectiveCompletedResearchTabs(plan) {
+    return plan.completedResearchTabs ?? "close";
 }
 function validateBrowserSelection(value, path, issues) {
     if (!isRecord(value)) {
@@ -93,6 +97,9 @@ export function parsePlanRequest(value) {
     }
     enumValue(value.defaultEvidenceTier, EVIDENCE_TIERS, "$.defaultEvidenceTier", issues);
     validateBrowserSelection(value.browserSelection, "$.browserSelection", issues);
+    if (value.completedResearchTabs !== undefined) {
+        enumValue(value.completedResearchTabs, COMPLETED_RESEARCH_TABS, "$.completedResearchTabs", issues);
+    }
     if (!isRecord(value.interactionBounds)) {
         issues.push({ code: "invalid_object", message: "Expected an object.", path: "$.interactionBounds" });
     }

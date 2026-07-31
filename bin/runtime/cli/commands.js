@@ -1,4 +1,4 @@
-import { asJsonValue, CONTRACT_VERSION, ContractError, effectiveBrowserSelection, parseObservation, parsePlanAmendment, parsePlanRequest, } from "../contracts/index.js";
+import { asJsonValue, CONTRACT_VERSION, ContractError, effectiveCompletedResearchTabs, effectiveBrowserSelection, parseObservation, parsePlanAmendment, parsePlanRequest, } from "../contracts/index.js";
 import { getPlaybook } from "../channels/index.js";
 import { getChannelModulePolicy } from "../channels/policies/index.js";
 import { parseModuleObservationPayload, reduceChannelModules, } from "../modules/registry.js";
@@ -49,9 +49,12 @@ function latestUnresolvedInterruption(observations, plan) {
 }
 function nextAction(plan, amendments, observations, receiptChannelRunIds) {
     const browserSelection = effectiveBrowserSelection(plan, amendments);
+    const completedResearchTabs = effectiveCompletedResearchTabs(plan);
     const unfinished = plan.channelRuns.find((channelRun) => !receiptChannelRunIds.includes(channelRun.channelRunId));
     if (!unfinished)
-        return asJsonValue({ kind: "complete", runId: plan.runId, browserSelection });
+        return asJsonValue({
+            kind: "complete", runId: plan.runId, browserSelection, completedResearchTabs,
+        });
     const allowedBrowsers = getPlaybook(unfinished.channel).supportedBrowsers.codex;
     if (!allowedBrowsers.includes(browserSelection.browser)) {
         return asJsonValue({
@@ -60,6 +63,7 @@ function nextAction(plan, amendments, observations, receiptChannelRunIds) {
             channelRunId: unfinished.channelRunId,
             channel: unfinished.channel,
             browserSelection,
+            completedResearchTabs,
             allowedBrowsers,
         });
     }
@@ -72,6 +76,7 @@ function nextAction(plan, amendments, observations, receiptChannelRunIds) {
             channelRunId: unfinished.channelRunId,
             channel: unfinished.channel,
             browserSelection,
+            completedResearchTabs,
             interruptionObservationId: interruption.observationId,
         });
     }
@@ -88,6 +93,7 @@ function nextAction(plan, amendments, observations, receiptChannelRunIds) {
             channelRunId: unfinished.channelRunId,
             channel: unfinished.channel,
             browserSelection,
+            completedResearchTabs,
         });
     }
     return asJsonValue({
@@ -96,6 +102,7 @@ function nextAction(plan, amendments, observations, receiptChannelRunIds) {
         channelRunId: unfinished.channelRunId,
         channel: unfinished.channel,
         browserSelection,
+        completedResearchTabs,
     });
 }
 function assertBrowserCompatibility(channels, selection, runId) {
@@ -147,6 +154,7 @@ export async function executeCommand(args, cwd) {
             const createdAt = new Date().toISOString();
             const plan = {
                 ...request,
+                completedResearchTabs: request.completedResearchTabs ?? "close",
                 runId,
                 createdAt,
                 channelRuns: request.channels.map((channel) => ({

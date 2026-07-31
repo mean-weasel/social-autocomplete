@@ -56,6 +56,10 @@
       },
       "additionalProperties": false
     },
+    "completedResearchTabs": {
+      "enum": ["close", "keep_open"],
+      "default": "close"
+    },
     "interactionBounds": {
       "type": "object",
       "required": ["maxPrefixesPerModule", "maxSuggestionsPerPrefix", "maxResultsPerCandidate", "maxRefinementRounds"],

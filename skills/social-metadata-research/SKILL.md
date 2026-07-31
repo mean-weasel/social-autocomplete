@@ -15,12 +15,13 @@ Research attention-relevant metadata without publishing or changing the user's c
 2. Record the confirmed choice in `browserSelection` with `confirmedByUser: true`. Establish that host browser binding once and reuse it for every channel while the choice remains effective.
 3. Ask explicitly: **"Which channels should I research, and in what order?"** Present all supported choices: Facebook, Instagram, LinkedIn, X, TikTok, YouTube, and Pinterest. The user may accept an agent-proposed list, but a proposal is never a default or a substitute for this explicit choice.
 4. Record the user's confirmed ordered list as `channels` in the new plan. On every new run, ask again and create a new `runId`; never inherit channels from a previous run. When explicitly resuming an existing `runId`, reuse its recorded channels without asking again.
-5. Understand the supplied caption, image, app, or messaging context.
-6. Infer topic, locale, modules, evidence tier, and orchestration mode. By default select both `hashtag` and `search-term`, use fresh research, and use `autocomplete_only`.
-7. Present those inferred values, the confirmed ordered channels, the browser choice, and any compatibility limits, then ask for confirmation before any channel research. Always offer:
+5. Ask: **"Should completed research tabs stay open? The default is no."** Record `completedResearchTabs` as `close` or `keep_open`. A fresh run asks again; an explicit resume reuses the recorded choice.
+6. Understand the supplied caption, image, app, or messaging context.
+7. Infer topic, locale, modules, evidence tier, and orchestration mode. By default select both `hashtag` and `search-term`, use fresh research, and use `autocomplete_only`.
+8. Present those inferred values, the confirmed ordered channels, the browser choice, the completed-tab choice, and any compatibility limits, then ask for confirmation before any channel research. Always offer:
    - `guided`: two approvals per channel, first for initial query prefixes and then for the single refinement round if needed.
    - `automatic`: the agent chooses prefixes and candidates after the initial confirmation; ask again only for an interruption or material plan amendment.
-8. Call the bundled CLI as a subprocess and consume its JSON stdout directly:
+9. Call the bundled CLI as a subprocess and consume its JSON stdout directly:
 
    ```sh
    social-metadata plan --json @plan-input.json
@@ -59,9 +60,12 @@ Never list or return a complete open-tab list or any target collection. Never
 return or retain full authenticated DOM snapshots, raw HTML, `body` text, feed
 content, tab titles or URLs, raw target identifiers, or account identifiers. A
 failed structural check must return a sanitized interruption; it must not
-trigger a broader tab or DOM read. Release the plugin-created target before a
-normal channel result; explicit manual-authentication handoff is the only
-unreleased state.
+trigger a broader tab or DOM read. Before a normal channel result, always
+release browser-session control of the plugin-created target. With `close`,
+omit the tab from finalization so the agent-created tab closes. With
+`keep_open`, finalize that exact tab as a deliverable so it remains visible to
+the user but is no longer plugin-controlled. Never rediscover or reuse it.
+Explicit manual-authentication handoff remains the only unfinished state.
 
 ## Research channels
 
@@ -74,7 +78,7 @@ Pause before each channel, select its dedicated skill, and follow the [shared re
   unstarted.
 - Create exactly one task-scoped plugin-owned target per channel directly from
   that retained binding and continue the bounded lifecycle through mandatory
-  release. Both supported Codex browser choices use host agent-tab creation;
+  release of browser-session control. Both supported Codex browser choices use host agent-tab creation;
   neither path enumerates or claims user tabs.
 - Codex: Chrome for authenticated sessions; in-app Browser only for public TikTok or YouTube research, or Pinterest search-term research.
 - Claude: Claude in Chrome. If unavailable, return a visible capability interruption.

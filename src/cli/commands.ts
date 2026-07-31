@@ -3,6 +3,7 @@ import {
   CONTRACT_VERSION,
   ContractError,
   type CoreReceipt,
+  effectiveCompletedResearchTabs,
   effectiveBrowserSelection,
   type JsonValue,
   type Observation,
@@ -90,10 +91,13 @@ function nextAction(
   receiptChannelRunIds: string[],
 ): JsonValue {
   const browserSelection = effectiveBrowserSelection(plan, amendments);
+  const completedResearchTabs = effectiveCompletedResearchTabs(plan);
   const unfinished = plan.channelRuns.find(
     (channelRun) => !receiptChannelRunIds.includes(channelRun.channelRunId),
   );
-  if (!unfinished) return asJsonValue({ kind: "complete", runId: plan.runId, browserSelection });
+  if (!unfinished) return asJsonValue({
+    kind: "complete", runId: plan.runId, browserSelection, completedResearchTabs,
+  });
   const allowedBrowsers = getPlaybook(unfinished.channel).supportedBrowsers.codex;
   if (!allowedBrowsers.includes(browserSelection.browser)) {
     return asJsonValue({
@@ -102,6 +106,7 @@ function nextAction(
       channelRunId: unfinished.channelRunId,
       channel: unfinished.channel,
       browserSelection,
+      completedResearchTabs,
       allowedBrowsers,
     });
   }
@@ -116,6 +121,7 @@ function nextAction(
       channelRunId: unfinished.channelRunId,
       channel: unfinished.channel,
       browserSelection,
+      completedResearchTabs,
       interruptionObservationId: interruption.observationId,
     });
   }
@@ -134,6 +140,7 @@ function nextAction(
       channelRunId: unfinished.channelRunId,
       channel: unfinished.channel,
       browserSelection,
+      completedResearchTabs,
     });
   }
   return asJsonValue({
@@ -142,6 +149,7 @@ function nextAction(
     channelRunId: unfinished.channelRunId,
     channel: unfinished.channel,
     browserSelection,
+    completedResearchTabs,
   });
 }
 
@@ -209,6 +217,7 @@ export async function executeCommand(
       const createdAt = new Date().toISOString();
       const plan: StoredPlan = {
         ...request,
+        completedResearchTabs: request.completedResearchTabs ?? "close",
         runId,
         createdAt,
         channelRuns: request.channels.map((channel) => ({

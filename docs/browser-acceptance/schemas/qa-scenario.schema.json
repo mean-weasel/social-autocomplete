@@ -32,6 +32,10 @@
     "scope": { "enum": ["setup", "preflight", "research"] },
     "interactionSource": { "enum": ["synthetic_manager", "single_task"] },
     "browser": { "enum": ["chrome", "in_app"] },
+    "completedResearchTabs": {
+      "enum": ["close", "keep_open"],
+      "default": "close"
+    },
     "channels": {
       "type": "array",
       "minItems": 1,

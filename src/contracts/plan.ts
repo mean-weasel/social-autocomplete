@@ -37,6 +37,8 @@ export interface InteractionBounds {
 
 export const RUN_BROWSERS = ["chrome", "in_app"] as const;
 export type RunBrowser = (typeof RUN_BROWSERS)[number];
+export const COMPLETED_RESEARCH_TABS = ["close", "keep_open"] as const;
+export type CompletedResearchTabs = (typeof COMPLETED_RESEARCH_TABS)[number];
 
 export interface BrowserSelection {
   browser: RunBrowser;
@@ -54,6 +56,7 @@ export interface PlanRequest {
   enabledModules: ModuleName[];
   defaultEvidenceTier: EvidenceTier;
   browserSelection: BrowserSelection;
+  completedResearchTabs?: CompletedResearchTabs;
   channelOverrides?: Partial<Record<Channel, { evidenceTier?: EvidenceTier }>>;
   approvedPrefixes?: Partial<Record<Channel, Partial<Record<ModuleName, string[]>>>>;
   interactionBounds: InteractionBounds;
@@ -91,6 +94,10 @@ export function effectiveBrowserSelection(
     if (isRecord(candidate)) selection = candidate as unknown as BrowserSelection;
   }
   return selection;
+}
+
+export function effectiveCompletedResearchTabs(plan: StoredPlan): CompletedResearchTabs {
+  return plan.completedResearchTabs ?? "close";
 }
 
 function validateBrowserSelection(
@@ -191,6 +198,14 @@ export function parsePlanRequest(value: unknown): PlanRequest {
   }
   enumValue(value.defaultEvidenceTier, EVIDENCE_TIERS, "$.defaultEvidenceTier", issues);
   validateBrowserSelection(value.browserSelection, "$.browserSelection", issues);
+  if (value.completedResearchTabs !== undefined) {
+    enumValue(
+      value.completedResearchTabs,
+      COMPLETED_RESEARCH_TABS,
+      "$.completedResearchTabs",
+      issues,
+    );
+  }
   if (!isRecord(value.interactionBounds)) {
     issues.push({ code: "invalid_object", message: "Expected an object.", path: "$.interactionBounds" });
   } else {

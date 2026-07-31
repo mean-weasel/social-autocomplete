@@ -4,6 +4,7 @@ title: Chrome Instagram hashtag single-task smoke
 scope: research
 interactionSource: single_task
 browser: chrome
+completedResearchTabs: close
 channels:
   - instagram
 creativeBrief:

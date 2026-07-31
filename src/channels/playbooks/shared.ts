@@ -45,7 +45,7 @@ export const canonicalSteps: PlaybookStep[] = [
   },
   {
     id: "release-dedicated-target",
-    instruction: "Release the plugin-owned target after all browser-dependent research and before validating the channel; retain it only for an explicit same-task manual-authentication handoff.",
+    instruction: "Release browser-session control of the plugin-owned target after all browser-dependent research and before validating the channel. Close it by default; when the plan says keep_open, finalize the exact tab as a visible deliverable without later rediscovery or reuse. Retain control only for an explicit same-task manual-authentication handoff.",
     emits: null,
     bound: "one release after browser research and before a normal channel result",
   },

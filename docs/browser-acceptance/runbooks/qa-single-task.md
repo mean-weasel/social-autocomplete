@@ -22,7 +22,8 @@ tab, and receipt. Prove Chrome plus Instagram before adding channels.
 2. Install that revision, then start the one fresh Codex task that will finish
    the live smoke; it creates no child task.
 3. Copy the committed single-task example to `.social-metadata/qa/scenarios/`.
-   Confirm its synthetic brief, locale, exact prefixes, and bounds.
+   Confirm its synthetic brief, locale, exact prefixes, bounds, and
+   `completedResearchTabs` choice. The default is `close`.
 4. After user approval, set `status: approved`, `approvedAt`, and
    `browserAccessAuthorized: true`; keep credentials false and reuse false.
 5. Validate the scenario against the Chrome oracle with `--require-approved`.
@@ -40,8 +41,11 @@ tab, and receipt. Prove Chrome plus Instagram before adding channels.
     candidates and only through the exact input's `aria-controls` or
     `aria-owns` popup. Missing or conflicting ownership is `ui_change`; do not
     broaden to page-global candidates.
-11. Release the tab, record observations with `social-metadata
-    record-observation`, and run `social-metadata validate`.
+11. Release browser-session control of the tab, record observations with
+    `social-metadata record-observation`, and run `social-metadata validate`.
+    For `close`, omit the agent-created tab from finalization. For `keep_open`,
+    finalize it as a deliverable so it stays visible without remaining under
+    plugin control or becoming eligible for later reuse.
 12. Write one ignored, sanitized note and receipt containing revision,
     scenario checksum, timestamps, locale, prefixes, counts, status, and
     structural failure labels—never handles, DOM, screenshots, credentials,

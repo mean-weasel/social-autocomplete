@@ -4,6 +4,7 @@ title: Chrome all-channel autocomplete research
 scope: research
 interactionSource: synthetic_manager
 browser: chrome
+completedResearchTabs: close
 channels:
   - facebook
   - instagram

@@ -37,6 +37,22 @@ Codex in-app Browser is accepted only for playbook-approved public surfaces.
 Every `nextAction` includes the effective `browserSelection`; subprocess
 consumers must use that exact surface.
 
+## Completed research tabs
+
+Before each fresh run, the host asks: **"Should completed research tabs stay
+open? The default is no."** It records the answer as:
+
+```json
+{ "completedResearchTabs": "close" }
+```
+
+The other accepted value is `keep_open`. Missing values from older plans retain
+the backward-compatible `close` default. Every `nextAction` exposes the
+effective value. Both choices release browser-session control before a normal
+result: `close` closes the agent-created tab, while `keep_open` leaves that
+exact tab visible as a user-facing deliverable. Retained tabs are never
+rediscovered, claimed, or reused by the plugin.
+
 The user can adjust the choice before channel-native evidence is captured, or
 after an interruption that contains no native evidence:
 
