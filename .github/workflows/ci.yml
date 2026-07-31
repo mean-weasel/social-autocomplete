@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [codex/qa-automation-pivot]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository:
+    name: Repository contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run validate:repo
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Verify committed runtime is current
+        run: git diff --exit-code -- bin/runtime
+      - name: Lint durable Markdown
+        uses: DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe # v24.1.0
+        with:
+          config: .markdownlint-cli2.jsonc
+          globs: |
+            AGENTS.md
+            README.md
+            skills/**/*.md
+            docs/browser-acceptance/**/*.md
+            docs/integration/**/*.md
+            docs/feature-task-template.md
+
+  offline:
+    name: Offline test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run verify:offline
+      - run: npm run test:diagnostics
+      - run: npm run test:browser-harness
+      - run: npm run test:subprocess-consumer
+
+  package:
+    name: Packed plugin smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:ci-contract
+      - run: npm run test:package
+
+  required:
+    name: Required
+    if: always()
+    needs: [repository, offline, package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every CI job
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: test "$RESULTS" = "success,success,success"

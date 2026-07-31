@@ -8,14 +8,17 @@ Dedicated QA repository: {{QA_REPOSITORY}}
 QA scope: {{QA_SCOPE}}
 
 Approved scenario:
+
 - path: {{SCENARIO_PATH}}
 - SHA-256: {{SCENARIO_SHA256}}
 
 Independent oracle:
+
 - path: {{ORACLE_PATH}}
 - SHA-256: {{ORACLE_SHA256}}
 
 Manager/worker protocol:
+
 - path: {{PROTOCOL_PATH}}
 - SHA-256: {{PROTOCOL_SHA256}}
 
