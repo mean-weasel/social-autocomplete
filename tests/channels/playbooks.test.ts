@@ -202,13 +202,23 @@ test("channel caveats preserve observed limitations", () => {
   assert.equal(getPlaybook("youtube").modules.hashtag.autocompleteEvidence, "confirmed_live");
 });
 
-test("Instagram and LinkedIn use one finite accessible-name Search projection", () => {
-  for (const channel of ["instagram", "linkedin"] as const) {
+test("authenticated channels use closed finite accessible-name Search allowlists", () => {
+  const expectedNames = {
+    instagram: ["Search", "Search input"],
+    facebook: ["Search Facebook"],
+    linkedin: ["Search", "Search by title, skill, or company", "Click to start a search"],
+  } as const;
+  for (const channel of ["instagram", "facebook", "linkedin"] as const) {
     const instruction = getPlaybook(channel).entryInstruction;
-    assert.match(instruction, /exact accessible-name Search roles/i);
+    assert.match(instruction, /closed exact accessible-name allowlist/i);
     for (const role of ["searchbox", "combobox", "textbox", "link", "button"]) {
       assert.match(instruction, new RegExp(`\\b${role}\\b`, "i"));
     }
+    for (const name of expectedNames[channel]) {
+      assert.ok(instruction.includes(name), `${channel} is missing exact name ${name}`);
+    }
+    assert.match(instruction, /each role\/name pair directly/i);
+    assert.match(instruction, /exactly one visible allowed match/i);
     assert.match(instruction, /one evidenced in-origin activation/i);
     assert.match(instruction, /one identical repeat/i);
     assert.match(instruction, /target_unavailable is reserved for an unmatched target/i);

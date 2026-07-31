@@ -6,7 +6,7 @@ export const facebookPlaybook = {
     publicCompletion: false,
     supportedBrowsers: { codex: ["chrome"], claude: ["chrome"] },
     dedicatedTarget: dedicatedTargetPolicy("facebook"),
-    entryInstruction: "Create a plugin-owned Facebook target at the typed official root in the user-controlled signed-in Chrome session. Proceed only on facebook_search with facebook_native_search_entry; an authenticated shell or lost dedicated target is ui_change.",
+    entryInstruction: "Create a plugin-owned Facebook target at the typed official root in the user-controlled signed-in Chrome session. Project entry roles (searchbox, combobox, textbox) only through the closed exact accessible-name allowlist Search Facebook; project navigation roles (link, button) only through Search and Search Facebook. Query each role/name pair directly, require exactly one visible allowed match, and permit at most one evidenced in-origin activation plus one identical repeat. Proceed only on facebook_search with facebook_native_search_entry; a matched authenticated shell reports facebook_authenticated_navigation, while target_unavailable is reserved for an unmatched target.",
     semanticCheckpoints: [
         { id: "facebook-channel", purpose: "channel", description: "Facebook identity is visible.", evidenceStatus: "confirmed_live", required: true, failureCode: "ui_change" },
         { id: "facebook-auth", purpose: "access", description: "The surface is not the Facebook login page.", evidenceStatus: "confirmed_live", required: true, failureCode: "authentication_required" },

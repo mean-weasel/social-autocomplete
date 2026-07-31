@@ -115,10 +115,14 @@ once and repeat the same projection. Do not guess a URL or selector, broaden
 the read, inspect page text, or try a second recovery. Results landmarks are
 required after query interaction begins, not during entry preflight.
 
-That projection is a finite accessibility query, never a DOM scan. Query only
-the exact accessible name `Search` through `searchbox`, `combobox`, or
-`textbox` roles for the direct entry and `link` or `button` roles for the
-optional navigation control. Require exactly one visible match before using
-it. Never enumerate or slice generic element collections. A matched Instagram
-shell or LinkedIn Feed must retain its enumerated navigation landmark;
+That projection is a finite accessibility query, never a DOM scan. Use the
+closed per-channel exact accessible-name allowlists: Instagram entries
+`Search`/`Search input` and navigation `Search`; Facebook entry `Search
+Facebook` and navigation `Search`/`Search Facebook`; LinkedIn entries
+`Search`/`Search by title, skill, or company` and navigation `Search`/`Click to
+start a search`. Query only `searchbox`, `combobox`, or `textbox` roles for
+entries and `link` or `button` roles for navigation, one exact role/name pair
+at a time. Require exactly one visible allowed match across the finite
+projection before using it. Never use regex/fuzzy names or enumerate or slice
+generic element collections. A matched Instagram shell or LinkedIn Feed must retain its enumerated navigation landmark;
 `target_unavailable` is valid only when `targetMatched=false`.

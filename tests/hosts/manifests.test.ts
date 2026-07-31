@@ -91,13 +91,14 @@ test("authenticated Search recovery is finite, accessible, and diagnostic-safe",
   const documents = await Promise.all([
     readFile("skills/_shared/browser-research-contract.md", "utf8"),
     readFile("skills/instagram-metadata-research/SKILL.md", "utf8"),
+    readFile("skills/facebook-metadata-research/SKILL.md", "utf8"),
     readFile("skills/linkedin-metadata-research/SKILL.md", "utf8"),
     readFile("docs/browser-acceptance/runbooks/qa-worker.md", "utf8"),
     readFile("docs/browser-acceptance/prompts/qa-worker-dispatch.md", "utf8"),
   ]);
 
   for (const document of documents) {
-    assert.match(document, /accessible-name\s+`?Search`?/i);
+    assert.match(document, /exact accessible-name/i);
     for (const role of ["searchbox", "combobox", "textbox", "link", "button"]) {
       assert.match(document, new RegExp(`\\b${role}\\b`, "i"));
     }
@@ -106,7 +107,12 @@ test("authenticated Search recovery is finite, accessible, and diagnostic-safe",
     assert.match(document, /target_unavailable/i);
   }
 
-  for (const document of [documents[0], documents[3], documents[4]]) {
+  assert.match(documents[1], /`Search input`/);
+  assert.match(documents[2], /`Search Facebook`/);
+  assert.match(documents[3], /`Search by title, skill, or company`/);
+  assert.match(documents[3], /`Click to start a search`/);
+
+  for (const document of [documents[0], documents[4], documents[5]]) {
     assert.match(document, /Never (?:use |enumerate or slice )`?querySelectorAll`?/i);
   }
 });

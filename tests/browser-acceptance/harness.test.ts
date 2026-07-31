@@ -305,8 +305,10 @@ test("authenticated preflight contract prohibits broad reads and limits its proj
   assert.match(sharedContract, /create one new agent tab/i);
   assert.match(sharedContract, /Never guess a URL or selector/i);
   assert.match(sharedContract, /Never repeat a preflight with a broader tab or DOM read/i);
-  assert.match(sharedContract, /finite accessibility query set/i);
-  assert.match(sharedContract, /exact accessible-name `Search`/i);
+  assert.match(sharedContract, /finite projection/i);
+  assert.match(sharedContract, /closed channel-specific exact accessible-name allowlist/i);
+  assert.match(sharedContract, /every role\/name pair directly and separately/i);
+  assert.match(sharedContract, /never use a regex or fuzzy match/i);
   assert.match(sharedContract, /Never enumerate or slice `querySelectorAll`/i);
   assert.match(sharedContract, /`targetMatched=true` must use the channel's authenticated-shell\/feed observed landmark/i);
   assert.match(sharedContract, /only `targetMatched=false` may use `target_unavailable`/i);

@@ -10,6 +10,7 @@ Follow [the shared browser research contract](../_shared/browser-research-contra
 - Require a user-controlled signed-in Chrome session; public completion is not allowed.
 - Create a new plugin-owned agent tab at the typed official root `https://www.facebook.com/`; never search for or reuse an existing Facebook tab.
 - Require `targetMatched=true`. Only `facebook_search` with expected and observed `facebook_native_search_entry` may proceed. `facebook_authenticated_shell` with `facebook_authenticated_navigation`, or `facebook_target_unavailable` with `target_unavailable`, is `ui_change`.
+- Project entry roles (`searchbox`, `combobox`, `textbox`) only through the closed exact accessible-name allowlist `Search Facebook`; project navigation roles (`link`, `button`) only through `Search` and `Search Facebook`. Query each role/name pair directly, count visible allowed matches across the finite projection, and require exactly one visible allowed match. Never use regex/fuzzy names or enumerate generic element collections.
 - If authenticated navigation exposes an evidenced native Search navigation control, the shared contract permits exactly one in-origin activation and one repeat of the same bounded structural projection. Never guess a URL or selector.
 - Require permission-scoped result landmarks only after a query interaction begins.
 - Search terms use ordinary phrase prefixes and accept only native phrase completions.

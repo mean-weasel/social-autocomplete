@@ -92,11 +92,17 @@ exactly `protocol`, `runId`, `sequence`, `checkpointId`, `channel`, and
 Exact-copy its hash before recreating from the typed official root. Never treat
 it as a resent initial acknowledgement or read private manager state.
 
-For Instagram and LinkedIn Search readiness, use only exact accessible-name
-`Search` role locators: `searchbox`, `combobox`, or `textbox` for the entry
-and `link` or `button` for the optional navigation control. Require exactly
-one visible match. Never enumerate or slice `querySelectorAll`, generic input
-or control collections, or page text. If the direct entry is absent and
+For authenticated Search readiness, use only these closed exact accessible-name
+allowlists: Instagram entry roles (`searchbox`, `combobox`, `textbox`) use
+`Search` and `Search input`, with navigation roles (`link`, `button`) using
+`Search`; Facebook entry roles use `Search Facebook`, with navigation roles
+using `Search` and `Search Facebook`; LinkedIn entry roles use `Search` and
+`Search by title, skill, or company`, with navigation roles using `Search` and
+`Click to start a search`. Query every role/name pair directly and separately
+with exact string matching, count visible allowed matches across the finite
+projection, and require exactly one visible allowed match. Never use regex or fuzzy
+names. Never enumerate or slice `querySelectorAll`, generic input or control collections, or page
+text. If the direct entry is absent and
 exactly one navigation control exists, activate it once and repeat the same
 finite projection once. With `targetMatched=true`, report the channel's
 authenticated-shell/feed navigation landmark; reserve `target_unavailable`

@@ -279,11 +279,17 @@ unselected channel.
   Repeat the same bounded structural check.
 - [ ] If a challenge is visible, record `challenge` and wait for the user.
 - [ ] If the target is matched and authenticated but its search entry is
-  absent, use only the finite exact-accessible-name `Search` projection:
-  `searchbox`, `combobox`, or `textbox` for the entry and `link` or `button`
-  for the optional navigation control. Query those roles directly. Require
-  exactly one visible entry or exactly one visible navigation control; zero
-  or multiple matches fail closed.
+  absent, use only the closed channel-specific exact accessible-name
+  projection: Instagram entry roles (`searchbox`, `combobox`, `textbox`) use
+  `Search` and `Search input`, and navigation roles (`link`, `button`) use
+  `Search`; Facebook entry roles use `Search Facebook`, and navigation roles
+  use `Search` and `Search Facebook`; LinkedIn entry roles use `Search` and
+  `Search by title, skill, or company`, and navigation roles use `Search` and
+  `Click to start a search`. Query every role/name pair directly and
+  separately with exact string matching. Count visible allowed matches across
+  the finite projection and require exactly one visible allowed entry match or
+  exactly one visible allowed navigation-control match; zero, multiple, or
+  conflicting matches fail closed.
 - [ ] Never use `querySelectorAll`, generic input/control collections, an
   arbitrary element limit, or array slicing to discover Search. Do not inspect
   page text. Allow exactly one recovery only when the finite projection
