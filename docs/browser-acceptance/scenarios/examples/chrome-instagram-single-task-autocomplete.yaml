@@ -1,0 +1,49 @@
+schemaVersion: qa-scenario/v1
+scenarioId: chrome_instagram_single_task_autocomplete
+title: Chrome Instagram single-task autocomplete smoke
+scope: research
+interactionSource: single_task
+browser: chrome
+channels:
+  - instagram
+creativeBrief:
+  summary: A fictional productivity app launching collaborative project notes.
+  synthetic: true
+locale:
+  uiLocale: en-US
+  region: US
+  timezone: America/Phoenix
+modules:
+  - hashtag
+  - search-term
+evidenceTier: autocomplete_only
+mode: automatic
+queryPrefixes:
+  hashtag:
+    - "#productivity"
+  search-term:
+    - productivity app
+authentication:
+  byChannel:
+    instagram:
+      expectedState: already_signed_in
+  ifRequired: stop
+  ifChallenge: stop
+interruptionPolicy:
+  unexpectedRequest: stop
+  authenticationRequired: stop
+  challenge: stop
+  localeMismatch: stop
+  uiChange: stop
+bounds:
+  maxPrefixesPerModule: 1
+  maxSuggestionsPerPrefix: 5
+  maxResultsPerCandidate: 1
+  maxRefinementRounds: 1
+authorization:
+  status: unapproved
+  purpose: qa_only
+  reusable: false
+  requireHumanBeforeBrowserAccess: true
+  browserAccessAuthorized: false
+  credentialsAuthorized: false

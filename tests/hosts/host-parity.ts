@@ -102,7 +102,7 @@ export async function checkHostParity(): Promise<{ ok: true; hosts: number; skil
   assert.deepEqual(contract.shared.dedicatedTarget, {
     ownership: "plugin_owned",
     scope: "task_channel",
-    acquisition: "new_agent_tab_after_action_acknowledgement",
+    acquisition: "new_agent_tab_from_retained_task_browser_binding",
     navigation: "typed_official_root_only",
     userTabs: "never_list_claim_inspect_or_reuse",
     rawHandle: "host_runtime_only",

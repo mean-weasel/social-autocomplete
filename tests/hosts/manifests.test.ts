@@ -85,6 +85,9 @@ test("primary skill supports discovery, direct invocation, and incremental resea
   assert.match(skill, /account identifiers/i);
   assert.match(skill, /only structural booleans, sanitized lifecycle\/status values, a deterministic lease hash, and short expected\/observed semantic landmarks/i);
   assert.match(skill, /must not\s+trigger a broader tab or DOM\s+read/i);
+  assert.match(skill, /Establish the selected host browser binding once/i);
+  assert.match(skill, /new user turn does not\s+invalidate the binding/i);
+  assert.doesNotMatch(skill, /QA_CHECKPOINT_ACK/i);
 });
 
 test("authenticated Search recovery is finite, accessible, and diagnostic-safe", async () => {
