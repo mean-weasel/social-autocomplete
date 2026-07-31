@@ -73,6 +73,10 @@ Keep only campaign ID and scope hash in the private scenario; ordinal, pin, and
 grant hashes remain detached. Hash original scenario/oracle bytes before
 decoding, validate with `--campaign-grant <grant-path> --require-approved`,
 and pass the detached grant as `campaignGrant` to `qa-recovery.mjs create`.
+The campaign-marked scenario remains `unapproved` with
+`browserAccessAuthorized:false`; only an exact matching detached child grant
+is effective dispatch approval. Never mutate the pinned scenario bytes after
+grant issuance.
 It must bind the resolved state path before exclusive creation. Populate the campaign placeholders
 in the worker dispatch. The grant replaces only the repeated human release;
 every per-run one-time authorization, ACK/hash, post-ACK binding, action,

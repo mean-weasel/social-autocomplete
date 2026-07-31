@@ -193,6 +193,7 @@ export function checkQaCompatibility(
   }
 
   const authorization = scenario.authorization ?? {};
+  let campaignGrantAuthorizes = false;
   if (authorization.credentialsAuthorized !== false) {
     push(
       "/authorization/credentialsAuthorized",
@@ -205,20 +206,6 @@ export function checkQaCompatibility(
       "/authorization/expiresAt",
       "approval_expired",
       "scenario approval has expired",
-    );
-  }
-  if (requireApproved && authorization.status !== "approved") {
-    push(
-      "/authorization/status",
-      "approval_required",
-      "dispatch requires an explicitly approved scenario",
-    );
-  }
-  if (requireApproved && authorization.browserAccessAuthorized !== true) {
-    push(
-      "/authorization/browserAccessAuthorized",
-      "browser_authorization_required",
-      "dispatch requires explicit browser access authorization",
     );
   }
   const campaign = authorization.campaign;
@@ -271,6 +258,8 @@ export function checkQaCompatibility(
             "campaign_grant_mismatch",
             "scenario does not exactly match the campaign child grant",
           );
+        } else {
+          campaignGrantAuthorizes = true;
         }
       } catch {
         push(
@@ -285,6 +274,28 @@ export function checkQaCompatibility(
       "/authorization/campaign",
       "campaign_binding_missing",
       "campaign grant was supplied for an unbound scenario",
+    );
+  }
+  if (
+    requireApproved &&
+    authorization.status !== "approved" &&
+    !campaignGrantAuthorizes
+  ) {
+    push(
+      "/authorization/status",
+      "approval_required",
+      "dispatch requires an explicitly approved scenario or exact campaign child grant",
+    );
+  }
+  if (
+    requireApproved &&
+    authorization.browserAccessAuthorized !== true &&
+    !campaignGrantAuthorizes
+  ) {
+    push(
+      "/authorization/browserAccessAuthorized",
+      "browser_authorization_required",
+      "dispatch requires explicit browser access authorization or exact campaign child grant",
     );
   }
 
@@ -331,6 +342,12 @@ export async function validateQaConfig({
     );
   }
 
+  const campaignGrantAuthorizes =
+    requireApproved &&
+    campaignGrantDocument !== null &&
+    scenarioDocument.value?.authorization?.campaign !== undefined &&
+    errors.length === 0;
+
   return {
     ok: errors.length === 0,
     protocolVersion: oracleDocument.value?.protocolVersion ?? null,
@@ -338,9 +355,12 @@ export async function validateQaConfig({
     scenarioSha256: scenarioDocument.sha256,
     oracleId: oracleDocument.value?.oracleId ?? null,
     oracleSha256: oracleDocument.sha256,
-    approved: scenarioDocument.value?.authorization?.status === "approved",
+    approved:
+      scenarioDocument.value?.authorization?.status === "approved" ||
+      campaignGrantAuthorizes,
     browserAccessAuthorized:
-      scenarioDocument.value?.authorization?.browserAccessAuthorized === true,
+      scenarioDocument.value?.authorization?.browserAccessAuthorized === true ||
+      campaignGrantAuthorizes,
     requireHumanBeforeBrowserAccess:
       scenarioDocument.value?.authorization?.requireHumanBeforeBrowserAccess ??
       null,

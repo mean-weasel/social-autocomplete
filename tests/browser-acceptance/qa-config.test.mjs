@@ -205,9 +205,8 @@ test("campaign dispatch requires and exact-matches the one-time child grant", as
   const scenario = scenarioFor(base, "chrome", ["instagram", "facebook", "linkedin"]);
   scenario.scenarioId = "chrome_instagram_facebook_linkedin_autocomplete";
   scenario.authorization = {
-    ...scenario.authorization, status: "approved", approvedAt: "2026-07-30T00:02:00Z",
-    expiresAt: "2026-08-06T00:00:00Z", reusable: false,
-    requireHumanBeforeBrowserAccess: false, browserAccessAuthorized: true,
+    ...scenario.authorization, status: "unapproved", reusable: false,
+    requireHumanBeforeBrowserAccess: false, browserAccessAuthorized: false,
     credentialsAuthorized: false,
     campaign: { campaignId: "campaign_config_01", campaignScopeSha256: campaignScopeSha256() },
   };
@@ -290,6 +289,8 @@ test("campaign dispatch requires and exact-matches the one-time child grant", as
     campaignGrantPath: grantFixture,
   });
   assert.equal(result.ok, true, JSON.stringify(result.errors));
+  assert.equal(result.approved, true);
+  assert.equal(result.browserAccessAuthorized, true);
   assert.equal(result.campaignId, grant.campaignId);
   assert.equal(result.campaignGrantSha256, grant.grantSha256);
 
