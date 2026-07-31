@@ -224,3 +224,19 @@ test("authenticated channels use closed finite accessible-name Search allowlists
     assert.match(instruction, /target_unavailable is reserved for an unmatched target/i);
   }
 });
+
+test("Instagram and Facebook scope autocomplete to one entry-owned popup", () => {
+  for (const channel of ["instagram", "facebook"] as const) {
+    const instruction = getPlaybook(channel).entryInstruction;
+    assert.match(instruction, /aria-controls or aria-owns/i);
+    assert.match(instruction, /relationship value runtime-private/i);
+    assert.match(instruction, /exactly one visible owned popup/i);
+    for (const role of ["option", "listitem", "link", "button"]) {
+      assert.match(instruction, new RegExp(`\\b${role}\\b`, "i"));
+    }
+    assert.match(instruction, /at most ten visible/i);
+    assert.match(instruction, /scoped inside it/i);
+    assert.match(instruction, /Missing, multiple, or conflicting ownership is ui_change, never native empty/i);
+  }
+  assert.doesNotMatch(getPlaybook("linkedin").entryInstruction, /aria-controls|aria-owns/i);
+});

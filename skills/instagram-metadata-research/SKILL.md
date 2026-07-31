@@ -14,6 +14,7 @@ Follow [the shared browser research contract](../_shared/browser-research-contra
 - If authenticated navigation exposes exactly one evidenced native Search navigation control, the shared contract permits exactly one in-origin activation and one repeat of that same finite projection. Never guess a URL or selector.
 - With `targetMatched=true`, a missing entry remains `instagram_authenticated_shell` / `instagram_authenticated_navigation`; reserve `instagram_target_unavailable` / `target_unavailable` for `targetMatched=false`.
 - Require native result landmarks only after a query interaction begins.
+- After filling a prefix into the exact entry, inspect only its `aria-controls` or `aria-owns` relationship. Keep the relationship value runtime-private, require exactly one visible owned popup, then capture at most ten visible `option`, `listitem`, `link`, or `button` candidates scoped inside it. Never query those roles page-wide. Missing, multiple, or conflicting ownership is `ui_change`, not native empty.
 - Search terms use ordinary phrases; hashtags use `#` plus an unspaced phrase.
 - Preserve personalization and restricted-hashtag states. Reject restricted tags with the visible native reason.
 - Never treat a login screen, missing dropdown, or restricted tag as native empty.

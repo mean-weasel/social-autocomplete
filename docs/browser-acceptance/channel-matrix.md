@@ -126,3 +126,13 @@ at a time. Require exactly one visible allowed match across the finite
 projection before using it. Never use regex/fuzzy names or enumerate or slice
 generic element collections. A matched Instagram shell or LinkedIn Feed must retain its enumerated navigation landmark;
 `target_unavailable` is valid only when `targetMatched=false`.
+
+After an exact Instagram or Facebook entry accepts a planned prefix, resolve
+only that entry's `aria-controls` or `aria-owns` accessibility relationship.
+Keep the relationship value inside the browser runtime, require exactly one
+visible owned popup, and query only `option`, `listitem`, `link`, or `button`
+roles scoped inside it. Capture at most ten visible candidates. Never query
+those roles page-wide, return the relationship value, guess a selector, or
+interpret absent, multiple, conflicting, or still-empty ownership as native
+empty; record `ui_change` instead. LinkedIn is not authorized to use this
+projection until its exact entry checkpoint passes.

@@ -108,6 +108,15 @@ finite projection once. With `targetMatched=true`, report the channel's
 authenticated-shell/feed navigation landmark; reserve `target_unavailable`
 for `targetMatched=false`.
 
+For Instagram and Facebook only, after filling a planned prefix into the exact
+entry, inspect only that entry's `aria-controls` or `aria-owns` relationship.
+Keep its value runtime-private, require exactly one visible owned popup, and
+query only `option`, `listitem`, `link`, or `button` roles scoped inside it.
+Capture at most ten visible candidates. Never query those roles page-wide,
+return or persist the relationship value, guess a selector, or treat absent,
+multiple, conflicting, or still-empty ownership as native empty. LinkedIn may
+not use this projection before its exact entry checkpoint passes.
+
 Authenticated browser work may use only the user's existing visible Chrome
 profile. Never launch temporary or profile-less Chromium. Public browser work
 may use only surfaces permitted by the channel matrix. Never publish, enter a

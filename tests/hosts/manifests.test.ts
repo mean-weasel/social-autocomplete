@@ -115,4 +115,14 @@ test("authenticated Search recovery is finite, accessible, and diagnostic-safe",
   for (const document of [documents[0], documents[4], documents[5]]) {
     assert.match(document, /Never (?:use |enumerate or slice )`?querySelectorAll`?/i);
   }
+
+  for (const document of [documents[0], documents[1], documents[2], documents[4], documents[5]]) {
+    assert.match(document, /`aria-controls` or `aria-owns`/i);
+    assert.match(document, /runtime-private|inside the browser runtime/i);
+    assert.match(document, /exactly one visible (?:owned|related) popup/i);
+    assert.match(document, /at most ten visible/i);
+    assert.match(document, /page-wide|page-global/i);
+    assert.match(document, /native empty/i);
+  }
+  assert.doesNotMatch(documents[3], /`aria-controls`|`aria-owns`/i);
 });

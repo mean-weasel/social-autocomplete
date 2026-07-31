@@ -322,6 +322,12 @@ creative brief and intended channels.
   supported.
 - [ ] Confirm `autocomplete_only` is the default evidence tier.
 - [ ] Enter each planned prefix exactly and record the exact prefix.
+- [ ] For Instagram and Facebook, resolve autocomplete only from the exact
+  entry's `aria-controls` or `aria-owns` relationship. Keep the relationship
+  value runtime-private, require exactly one visible owned popup, and query
+  only `option`, `listitem`, `link`, or `button` roles scoped inside it. Never
+  query those roles page-wide or guess a selector. Absent, multiple,
+  conflicting, or still-empty ownership is `ui_change`, not native empty.
 - [ ] Capture at most ten visible native suggestions in displayed order.
 - [ ] Record suggestion type and safe auxiliary labels without treating order
   as popularity or performance proof.

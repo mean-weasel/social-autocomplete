@@ -312,6 +312,13 @@ test("authenticated preflight contract prohibits broad reads and limits its proj
   assert.match(sharedContract, /Never enumerate or slice `querySelectorAll`/i);
   assert.match(sharedContract, /`targetMatched=true` must use the channel's authenticated-shell\/feed observed landmark/i);
   assert.match(sharedContract, /only `targetMatched=false` may use `target_unavailable`/i);
+  assert.match(sharedContract, /inspect only `aria-controls` or `aria-owns` on the already exact-matched entry/i);
+  assert.match(sharedContract, /keep the relationship value inside the browser runtime/i);
+  assert.match(sharedContract, /exactly one visible related popup/i);
+  assert.match(sharedContract, /at most ten visible native suggestions/i);
+  assert.match(sharedContract, /Never return or persist the relationship value/i);
+  assert.match(sharedContract, /inspect page-global candidate roles/i);
+  assert.match(sharedContract, /absent, multiple, conflicting, or still-empty ownership as native empty/i);
   for (const contract of [readme, sharedContract, researchSkill]) {
     assertPostAcknowledgementAcquisitionContract(contract);
   }
