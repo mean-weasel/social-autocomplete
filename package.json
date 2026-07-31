@@ -41,6 +41,10 @@
     "test:qa-single-task": "node --test tests/browser-acceptance/qa-single-task.test.mjs",
     "test:qa-campaign": "node --test tests/browser-acceptance/qa-campaign.test.mjs",
     "test:qa-recovery": "node --test tests/browser-acceptance/qa-recovery.test.mjs",
+    "test:ci-contract": "node --test tests/ci/ci-contract.test.mjs",
+    "test:package": "npm run build --silent && node scripts/ci/package-smoke.mjs",
+    "validate:repo": "node scripts/ci/validate-repository.mjs",
+    "verify:ci": "npm run validate:repo && npm run verify:offline && npm run test:diagnostics && npm run test:browser-harness && npm run test:subprocess-consumer && npm run test:ci-contract && npm run test:package",
     "qa:scenario:validate": "node scripts/browser-acceptance/validate-qa-config.mjs",
     "verify:release": "node scripts/browser-acceptance/verify-release.mjs"
   },
