@@ -49,7 +49,7 @@
     "verify:release": "node scripts/browser-acceptance/verify-release.mjs"
   },
   "devDependencies": {
-    "@types/node": "^22.15.30",
+    "@types/node": "^26.1.2",
     "ajv": "^8.17.1",
     "typescript": "^5.8.3",
     "yaml": "^2.8.1"
