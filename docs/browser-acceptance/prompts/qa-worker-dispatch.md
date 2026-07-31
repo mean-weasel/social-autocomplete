@@ -73,15 +73,22 @@ one bounded browser lifecycle with the declared 60000 ms timeout and no retry.
 In that same post-acknowledgement continuation, resolve the exact selected host
 binding again. Emit no commentary, protocol event, manager/worker message, or
 other worker output between that resolution and the immediate `tabs.new` call.
-Create one new agent tab, navigate only to the playbook's typed official root,
-and record the exact manager-supplied task-scoped lease hash. If binding
+Create one new agent tab and navigate only to the playbook's typed official
+root. For a normal non-authentication action, create, inspect, persist the
+sanitized outcome, and release that exact target in this same Codex turn. Emit
+no commentary, protocol event, manager/worker message, or other output between
+`tabs.new` and release. Only after release emit one sanitized
+`browser_action_completed` checkpoint with the unchanged lease hash, typed
+official root, `targetOwnership:"plugin_owned"`,
+`targetLifecycle:"released"`, action hash, fixed timeout, and outcome hash;
+the manager atomically finalizes the target and action. If binding
 resolution or `tabs.new` fails now, the action remains non-replayable `started`
 and stops as `ambiguous_browser_action`; do not retry, request another
 acknowledgement, or reuse the pre-ACK probe. Never list, claim, inspect, or reuse
-user tabs and never persist its raw binding, handle, or ID. Release the target
-before durably storing the sanitized outcome and record
-`browser_action_completed` with its hash, and persist the result from that
-exact outcome before emission. On recovery, use the manager-supplied
+user tabs and never persist its raw binding, handle, or ID. A failure before
+atomic finalization remains terminal ambiguity and never authorizes target
+rediscovery or action replay. Persist the result from the exact stored outcome
+before emission. On recovery, use the manager-supplied
 durable checkpoint. Never resend an accepted response, repeat an action at
 `started` or `completed`, or revisit a completed channel. Stop on any
 checkpoint contradiction. Explicit `authentication_handoff` retains the live

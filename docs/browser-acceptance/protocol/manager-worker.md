@@ -163,23 +163,33 @@ precedes the external browser call. In that same post-acknowledgement worker
 continuation, the worker resolves the exact selected host binding again and,
 without commentary, a protocol event, a manager/worker message, or any other
 intermediate worker output, immediately invokes `tabs.new` on it. The worker
-then navigates only to the channel's typed official root, keeps the raw binding
-and handle in the host runtime, and records `record_target_created` with the
-unchanged manager-supplied lease hash. The reducer compares it with the
-persisted canonical value. A post-acknowledgement binding-resolution or
+then navigates only to the channel's typed official root and keeps the raw
+binding and handle in the host runtime. For a normal non-authentication action,
+target creation, bounded inspection, sanitized outcome persistence, and
+release must all finish in this same Codex turn. No commentary, protocol event,
+manager/worker message, or other output may occur between `tabs.new` and
+release of that exact target. Only after release may the worker emit one
+sanitized `browser_action_completed` checkpoint containing the unchanged lease
+hash, typed official root, `targetOwnership:"plugin_owned"`,
+`targetLifecycle:"released"`, action hash, fixed timeout, and outcome hash.
+The manager applies `finalize_browser_action`, which exact-checks those fields
+and atomically advances the target from `not_created` to `released` and the
+action from `started` to `completed`. A post-acknowledgement binding-resolution or
 `tabs.new` failure remains `started`, stops as `ambiguous_browser_action`, and
 cannot be retried, re-acknowledged, or recovered from `not_created`. It never
 lists, claims, inspects, or reuses user tabs.
 If acknowledgement delivery or manager
 state becomes uncertain after that transition, the run stops as
 `ambiguous_browser_action`; the manager never resends the acknowledgement. The
-worker records `release_target` before it durably stores the sanitized outcome
-and records `browser_action_completed` with its hash. Action completion is
-rejected unless target lifecycle is `released`. It
-persists the channel result from that stored outcome before emitting it. These
-checkpoint events contain only run IDs, sequence numbers, enumerated
-channel/action labels, bounded timeout, and hashes; they never contain browser
-or page content.
+If the same-turn lifecycle fails after `tabs.new` but before the atomic
+finalization checkpoint, the manager's conservative `started` state remains
+terminally ambiguous even when the worker may have closed the target; the
+action is never replayed and the target is never rediscovered. Authentication
+handoff and its distinct recreation lease remain on the existing granular
+target lifecycle path. The worker persists the channel result from the stored
+outcome before emitting it. Checkpoint events contain only run IDs, sequence
+numbers, enumerated channel/action/lifecycle labels, typed official roots,
+bounded timeout, and hashes; they never contain browser or page content.
 
 After a terminal host failure, only the manager may reserve and create a
 recovery continuation. The retry limit is exactly one recovery continuation
@@ -276,9 +286,11 @@ The worker emits:
   persisted for the selected channel and task turn, before the action-start
   checkpoint;
 - `browser_action_started` with `actionHash` and `timeoutMs:60000` before the
-  manager acknowledgement; `target_created` and `target_released` lifecycle
-  results around one bounded authorized channel action; and
-  `browser_action_completed` only after release;
+  manager acknowledgement; for normal non-authentication work, one
+  `browser_action_completed` only after the uninterrupted create-inspect-release
+  lifecycle, carrying the sanitized released target and outcome hashes needed
+  for atomic `finalize_browser_action`; authentication recovery retains its
+  separate target lifecycle checkpoints;
 - `channel_complete` after every completed channel, including a truthful
   `ui_change` or `not_applicable` result;
 - `authentication_required`, `challenge`, `locale_mismatch`, or

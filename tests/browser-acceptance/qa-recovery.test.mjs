@@ -1032,6 +1032,121 @@ test("failure after durable action completion resumes at result persistence", ()
   );
 });
 
+test("one post-ACK finalization atomically records a released target and completed action", () => {
+  const issuance = issueQaCheckpointAck(initialAckReadyState());
+  const leaseHash = issuance.acknowledgement.targetLeaseHash;
+  const state = apply(issuance.state, {
+    type: "finalize_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    officialRoot: "https://www.instagram.com/",
+    targetOwnership: "plugin_owned",
+    targetLifecycle: "released",
+    leaseHash,
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+    outcomeHash: HASH_D,
+  });
+  assert.equal(state.protocol.pending.action.target.state, "released");
+  assert.equal(state.protocol.pending.action.state, "completed");
+  assert.equal(state.protocol.pending.action.outcomeHash, HASH_D);
+  assert.deepEqual(recoveryCheckpoint(state), {
+    ok: true,
+    resumeAt: "persist_channel_result",
+  });
+});
+
+test("atomic finalization rejects unacknowledged, substituted, or unreleased target evidence", () => {
+  const unissued = initialAckReadyState();
+  const issuance = issueQaCheckpointAck(unissued);
+  const leaseHash = issuance.acknowledgement.targetLeaseHash;
+  const valid = {
+    type: "finalize_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    officialRoot: "https://www.instagram.com/",
+    targetOwnership: "plugin_owned",
+    targetLifecycle: "released",
+    leaseHash,
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+    outcomeHash: HASH_D,
+  };
+  assert.throws(() => apply(unissued, valid), /acknowledgement was not durably issued/);
+  for (const [change, pattern] of [
+    [{ actor: "manager" }, /must be recorded by worker/],
+    [{ channel: "facebook" }, /channel mismatch/],
+    [{ browser: "in_app" }, /browser mismatch/],
+    [{ leaseHash: HASH_A }, /lease mismatch/],
+    [{ officialRoot: "https://example.invalid/" }, /typed official root/],
+    [{ targetOwnership: "user_owned" }, /ownership mismatch/],
+    [{ targetLifecycle: "created" }, /requires a released target/],
+    [{ action: "unbounded_research" }, /action label mismatch/],
+    [{ actionHash: HASH_A }, /action hash mismatch/],
+    [{ timeoutMs: 1 }, /timeout must be 60000 ms/],
+    [{ outcomeHash: "invalid" }, /outcomeHash must be a SHA-256 hash/],
+  ]) {
+    assert.throws(() => apply(issuance.state, { ...valid, ...change }), pattern);
+  }
+});
+
+test("atomic finalization requires every sanitized field and rejects raw target transport", () => {
+  const issuance = issueQaCheckpointAck(initialAckReadyState());
+  const valid = {
+    type: "finalize_browser_action",
+    actor: "worker",
+    channel: "instagram",
+    browser: "chrome",
+    officialRoot: "https://www.instagram.com/",
+    targetOwnership: "plugin_owned",
+    targetLifecycle: "released",
+    leaseHash: issuance.acknowledgement.targetLeaseHash,
+    action: QA_BROWSER_ACTION,
+    actionHash: ACTION_HASH,
+    timeoutMs: QA_BROWSER_ACTION_TIMEOUT_MS,
+    outcomeHash: HASH_D,
+  };
+  for (const field of Object.keys(valid)) {
+    const missing = { ...valid };
+    delete missing[field];
+    assert.throws(
+      () => apply(issuance.state, missing),
+      /finalize_browser_action fields mismatch|event type is required/,
+      `missing ${field} must fail closed`,
+    );
+  }
+  for (const extra of [
+    { targetId: "raw-target-id" },
+    { targetHandle: "raw-target-handle" },
+    { binding: { raw: true } },
+  ]) {
+    assert.throws(
+      () => apply(issuance.state, { ...valid, ...extra }),
+      /finalize_browser_action fields mismatch/,
+    );
+  }
+  assert.equal(issuance.state.protocol.pending.action.target.state, "not_created");
+  assert.equal(issuance.state.protocol.pending.action.state, "started");
+  assert.equal(issuance.state.protocol.pending.action.outcomeHash, null);
+});
+
+test("failure before atomic finalization remains non-replayable terminal ambiguity", () => {
+  const issuance = issueQaCheckpointAck(initialAckReadyState());
+  assert.deepEqual(recoveryCheckpoint(issuance.state), {
+    ok: false,
+    reason: "ambiguous_browser_action",
+  });
+  const terminal = reserveRecovery(terminalHostFailure(issuance.state));
+  assert.equal(terminal.terminal.reason, "ambiguous_browser_action");
+  assert.equal(terminal.terminal.checkpoint.action.state, "started");
+  assert.equal(terminal.terminal.checkpoint.action.target.state, "not_created");
+  assert.equal(terminal.authorization.consumed, true);
+});
+
 test("dedicated target creation is acknowledged, typed, task-scoped, and released before completion", () => {
   let state = persistAndSend(observeChannel(executionState()));
   state = apply(state, {

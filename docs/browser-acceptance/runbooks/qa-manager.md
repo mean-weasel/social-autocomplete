@@ -348,17 +348,23 @@ Reject a second issuance, issuance after task termination, and regeneration
 after manager recovery; never resend the acknowledgement; uncertain delivery
 is `ambiguous_browser_action`. After
 acknowledgement and exact hash comparison, require the worker to resolve the
-exact selected host binding again in that same continuation and immediately
-invoke `tabs.new` without commentary, a protocol event, a manager/worker
-message, or any other intermediate worker output. Then require
-`record_target_created` for that new plugin-owned agent tab at the channel's
-typed official root with the exact persisted lease hash, followed by
-`release_target` before
-`browser_action_completed` and persisted-result checkpoints. Reject user-tab
+exact selected host binding again in that same Codex turn and immediately
+invoke `tabs.new`. Permit no commentary, protocol event, manager/worker message, or other output
+between `tabs.new` and release. For a normal
+non-authentication action, require target creation, bounded inspection,
+sanitized outcome persistence, and exact-target release to finish in that same
+turn with no intermediate output. Then require one sanitized
+`browser_action_completed` checkpoint with the exact persisted lease, typed
+official root, `targetOwnership:"plugin_owned"`,
+`targetLifecycle:"released"`, action hash, fixed timeout, and outcome hash.
+Apply `finalize_browser_action` atomically before persisted-result checkpoints. Reject user-tab
 listing, claiming, inspection, or reuse and reject any raw handle/ID in durable
 state. If post-acknowledgement binding resolution or `tabs.new` fails, keep the
 action `started` and stop as non-replayable `ambiguous_browser_action`; never
-retry, re-acknowledge, or recover it from `not_created`. A recovered worker re-establishes and verifies the binding before
+retry, re-acknowledge, recover it from `not_created`, or rediscover a target.
+Any failure before atomic finalization remains terminal ambiguity.
+Authentication handoff continues to use its distinct granular target and
+recreation lease path. A recovered worker re-establishes and verifies the binding before
 an unacknowledged action; task termination invalidates `binding_verified` and
 `start_persisted`. It never repeats an accepted request, acknowledged/started
 or completed action, or completed channel. A durable

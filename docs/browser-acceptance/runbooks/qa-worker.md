@@ -202,16 +202,26 @@ window.
   message, or other worker output between resolution and the immediate
   `tabs.new` call. Create one new agent tab and navigate it only to the
   playbook's typed official root. Never list, enumerate, claim, inspect, or
-  reuse user tabs. Keep the raw binding and handle only in the host runtime and
-  persist `record_target_created` with the exact manager-supplied task-scoped
-  lease hash. If binding resolution or `tabs.new` fails after acknowledgement,
+  reuse user tabs. Keep only the raw binding and handle in the host runtime.
+  The sanitized manager-issued task-scoped lease hash is intentionally copied
+  unchanged into the worker action context, transported in the finalization
+  checkpoint, and persisted by the manager. For a normal non-authentication
+  action, create, inspect, persist the sanitized outcome, and release that
+  exact target in this same Codex turn. Emit no commentary, protocol event,
+  manager/worker message, or other output between `tabs.new` and release. Only
+  after release emit one sanitized `browser_action_completed` checkpoint with
+  the lease hash, typed official root, `targetOwnership:"plugin_owned"`,
+  `targetLifecycle:"released"`, action hash, fixed timeout, and outcome hash
+  so the manager can atomically finalize the target and action. If binding resolution or `tabs.new` fails after acknowledgement,
   the action remains non-replayable `started`; stop as
   `ambiguous_browser_action` without retry, re-acknowledgement, or recovery
-  from `not_created`.
+  from `not_created`. Any failure before atomic finalization is terminal
+  ambiguity.
 - [ ] Perform the bounded channel operation with the declared 60000 ms timeout
-  and no retry. Persist `release_target` before
-  `browser_action_completed`; completion with a live target is invalid.
-- [ ] Before `browser_action_completed`, durably store the sanitized outcome
+  and no retry. Authentication handoff retains its separate granular
+  target/recreation lease path.
+- [ ] Before the atomic `browser_action_completed` checkpoint, release the
+  exact target and durably store the sanitized outcome
   and include its hash; persist the channel result from that exact outcome
   before emitting `channel_complete`.
 

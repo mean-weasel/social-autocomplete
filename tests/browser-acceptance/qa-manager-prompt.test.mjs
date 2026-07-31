@@ -42,11 +42,11 @@ function assertPostAcknowledgementAcquisitionContract(contract) {
   assert.match(normalized, /lease(?:-| )hash|targetLeaseHash/i);
   assert.match(
     continuationScope,
-    /same (?:post-acknowledgement )?(?:worker )?continuation/i,
+    /same (?:(?:post-acknowledgement )?(?:worker )?continuation|Codex turn)/i,
   );
   assert.match(
     acquisitionScope,
-    /(?:emit |with )?no[^.]{0,220}(?:intermediate |other )worker output|without[^.]{0,220}(?:intermediate |other )worker output/i,
+    /(?:emit |with |permit )?no[^.]{0,220}(?:intermediate |other )(?:worker )?output|without[^.]{0,220}(?:intermediate |other )(?:worker )?output/i,
   );
   assert.match(
     acquisitionScope,
@@ -200,6 +200,11 @@ test("documentation exposes starter, manager, worker dispatch, and worker runboo
   assert.match(managerRunbook, /Never generate an oracle from questionnaire answers/);
   assert.match(workerRunbook, /complete and\s+exclusive run plan/);
   assert.match(workerRunbook, /Never sort the scenario list into oracle order/);
+  assert.match(workerRunbook, /Keep only the raw binding and handle in the host runtime/);
+  assert.match(
+    workerRunbook,
+    /sanitized manager-issued task-scoped lease hash is intentionally copied[\s\S]{0,180}transported[\s\S]{0,120}persisted by the manager/,
+  );
 });
 
 test("manager runbook defines cursor and timeout behavior without status polling", async () => {
@@ -272,6 +277,17 @@ test("protocol and runbooks define fail-closed single-owner host recovery", asyn
   assert.match(protocol, /Missing,\s+malformed, or unequal values stop the run before browser access/);
   assert.match(protocol, /durable single-use transition/);
   assert.match(protocol, /QA_AUTHENTICATION_RECOVERY_LEASE/);
+  for (const contract of [dispatch, manager, worker, protocol]) {
+    assert.match(contract, /same (?:Codex )?turn/i);
+    assert.match(
+      contract,
+      /no (?:commentary,\s+)?protocol event,\s+manager\/worker message, or other output/i,
+    );
+    assert.match(contract, /between\s+`?tabs\.new`?\s+and\s+release/i);
+    assert.match(contract, /finalize_browser_action|atomically finalize/i);
+    assert.match(contract, /terminal\s+ambiguity/i);
+    assert.match(contract, /rediscover/i);
+  }
   for (const contract of [starter, dispatch, manager, worker, protocol]) {
     assertPostAcknowledgementAcquisitionContract(contract);
   }

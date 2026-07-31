@@ -934,6 +934,64 @@ function applyActiveEvent(state, event) {
       pending.action.target.state = "released";
       break;
     }
+    case "finalize_browser_action": {
+      requireExactKeys(event, [
+        "type",
+        "actor",
+        "channel",
+        "browser",
+        "officialRoot",
+        "targetOwnership",
+        "targetLifecycle",
+        "leaseHash",
+        "action",
+        "actionHash",
+        "timeoutMs",
+        "outcomeHash",
+      ], "finalize_browser_action");
+      requireActor(event, "worker");
+      const pending = state.protocol.pending;
+      requireActiveTask(state);
+      invariant(pending?.action.state === "started", "action was not started");
+      invariant(
+        pending.action.target.state === "not_created",
+        "atomic finalization requires an unreported initial target",
+      );
+      invariant(
+        pending.action.acknowledgementState === "issued",
+        "initial acknowledgement was not durably issued",
+      );
+      invariant(event.channel === pending.channel, "target channel mismatch");
+      invariant(event.browser === state.run.browser, "target browser mismatch");
+      invariant(
+        event.officialRoot === OFFICIAL_ROOTS[pending.channel],
+        "target root does not match the typed official root",
+      );
+      invariant(
+        event.targetOwnership === QA_DEDICATED_TARGET_OWNERSHIP,
+        "target ownership mismatch",
+      );
+      invariant(
+        event.targetLifecycle === "released",
+        "atomic finalization requires a released target",
+      );
+      requireHash(event.leaseHash, "leaseHash");
+      invariant(
+        event.leaseHash === pending.action.target.leaseHash,
+        "target finalization lease mismatch",
+      );
+      invariant(event.action === QA_BROWSER_ACTION, "browser action label mismatch");
+      invariant(event.actionHash === pending.action.hash, "action hash mismatch");
+      invariant(
+        event.timeoutMs === QA_BROWSER_ACTION_TIMEOUT_MS,
+        `browser action timeout must be ${QA_BROWSER_ACTION_TIMEOUT_MS} ms`,
+      );
+      requireHash(event.outcomeHash, "outcomeHash");
+      pending.action.target.state = "released";
+      pending.action.state = "completed";
+      pending.action.outcomeHash = event.outcomeHash;
+      break;
+    }
     case "complete_browser_action": {
       requireActor(event, "worker");
       const pending = state.protocol.pending;
