@@ -25,7 +25,10 @@ test("all channel playbooks are addressable through the thin router", () => {
   assert.deepEqual(channels.map((channel) => getPlaybook(channel).channel), channels);
   for (const channel of channels) {
     const playbook = getPlaybook(channel);
-    assert.equal(routeChannel(request(channel)).status, "ready");
+    assert.equal(
+      routeChannel(request(channel)).status,
+      channel === "instagram" ? "not_applicable" : "ready",
+    );
     assert.equal(playbook.dedicatedTarget.ownership, "plugin_owned");
     assert.equal(playbook.dedicatedTarget.acquisition, "new_agent_tab");
     assert.equal(playbook.dedicatedTarget.userTabPolicy, "never_list_claim_inspect_or_reuse");
@@ -71,6 +74,17 @@ test("Pinterest hashtag is explicitly not applicable before browser access", () 
   }));
   assert.equal(decision.status, "not_applicable");
   assert.equal(decision.reasonCode, "module_not_applicable");
+});
+
+test("Instagram search-term autocomplete is explicitly not applicable before browser access", () => {
+  const decision = routeChannel(request("instagram", "search-term", {
+    host: "claude",
+    browser: "in_app",
+    accessMode: "public",
+  }));
+  assert.equal(decision.status, "not_applicable");
+  assert.equal(decision.reasonCode, "module_not_applicable");
+  assert.match(decision.instruction ?? "", /typed-text search action/i);
 });
 
 test("surface diagnostics keep native empty distinct from authentication and UI change", () => {
@@ -190,6 +204,9 @@ test("surface classification fails inconsistent target-match diagnostics", () =>
 });
 
 test("channel caveats preserve observed limitations", () => {
+  assert.equal(getPlaybook("instagram").modules["search-term"].support, "not_applicable");
+  assert.equal(getPlaybook("instagram").modules["search-term"].autocompleteEvidence, "not_applicable");
+  assert.deepEqual(getPlaybook("instagram").modules["search-term"].acceptedCandidateKinds, []);
   assert.match(getPlaybook("linkedin").modules.hashtag.zeroPolicy, /refinement/i);
   assert.equal(getPlaybook("linkedin").modules["search-term"].autocompleteEvidence, "acceptance_gap");
   assert.equal(

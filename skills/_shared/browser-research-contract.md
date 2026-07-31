@@ -7,7 +7,9 @@ Use this contract with the channel-specific instructions in the calling skill.
 3. Ask whether completed research tabs should stay open. Record `completedResearchTabs` as `close` or `keep_open`; default to `close`. A fresh run asks again and an explicit resume reuses the recorded choice.
 4. Infer the topic, modules (`hashtag` and `search-term` by default), locale, evidence tier (`autocomplete_only` by default), and orchestration mode. Ask the user to confirm the remaining inferred values, the chosen channels, completed-tab choice, and browser compatibility. Offer `guided` and `automatic` every run.
 5. Create the run with `social-metadata plan`, including the confirmed `browserSelection`, ordered `channels`, and `completedResearchTabs`. In automatic mode the agent chooses prefixes and candidates; in guided mode it asks before those choices. The CLI does not drive the browser or choose recommendations.
-6. Pause before each channel. Read the effective `nextAction.browserSelection`
+6. Pause before each channel. Resolve every enabled module through the router.
+   Record policy-defined `not_applicable` results without browser evidence and
+   do not create a channel target when no enabled module is supported. Then read the effective `nextAction.browserSelection`
    and establish that exact host browser binding in the current task. Retain
    and reuse the binding for the rest of the task; a new user turn does not by
    itself invalidate it. Use the user's existing, visible Chrome profile for

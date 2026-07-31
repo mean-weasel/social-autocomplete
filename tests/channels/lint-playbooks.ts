@@ -48,6 +48,8 @@ for (const channel of ["tiktok", "youtube", "pinterest"] as const) {
 
 assert.equal(playbooks.pinterest.modules.hashtag.support, "not_applicable");
 assert.equal(playbooks.pinterest.modules["search-term"].support, "supported");
+assert.equal(playbooks.instagram.modules["search-term"].support, "not_applicable");
+assert.equal(playbooks.instagram.modules["search-term"].autocompleteEvidence, "not_applicable");
 assert.deepEqual(playbooks.linkedin.modules.hashtag.acceptedCandidateKinds, ["native_hashtag"]);
 assert.match(playbooks.linkedin.modules.hashtag.caveat ?? "", /do not suggest hashtags/i);
 for (const moduleName of ["hashtag", "search-term"] as const) {

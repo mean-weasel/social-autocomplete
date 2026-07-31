@@ -46,9 +46,14 @@ function input(
   };
 }
 
-test("channel-specific recommendation ranges and Pinterest support are stable", () => {
+test("channel-specific recommendation ranges and module support are stable", () => {
   assert.deepEqual(getChannelModulePolicy("instagram", "hashtag").recommendationRange, { min: 3, max: 5 });
   assert.deepEqual(getChannelModulePolicy("x", "hashtag").recommendationRange, { min: 1, max: 2 });
+  assert.equal(getChannelModulePolicy("instagram", "search-term").supported, false);
+  assert.equal(
+    getChannelModulePolicy("instagram", "search-term").notApplicableReason,
+    "native_phrase_autocomplete_not_available",
+  );
   assert.equal(getChannelModulePolicy("pinterest", "search-term").supported, true);
   assert.equal(getChannelModulePolicy("pinterest", "hashtag").supported, false);
 });
@@ -128,6 +133,15 @@ test("Pinterest hashtag is explicitly not applicable without browser evidence", 
   assert.equal(result.outcome, "not_applicable");
   assert.equal(result.notApplicableReason, "hashtags_not_supported_on_pinterest");
   assert.deepEqual(result.evidenceReferences, []);
+});
+
+test("Instagram search-term is explicitly not applicable without browser evidence", () => {
+  const plan = makePlan("instagram", "search-term", "autocomplete_only", "productivity app");
+  const result = reduceModule(input(plan, []));
+  assert.equal(result.outcome, "not_applicable");
+  assert.equal(result.notApplicableReason, "native_phrase_autocomplete_not_available");
+  assert.deepEqual(result.evidenceReferences, []);
+  assert.deepEqual(result.attemptedPrefixes, []);
 });
 
 test("model suggestions remain outside researched recommendations", () => {

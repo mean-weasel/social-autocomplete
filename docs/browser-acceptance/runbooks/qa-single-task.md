@@ -37,7 +37,8 @@ tab, and receipt. Prove Chrome plus Instagram before adding channels.
    its one bounded Search-navigation recovery.
 9. If sign-in is required, retain the tab as a handoff, ask the user to sign in
    manually, and resume in this task. Never handle credentials.
-10. Enter each configured prefix exactly. Read at most the configured number of
+10. Return configured modules marked `not_applicable` without browser evidence.
+    Enter each supported module prefix exactly. Read at most the configured number of
     candidates and only through the exact input's `aria-controls` or
     `aria-owns` popup. Missing or conflicting ownership is `ui_change`; do not
     broaden to page-global candidates.
@@ -55,8 +56,9 @@ There is no `QA_EVENT`, `QA_CHECKPOINT_ACK`, manager lease, campaign, timer, or 
 
 ## Result rule
 
-The smoke passes only when every configured module captures current native
-autocomplete evidence and CLI validation succeeds. A validated zero is allowed
+The smoke passes only when every configured supported module captures current
+native autocomplete evidence and CLI validation succeeds. An explicit
+`not_applicable` result is allowed when required by channel policy. A validated zero is allowed
 after the required bounded refinement, or after definitive native-empty
 evidence. `authentication_required`, `challenge`,
 `browser_binding_unavailable`, `ui_change`, and `validation_failed` are

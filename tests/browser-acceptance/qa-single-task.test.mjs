@@ -72,7 +72,8 @@ test("single-task contracts retain browser ownership", async () => {
     assert.doesNotMatch(contract, /APPROVE QA BROWSER CAMPAIGN|ambiguous_browser_action/i);
   }
   assert.match(runbook, /There is no `QA_EVENT`, `QA_CHECKPOINT_ACK`/i);
-  assert.match(runbook, /passes only when every configured module captures/i);
+  assert.match(runbook, /passes only when every configured supported module captures/i);
+  assert.match(runbook, /not_applicable/i);
   assert.match(starter, /Do not create a manager,\s+worker, child task/i);
   assert.match(starter, /`keep_open`.*deliverable/is);
 });

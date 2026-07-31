@@ -18,11 +18,11 @@ export const instagramPlaybook: ChannelPlaybook = {
   modules: {
     "search-term": moduleProcedure("instagram", "search-term", {
       prefixSyntax: "ordinary phrase",
-      acceptedCandidateKinds: ["native_phrase"],
-      excludedCandidateKinds: ["account", "typed_entity", "search_action", "query_refinement", "native_hashtag"],
-      autocompleteEvidence: "acceptance_gap",
-      caveat: "Search is personalized and authenticated autocomplete remains a live acceptance gap.",
-      zeroPolicy: "Only explicit native empty evidence after bounded attempts may support zero.",
+      acceptedCandidateKinds: [],
+      excludedCandidateKinds: ["native_phrase", "account", "typed_entity", "search_action", "query_refinement", "native_hashtag"],
+      autocompleteEvidence: "not_applicable",
+      caveat: "Instagram desktop Search accepts keyword queries but does not expose evidenced native phrase completions; accounts, entities, hashtags, and the action to search the typed text are not search-term recommendations.",
+      zeroPolicy: "Return not_applicable without browser evidence; do not convert the typed-text search action into a native recommendation.",
     }),
     hashtag: moduleProcedure("instagram", "hashtag", {
       prefixSyntax: "# plus an unspaced phrase",
@@ -39,8 +39,9 @@ export const instagramPlaybook: ChannelPlaybook = {
     skipSponsored: true,
     engagementIsDescriptiveOnly: true,
   },
-  acceptanceGaps: ["The explicit Instagram search-entry adapter, authenticated autocomplete, hashtag restrictions, and result-card fields require fresh user-controlled Chrome acceptance."],
+  acceptanceGaps: ["The explicit Instagram search-entry adapter, hashtag autocomplete and restrictions, and result-card fields require fresh user-controlled Chrome acceptance."],
   evidenceSources: [
+    "https://www.facebook.com/help/instagram/145838832413709",
     "https://www.facebook.com/help/instagram/search/?query=hashtags",
     "https://www.facebook.com/help/487224561296752",
   ],
