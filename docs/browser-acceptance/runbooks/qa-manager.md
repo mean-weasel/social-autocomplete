@@ -103,6 +103,27 @@ repin, all declared hash checks, and passing offline/release verification.
 The authorization-machinery hashes and immutable scope must remain identical.
 Otherwise revoke and obtain fresh exact authorization for a new campaign.
 
+If an authorization-machinery correction instead leaves a suspended original
+campaign partially consumed, preserve the original series cap rather than
+starting a fresh ten-run budget. With no active child, call:
+
+```text
+node scripts/browser-acceptance/qa-campaign.mjs create-replacement \
+  --state <replacement-state> \
+  --spec <replacement-spec> \
+  --predecessor-state <suspended-predecessor-state>
+```
+
+The reducer derives the predecessor's consumed count, rejects invalid,
+active-child, empty, exhausted, and prior-replacement predecessors, and binds
+the lineage into the replacement scope hash. Show the returned local run limit
+plus the returned predecessor campaign ID and canonical predecessor state hash;
+exact-compare them with the intended suspended state before asking for approval.
+Then require a fresh exact authorization phrase using that limit. Four prior
+children means `FOR 6 RUNS`; the replacement issues series ordinals five
+through ten. Never reuse the predecessor approval, never manually enter a
+consumed count, and never operate Chrome while the replacement is pending.
+
 ## Phase -1 — interview and scenario authoring
 
 Ask these questions in order. Propose inferred values where the user's context

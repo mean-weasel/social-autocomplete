@@ -61,6 +61,7 @@
       }
     },
     "immutableScope": { "$ref": "#/$defs/immutableScope" },
+    "lineage": { "$ref": "#/$defs/replacementLineage" },
     "authorization": {
       "type": "object",
       "additionalProperties": false,
@@ -106,7 +107,7 @@
       "additionalProperties": false,
       "required": ["limit", "issuedCount", "activeChild", "children"],
       "properties": {
-        "limit": { "const": 10 },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 10 },
         "issuedCount": { "type": "integer", "minimum": 0, "maximum": 10 },
         "activeChild": {
           "oneOf": [{ "$ref": "#/$defs/child" }, { "type": "null" }]
@@ -182,6 +183,28 @@
         "targetAcquisition": { "const": "new_agent_tab" },
         "targetOwnership": { "const": "plugin_owned" },
         "childLimit": { "const": 10 }
+      }
+    },
+    "replacementLineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "seriesLimit",
+        "consumedBefore",
+        "predecessorCampaignId",
+        "predecessorCampaignScopeSha256",
+        "predecessorStateSha256",
+        "predecessorAuthorizationMachinerySha256"
+      ],
+      "properties": {
+        "kind": { "const": "replacement" },
+        "seriesLimit": { "const": 10 },
+        "consumedBefore": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "predecessorCampaignId": { "$ref": "#/$defs/stableId" },
+        "predecessorCampaignScopeSha256": { "$ref": "#/$defs/sha256" },
+        "predecessorStateSha256": { "$ref": "#/$defs/sha256" },
+        "predecessorAuthorizationMachinerySha256": { "$ref": "#/$defs/sha256" }
       }
     },
     "pins": {

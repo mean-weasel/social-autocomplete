@@ -25,6 +25,7 @@ import {
   campaignScopeSha256,
   campaignChildGrantSha256,
   createQaCampaignState,
+  createQaReplacementCampaignState,
   expireQaCampaign,
   issueQaCampaignChildGrant,
   parseQaStrictJson,
@@ -32,6 +33,7 @@ import {
   recordQaCampaignChildTerminal,
   resumeQaCampaign,
   revokeQaCampaign,
+  qaCampaignStateSha256,
   assertSanitizedTerminalReceiptStrings,
   suspendQaCampaign,
 } from "../../scripts/browser-acceptance/qa-campaign.mjs";
@@ -86,6 +88,38 @@ function activeState(campaignId = "campaign_01") {
     ),
     at: "2026-07-30T00:01:00.000Z",
   });
+}
+
+function suspendedPredecessor(campaignId = "campaign_predecessor") {
+  let state = activeState(campaignId);
+  for (let ordinal = 1; ordinal <= 4; ordinal += 1) {
+    const issuance = issueQaCampaignChildGrant(
+      state,
+      childRequest(state, ordinal),
+    );
+    state = recordQaCampaignChildTerminal(
+      issuance.state,
+      terminalEvidence(issuance.grant),
+    );
+  }
+  return suspendQaCampaign(state, {
+    reason: "authorization_machinery_changed",
+    at: "2026-07-30T00:10:00.000Z",
+  });
+}
+
+function replacementSpec(campaignId = "campaign_replacement") {
+  return {
+    campaignId,
+    createdAt: "2026-07-30T00:11:00.000Z",
+    expiresAt: "2026-08-06T00:11:00.000Z",
+    immutableScope: structuredClone(QA_CAMPAIGN_SCOPE),
+    pins: {
+      ...pins("e"),
+      protocolSha256: "7".repeat(64),
+      runReducerSha256: "8".repeat(64),
+    },
+  };
 }
 
 function childRequest(state, ordinal = state.budget.issuedCount + 1, runStatePath = null) {
@@ -175,6 +209,218 @@ test("campaign state is schema-valid, private, exact-scope, and seven-day bounde
       }),
     /scope mismatch/,
   );
+});
+
+test("replacement campaign carries four consumed slots and grants exactly series ordinals five through ten", async () => {
+  const predecessor = suspendedPredecessor();
+  const pending = createQaReplacementCampaignState(
+    replacementSpec(),
+    predecessor,
+  );
+  assertQaCampaignState(pending);
+  assert.equal(pending.lineage.kind, "replacement");
+  assert.equal(pending.lineage.seriesLimit, 10);
+  assert.equal(pending.lineage.consumedBefore, 4);
+  assert.equal(
+    pending.lineage.predecessorCampaignId,
+    predecessor.campaign.campaignId,
+  );
+  assert.equal(
+    pending.lineage.predecessorStateSha256,
+    qaCampaignStateSha256(predecessor),
+  );
+  assert.equal(pending.budget.limit, 6);
+  assert.equal(pending.budget.issuedCount, 0);
+  assert.notEqual(
+    pending.campaign.campaignScopeSha256,
+    predecessor.campaign.campaignScopeSha256,
+  );
+
+  const schema = JSON.parse(
+    await readFile(
+      "docs/browser-acceptance/schemas/qa-manager-campaign-state.schema.json",
+      "utf8",
+    ),
+  );
+  const validate = new Ajv2020({ strict: true }).compile(schema);
+  assert.equal(validate(pending), true, JSON.stringify(validate.errors));
+
+  const sixRunPhrase = campaignAuthorizationPhrase(
+    pending.campaign.campaignId,
+    pending.campaign.campaignScopeSha256,
+    6,
+  );
+  assert.match(sixRunPhrase, / FOR 6 RUNS$/);
+  assert.throws(
+    () => authorizeQaCampaign(pending, {
+      phrase: campaignAuthorizationPhrase(
+        pending.campaign.campaignId,
+        pending.campaign.campaignScopeSha256,
+      ),
+      at: "2026-07-30T00:12:00.000Z",
+    }),
+    /phrase mismatch/,
+  );
+  let state = authorizeQaCampaign(pending, {
+    phrase: sixRunPhrase,
+    at: "2026-07-30T00:12:00.000Z",
+  });
+  const ordinals = [];
+  for (let local = 1; local <= 6; local += 1) {
+    const ordinal = local + 4;
+    const request = {
+      ...childRequest(state, ordinal),
+      issuedAt: `2026-07-30T01:${String(local * 2).padStart(2, "0")}:00.000Z`,
+    };
+    const issuance = issueQaCampaignChildGrant(state, request);
+    ordinals.push(issuance.grant.ordinal);
+    state = recordQaCampaignChildTerminal(issuance.state, {
+      ...terminalEvidence(issuance.grant),
+      terminalAt: `2026-07-30T01:${String((local * 2) + 1).padStart(2, "0")}:00.000Z`,
+    });
+  }
+  assert.deepEqual(ordinals, [5, 6, 7, 8, 9, 10]);
+  assert.equal(state.budget.issuedCount, 6);
+  assert.equal(state.campaign.status, "completed");
+  assert.throws(
+    () => issueQaCampaignChildGrant(state, {
+      ...childRequest(state, 11),
+      issuedAt: "2026-07-30T01:14:00.000Z",
+    }),
+    /not active/,
+  );
+});
+
+test("replacement creation rejects forged, unsafe, exhausted, and chained predecessors", () => {
+  const specValue = replacementSpec("campaign_replacement_rejections");
+  const active = activeState("campaign_active_predecessor");
+  assert.throws(
+    () => createQaReplacementCampaignState(specValue, active),
+    /must be suspended/,
+  );
+  const activeIssued = issueQaCampaignChildGrant(
+    activeState("campaign_active_child_predecessor"),
+    childRequest(activeState("campaign_active_child_predecessor")),
+  );
+  const suspendedWithActiveChild = suspendQaCampaign(activeIssued.state, {
+    reason: "user_pause",
+    at: "2026-07-30T00:03:00.000Z",
+  });
+  assert.throws(
+    () => createQaReplacementCampaignState(
+      specValue,
+      suspendedWithActiveChild,
+    ),
+    /active child/,
+  );
+
+  const zero = suspendQaCampaign(
+    activeState("campaign_zero_predecessor"),
+    { reason: "user_pause", at: "2026-07-30T00:02:00.000Z" },
+  );
+  assert.throws(
+    () => createQaReplacementCampaignState(specValue, zero),
+    /between one and nine/,
+  );
+
+  let full = activeState("campaign_full_predecessor");
+  for (let ordinal = 1; ordinal <= 10; ordinal += 1) {
+    const issuance = issueQaCampaignChildGrant(
+      full,
+      childRequest(full, ordinal),
+    );
+    full = recordQaCampaignChildTerminal(
+      issuance.state,
+      terminalEvidence(issuance.grant),
+    );
+  }
+  assert.throws(
+    () => createQaReplacementCampaignState(specValue, full),
+    /must be suspended|between one and nine/,
+  );
+
+  const predecessor = suspendedPredecessor("campaign_chain_source");
+  assert.throws(
+    () => createQaReplacementCampaignState(
+      { ...specValue, consumedBefore: 4 },
+      predecessor,
+    ),
+    /spec fields mismatch/,
+  );
+  assert.throws(
+    () => createQaReplacementCampaignState(
+      { ...specValue, createdAt: "2026-07-30T00:09:00.000Z" },
+      predecessor,
+    ),
+    /predates predecessor suspension/,
+  );
+  const replacement = createQaReplacementCampaignState(
+    replacementSpec("campaign_chain_replacement"),
+    predecessor,
+  );
+  const forgedSuspendedReplacement = structuredClone(replacement);
+  forgedSuspendedReplacement.authorization.approved = true;
+  forgedSuspendedReplacement.authorization.approvedAt =
+    "2026-07-30T00:12:00.000Z";
+  forgedSuspendedReplacement.campaign.status = "suspended";
+  forgedSuspendedReplacement.campaign.activatedAt =
+    "2026-07-30T00:12:00.000Z";
+  forgedSuspendedReplacement.campaign.suspendedAt =
+    "2026-07-30T00:13:00.000Z";
+  forgedSuspendedReplacement.campaign.suspensionReason = "user_pause";
+  assertQaCampaignState(forgedSuspendedReplacement);
+  assert.throws(
+    () => createQaReplacementCampaignState(
+      replacementSpec("campaign_chain_second"),
+      forgedSuspendedReplacement,
+    ),
+    /cannot use a replacement predecessor/,
+  );
+
+  const forgedLineage = structuredClone(replacement);
+  forgedLineage.lineage.consumedBefore = 3;
+  assert.throws(
+    () => assertQaCampaignState(forgedLineage),
+    /child limit mismatch|scope hash mismatch/,
+  );
+  const forgedLimit = structuredClone(replacement);
+  forgedLimit.budget.limit = 7;
+  assert.throws(
+    () => assertQaCampaignState(forgedLimit),
+    /authorization phrase hash mismatch|child limit mismatch/,
+  );
+  const forgedPhrase = structuredClone(replacement);
+  forgedPhrase.authorization.exactPhraseSha256 = "f".repeat(64);
+  assert.throws(
+    () => assertQaCampaignState(forgedPhrase),
+    /authorization phrase hash mismatch/,
+  );
+});
+
+test("create-replacement CLI derives the six-run budget from predecessor state", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qa-campaign-replacement-"));
+  const predecessorPath = join(directory, "predecessor.json");
+  const specPath = join(directory, "replacement-spec.json");
+  const statePath = join(directory, "replacement-state.json");
+  await writeJson(predecessorPath, suspendedPredecessor("campaign_cli_source"));
+  await writeJson(specPath, replacementSpec("campaign_cli_replacement"));
+  const result = await cli([
+    "create-replacement",
+    "--state", statePath,
+    "--spec", specPath,
+    "--predecessor-state", predecessorPath,
+  ]);
+  assert.equal(result.status, 0, result.stderr);
+  const output = JSON.parse(result.stdout);
+  assert.equal(output.runLimit, 6);
+  assert.equal(output.consumedBefore, 4);
+  assert.equal(output.seriesLimit, 10);
+  assert.equal(output.predecessorCampaignId, "campaign_cli_source");
+  assert.match(output.predecessorStateSha256, /^[a-f0-9]{64}$/);
+  const saved = JSON.parse(await readFile(statePath, "utf8"));
+  assertQaCampaignState(saved);
+  assert.equal(saved.budget.limit, 6);
+  assert.equal(saved.lineage.consumedBefore, 4);
 });
 
 test("receipt template is ordinary-flow compatible and terminal string privacy is recursive", async () => {

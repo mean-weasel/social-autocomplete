@@ -234,6 +234,18 @@ consumed, target release or terminal ambiguity is recorded, and the terminal
 receipt hash is reconciled. There are no refunds, reissues, resends, or grant
 recovery after ambiguous delivery.
 
+If authorization machinery changes after some of those ten slots have already
+been consumed, do not resume or repin the old campaign. Leave it suspended and
+create one replacement with `qa-campaign.mjs create-replacement`, supplying
+the validated predecessor state. The reducer derives `consumedBefore` from
+that predecessor, rejects an active, empty, exhausted, invalid, or already
+replacement predecessor, binds the predecessor identity and state hash into
+the new scope hash, and exposes only `10 - consumedBefore` local grants. For a
+four-run predecessor, activation therefore requires the new exact phrase
+`APPROVE QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256> FOR 6 RUNS`,
+and grants retain series ordinals five through ten. The old approval never
+authorizes the replacement.
+
 Authentication, challenge, user pause, unsafe input, host/action ambiguity,
 release uncertainty, stale mutation ownership, or pin mismatch suspends new
 grants. Resume requires

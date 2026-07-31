@@ -403,6 +403,33 @@ reducer, campaign reducer, and scenario schema cannot change inside an
 authorized campaign. Such a change requires revocation and a new campaign
 with fresh exact approval.
 
+### Replacement after authorization-machinery change
+
+A suspended original campaign with no active child and between one and nine
+terminal, authorization-consumed children may seed exactly one non-chainable
+replacement through `qa-campaign.mjs create-replacement`. The reducer reads
+and validates the predecessor and derives the consumed count; the replacement
+spec never supplies that count. Replacement lineage binds the ten-run series
+limit, consumed-before count, predecessor campaign and scope IDs, canonical
+predecessor state hash, and predecessor authorization-machinery hash into the
+new campaign scope hash.
+
+The replacement's local limit is `10 - consumedBefore`, local `issuedCount`
+starts at zero, and child grants continue the series ordinal. Four consumed
+slots therefore permit exactly six grants numbered five through ten and the
+authorization phrase ends exactly in `FOR 6 RUNS`. A
+replacement cannot itself be a predecessor, and an active, empty, exhausted,
+or invalid predecessor fails closed. The replacement is pending and has no
+browser authority until a new exact phrase names its own ID, lineage-bound
+scope hash, and local run limit:
+
+```text
+APPROVE QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256> FOR <remaining> RUNS
+```
+
+The predecessor stays suspended. Its approval and immutable pins confer no
+authority on the replacement.
+
 Campaign state, claims, grants, and receipt bindings persist only sanitized
 IDs, ordinals, enums, timestamps, immutable object IDs, deterministic hashes,
 counts, terminal reasons, and booleans. Browser/page content, raw target

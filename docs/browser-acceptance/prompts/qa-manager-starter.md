@@ -164,6 +164,18 @@ state and require a new exact:
 `APPROVE QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256> FOR 10 RUNS`.
 The campaign expires within seven days.
 
+When changed authorization machinery prevents a suspended partially consumed
+campaign from advancing, never reuse its approval or reset its budget. Use
+`qa-campaign.mjs create-replacement` with that exact validated predecessor.
+The reducer must derive the consumed count, reject replacement chaining, bind
+the lineage into the new scope hash, expose the predecessor campaign ID and
+canonical state hash for exact comparison, and expose only the remaining
+series slots. Require the exact generated phrase
+`APPROVE QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256> FOR <remaining> RUNS`;
+four consumed predecessor slots means exactly `FOR 6 RUNS` and series
+ordinals five through ten. Do not operate the browser before this fresh phrase
+is received.
+
 Issue at most one active child through the reducer. Issuance atomically burns a
 slot before sanitized stdout; never refund, regenerate, resend, reassign, or
 recover an ambiguously delivered grant. Bind the exact grant into scenario

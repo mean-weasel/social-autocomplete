@@ -415,16 +415,25 @@ function authorizationMachinery(pins) {
   );
 }
 
-export function campaignScopeSha256(scope = QA_CAMPAIGN_SCOPE) {
-  return sha256(canonical(scope));
+export function campaignScopeSha256(scope = QA_CAMPAIGN_SCOPE, lineage = null) {
+  return sha256(canonical(lineage ? { immutableScope: scope, lineage } : scope));
 }
 
 export function campaignPinsSha256(pins) {
   return sha256(canonical(pins));
 }
 
-export function campaignAuthorizationPhrase(campaignId, scopeSha256) {
-  return `APPROVE QA BROWSER CAMPAIGN ${campaignId} ${scopeSha256} FOR 10 RUNS`;
+export function campaignAuthorizationPhrase(
+  campaignId,
+  scopeSha256,
+  runLimit = QA_CAMPAIGN_CHILD_LIMIT,
+) {
+  invariant(
+    Number.isInteger(runLimit) && runLimit >= 1 &&
+      runLimit <= QA_CAMPAIGN_CHILD_LIMIT,
+    "campaign authorization run limit is invalid",
+  );
+  return `APPROVE QA BROWSER CAMPAIGN ${campaignId} ${scopeSha256} FOR ${runLimit} RUNS`;
 }
 
 export function campaignResumePhrase(campaignId, scopeSha256) {
@@ -458,7 +467,7 @@ function assertExactScope(scope) {
   );
 }
 
-export function createQaCampaignState(spec) {
+function createCampaignState(spec, lineage = null, runLimit = QA_CAMPAIGN_CHILD_LIMIT) {
   invariant(spec && typeof spec === "object", "campaign spec is required");
   requireStableId(spec.campaignId, "campaignId");
   requireTrustedOperationTime(spec.createdAt, "createdAt");
@@ -472,7 +481,7 @@ export function createQaCampaignState(spec) {
     expiresAt - createdAt <= QA_CAMPAIGN_MAX_AGE_MS,
     "campaign expiry exceeds seven days",
   );
-  const scopeHash = campaignScopeSha256(spec.immutableScope);
+  const scopeHash = campaignScopeSha256(spec.immutableScope, lineage);
   if (spec.campaignScopeSha256 !== undefined) {
     invariant(
       spec.campaignScopeSha256 === scopeHash,
@@ -496,9 +505,10 @@ export function createQaCampaignState(spec) {
       completedAt: null,
     },
     immutableScope: clone(spec.immutableScope),
+    ...(lineage ? { lineage: clone(lineage) } : {}),
     authorization: {
       exactPhraseSha256: sha256(
-        campaignAuthorizationPhrase(spec.campaignId, scopeHash),
+        campaignAuthorizationPhrase(spec.campaignId, scopeHash, runLimit),
       ),
       approved: false,
       approvedAt: null,
@@ -512,7 +522,7 @@ export function createQaCampaignState(spec) {
       history: [],
     },
     budget: {
-      limit: QA_CAMPAIGN_CHILD_LIMIT,
+      limit: runLimit,
       issuedCount: 0,
       activeChild: null,
       children: [],
@@ -520,6 +530,79 @@ export function createQaCampaignState(spec) {
   };
   assertQaCampaignState(state);
   return state;
+}
+
+export function createQaCampaignState(spec) {
+  return createCampaignState(spec);
+}
+
+export function qaCampaignStateSha256(state) {
+  assertQaCampaignState(state);
+  return sha256(canonical(state));
+}
+
+export function createQaReplacementCampaignState(spec, predecessorState) {
+  invariant(spec && typeof spec === "object", "campaign spec is required");
+  const replacementSpecKeys = [
+    "campaignId", "createdAt", "expiresAt", "immutableScope", "pins",
+  ];
+  requireExactKeys(
+    spec,
+    spec.campaignScopeSha256 === undefined
+      ? replacementSpecKeys
+      : [...replacementSpecKeys, "campaignScopeSha256"],
+    "replacement campaign spec",
+  );
+  assertQaCampaignState(predecessorState);
+  invariant(
+    predecessorState.lineage === undefined,
+    "replacement campaign cannot use a replacement predecessor",
+  );
+  invariant(
+    predecessorState.campaign.status === "suspended",
+    "replacement predecessor must be suspended",
+  );
+  invariant(
+    predecessorState.budget.activeChild === null,
+    "replacement predecessor has an active child",
+  );
+  const consumedBefore = predecessorState.budget.issuedCount;
+  invariant(
+    consumedBefore > 0 && consumedBefore < QA_CAMPAIGN_CHILD_LIMIT,
+    "replacement predecessor must have between one and nine consumed children",
+  );
+  invariant(
+    predecessorState.budget.children.every(
+      (child) => child.status === "terminal" &&
+        child.authorizationConsumed === true,
+    ),
+    "replacement predecessor children are not terminal and consumed",
+  );
+  invariant(
+    spec.campaignId !== predecessorState.campaign.campaignId,
+    "replacement campaignId must differ from predecessor",
+  );
+  invariant(
+    Date.parse(spec.createdAt) >=
+      Date.parse(predecessorState.campaign.suspendedAt),
+    "replacement creation predates predecessor suspension",
+  );
+  const lineage = {
+    kind: "replacement",
+    seriesLimit: QA_CAMPAIGN_CHILD_LIMIT,
+    consumedBefore,
+    predecessorCampaignId: predecessorState.campaign.campaignId,
+    predecessorCampaignScopeSha256:
+      predecessorState.campaign.campaignScopeSha256,
+    predecessorStateSha256: qaCampaignStateSha256(predecessorState),
+    predecessorAuthorizationMachinerySha256:
+      predecessorState.pins.authorizationMachinerySha256,
+  };
+  return createCampaignState(
+    spec,
+    lineage,
+    QA_CAMPAIGN_CHILD_LIMIT - consumedBefore,
+  );
 }
 
 function requireNotExpired(state, now) {
@@ -555,6 +638,7 @@ export function authorizeQaCampaign(inputState, { phrase, at }) {
         campaignAuthorizationPhrase(
           state.campaign.campaignId,
           state.campaign.campaignScopeSha256,
+          state.budget.limit,
         ),
     "exact campaign authorization phrase mismatch",
   );
@@ -570,7 +654,8 @@ function childGrantBody(state, request) {
     protocol: "qa-campaign-child-grant/v1",
     campaignId: state.campaign.campaignId,
     campaignScopeSha256: state.campaign.campaignScopeSha256,
-    ordinal: state.budget.issuedCount + 1,
+    ordinal: (state.lineage?.consumedBefore ?? 0) +
+      state.budget.issuedCount + 1,
     runId: request.runId,
     runStatePathSha256: request.runStatePathSha256,
     authorizationId: `${request.runId}:one-time-browser-access`,
@@ -1124,9 +1209,13 @@ export function advanceQaCampaignPins(inputState, request) {
 }
 
 export function assertQaCampaignState(state) {
+  const stateKeys = [
+    "schemaVersion", "revision", "campaign", "immutableScope",
+    "authorization", "pins", "budget",
+  ];
   requireExactKeys(
     state,
-    ["schemaVersion", "revision", "campaign", "immutableScope", "authorization", "pins", "budget"],
+    state?.lineage === undefined ? stateKeys : [...stateKeys, "lineage"],
     "campaign state",
   );
   invariant(
@@ -1158,13 +1247,64 @@ export function assertQaCampaignState(state) {
     }
   }
   assertExactScope(state.immutableScope);
+  if (state.lineage !== undefined) {
+    requireExactKeys(state.lineage, [
+      "kind", "seriesLimit", "consumedBefore", "predecessorCampaignId",
+      "predecessorCampaignScopeSha256", "predecessorStateSha256",
+      "predecessorAuthorizationMachinerySha256",
+    ], "campaign lineage");
+    invariant(
+      state.lineage.kind === "replacement",
+      "campaign lineage kind mismatch",
+    );
+    invariant(
+      state.lineage.seriesLimit === QA_CAMPAIGN_CHILD_LIMIT,
+      "campaign lineage series limit mismatch",
+    );
+    invariant(
+      Number.isInteger(state.lineage.consumedBefore) &&
+        state.lineage.consumedBefore > 0 &&
+        state.lineage.consumedBefore < QA_CAMPAIGN_CHILD_LIMIT,
+      "campaign lineage consumed count is invalid",
+    );
+    requireStableId(
+      state.lineage.predecessorCampaignId,
+      "predecessorCampaignId",
+    );
+    invariant(
+      state.lineage.predecessorCampaignId !== state.campaign.campaignId,
+      "campaign lineage cannot reference itself",
+    );
+    requireHash(
+      state.lineage.predecessorCampaignScopeSha256,
+      "predecessorCampaignScopeSha256",
+    );
+    requireHash(
+      state.lineage.predecessorStateSha256,
+      "predecessorStateSha256",
+    );
+    requireHash(
+      state.lineage.predecessorAuthorizationMachinerySha256,
+      "predecessorAuthorizationMachinerySha256",
+    );
+  }
   invariant(
-    campaignScopeSha256(state.immutableScope) ===
+    campaignScopeSha256(state.immutableScope, state.lineage ?? null) ===
       state.campaign.campaignScopeSha256,
     "stored campaign scope hash mismatch",
   );
   requireExactKeys(state.authorization, ["exactPhraseSha256", "approved", "approvedAt"], "authorization");
   requireHash(state.authorization?.exactPhraseSha256, "exactPhraseSha256");
+  invariant(
+    state.authorization.exactPhraseSha256 === sha256(
+      campaignAuthorizationPhrase(
+        state.campaign.campaignId,
+        state.campaign.campaignScopeSha256,
+        state.budget?.limit,
+      ),
+    ),
+    "stored campaign authorization phrase hash mismatch",
+  );
   invariant(
     typeof state.authorization?.approved === "boolean",
     "campaign approval flag missing",
@@ -1227,14 +1367,17 @@ export function assertQaCampaignState(state) {
     requireTimestamp(entry.supersededAt, "historical supersededAt");
   });
   requireExactKeys(state.budget, ["limit", "issuedCount", "activeChild", "children"], "budget");
+  const expectedBudgetLimit = state.lineage === undefined
+    ? QA_CAMPAIGN_CHILD_LIMIT
+    : state.lineage.seriesLimit - state.lineage.consumedBefore;
   invariant(
-    state.budget?.limit === QA_CAMPAIGN_CHILD_LIMIT,
+    state.budget?.limit === expectedBudgetLimit,
     "campaign child limit mismatch",
   );
   invariant(
     Number.isInteger(state.budget.issuedCount) &&
       state.budget.issuedCount >= 0 &&
-      state.budget.issuedCount <= QA_CAMPAIGN_CHILD_LIMIT,
+      state.budget.issuedCount <= state.budget.limit,
     "invalid issued child count",
   );
   invariant(Array.isArray(state.budget.children), "child history is required");
@@ -1253,9 +1396,13 @@ export function assertQaCampaignState(state) {
     "duplicate campaign child run-state path",
   );
   let activeCount = 0;
+  const ordinalOffset = state.lineage?.consumedBefore ?? 0;
   state.budget.children.forEach((child, index) => {
     requireExactKeys(child, ["ordinal", "runId", "runStatePathSha256", "grantSha256", "pinsSha256", "status", "issuedAt", "terminalAt", "terminalResultId", "disposition", "authorizationConsumed", "targetDisposition", "receiptSha256"], "campaign child");
-    invariant(child.ordinal === index + 1, "campaign child ordinal gap");
+    invariant(
+      child.ordinal === ordinalOffset + index + 1,
+      "campaign child ordinal gap",
+    );
     requireStableId(child.runId, "child runId");
     requireHash(child.runStatePathSha256, "child runStatePathSha256");
     requireHash(child.grantSha256, "child grantSha256");
@@ -1305,7 +1452,7 @@ export function assertQaCampaignState(state) {
   }
   if (state.campaign.status === "completed") {
     invariant(
-      state.budget.issuedCount === QA_CAMPAIGN_CHILD_LIMIT &&
+      state.budget.issuedCount === state.budget.limit &&
         state.budget.activeChild === null,
       "completed campaign did not consume its full child budget",
     );
@@ -1561,6 +1708,30 @@ export async function runQaCampaignCli(argv) {
       schemaVersion: state.schemaVersion,
       campaignId: state.campaign.campaignId,
       campaignScopeSha256: state.campaign.campaignScopeSha256,
+      runLimit: state.budget.limit,
+    };
+  }
+  if (command === "create-replacement") {
+    invariant(
+      options.spec && options["predecessor-state"],
+      "--spec and --predecessor-state are required",
+    );
+    const [spec, predecessorState] = await Promise.all([
+      readJson(options.spec),
+      readJson(options["predecessor-state"]),
+    ]);
+    const state = createQaReplacementCampaignState(spec, predecessorState);
+    await writeJsonExclusive(options.state, state);
+    return {
+      ok: true,
+      schemaVersion: state.schemaVersion,
+      campaignId: state.campaign.campaignId,
+      campaignScopeSha256: state.campaign.campaignScopeSha256,
+      runLimit: state.budget.limit,
+      consumedBefore: state.lineage.consumedBefore,
+      seriesLimit: state.lineage.seriesLimit,
+      predecessorCampaignId: state.lineage.predecessorCampaignId,
+      predecessorStateSha256: state.lineage.predecessorStateSha256,
     };
   }
   if (command === "check") {
@@ -1571,6 +1742,14 @@ export async function runQaCampaignCli(argv) {
       campaignId: state.campaign.campaignId,
       status: state.campaign.status,
       issuedCount: state.budget.issuedCount,
+      runLimit: state.budget.limit,
+      consumedBefore: state.lineage?.consumedBefore ?? 0,
+      seriesIssuedCount:
+        (state.lineage?.consumedBefore ?? 0) + state.budget.issuedCount,
+      predecessorCampaignId:
+        state.lineage?.predecessorCampaignId ?? null,
+      predecessorStateSha256:
+        state.lineage?.predecessorStateSha256 ?? null,
       activeOrdinal: state.budget.activeChild?.ordinal ?? null,
     };
   }

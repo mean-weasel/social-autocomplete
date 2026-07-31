@@ -134,6 +134,28 @@ test("manager starter makes recovery manager-owned, durable, and bounded", async
   assert.match(starter, /at most one active child/i);
 });
 
+test("manager contracts preserve a partially consumed campaign as an exact remaining-run replacement", async () => {
+  const [starter, runbook, protocol, readme] = await Promise.all([
+    readFile(managerStarterPath, "utf8"),
+    readFile(managerRunbookPath, "utf8"),
+    readFile(protocolPath, "utf8"),
+    readFile("docs/browser-acceptance/README.md", "utf8"),
+  ]);
+  for (const contract of [starter, runbook, protocol, readme]) {
+    const normalized = contract.replace(/\s+/g, " ");
+    assert.match(normalized, /create-replacement/);
+    assert.match(normalized, /consumedBefore|consumed count/i);
+    assert.match(normalized, /scope hash/i);
+    assert.match(normalized, /FOR 6 RUNS/);
+    assert.match(normalized, /five through ten|five.*ten/i);
+    assert.match(normalized, /fresh exact|new exact/i);
+    assert.match(normalized, /never reuse|confer no authority|old approval never/i);
+  }
+  assert.match(starter, /reject replacement chaining/i);
+  assert.match(runbook, /prior-replacement predecessors/i);
+  assert.match(protocol, /cannot itself be a predecessor/i);
+});
+
 test("worker dispatch prompt has an exact versioned placeholder contract", async () => {
   const dispatch = await readFile(workerDispatchPath, "utf8");
   const placeholders = [
