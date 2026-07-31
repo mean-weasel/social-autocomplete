@@ -75,6 +75,129 @@ test("plan, record-observation, resume, and validate form a durable round trip",
   assert.equal((validated.envelope.data as Record<string, any>).receipt.status, "complete");
 });
 
+test("Instagram validates hashtag evidence plus evidence-free search-term not-applicable", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-instagram-na-"));
+  const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;
+  request.runId = "run_instagram_not_applicable";
+  request.channels = ["instagram"];
+  request.enabledModules = ["hashtag", "search-term"];
+  request.approvedPrefixes = {
+    instagram: {
+      hashtag: ["#productivity"],
+      "search-term": ["productivity app"],
+    },
+  };
+  const created = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(request)]),
+    cwd,
+  );
+  const channelRunId = (created.envelope.data as Record<string, any>).plan.channelRuns[0].channelRunId as string;
+  const capturedAt = new Date().toISOString();
+  const base = {
+    contractVersion: "1.0",
+    runId: request.runId,
+    channelRunId,
+    capturedAt,
+    source: {
+      kind: "browser_ui",
+      channel: "instagram",
+      browser: "chrome",
+      accessMode: "authenticated",
+      uiLocale: "en-US",
+      region: "US",
+      timezone: "America/Phoenix",
+      personalizedSession: true,
+      surface: "autocomplete",
+    },
+    module: { name: "hashtag", schemaVersion: "1.0" },
+  };
+  const session = {
+    ...base,
+    observationId: "obs_instagram_hashtag_session",
+    kind: "session_state",
+    payload: { ready: true, authenticated: true },
+  };
+  const suggestion = {
+    ...base,
+    observationId: "obs_instagram_hashtag_suggestion",
+    kind: "suggestion_set",
+    query: { typedText: "#productivity" },
+    payload: {
+      suggestions: [{ displayedValue: "#productivitytools", displayPosition: 1 }],
+      stoppingReason: "visible_list_exhausted",
+      round: 0,
+    },
+  };
+  const decision = {
+    ...base,
+    observationId: "obs_instagram_hashtag_decision",
+    kind: "recommendation_decision",
+    payload: {
+      decision: "selected",
+      candidate: "#productivitytools",
+      rationale: "The exact native hashtag matches the productivity-app brief.",
+      suggestionEvidenceIds: [suggestion.observationId],
+      resultEvidenceIds: [],
+      origin: "native",
+    },
+  };
+  for (const observation of [session, suggestion, decision]) {
+    await executeCommand(
+      parseArguments([
+        "record-observation",
+        "--run",
+        request.runId,
+        "--json",
+        JSON.stringify(observation),
+      ]),
+      cwd,
+    );
+  }
+  const resumed = await executeCommand(
+    parseArguments(["plan", "--run", request.runId]),
+    cwd,
+  );
+  assert.equal((resumed.envelope.data as Record<string, any>).nextAction.kind, "validate");
+
+  const validated = await executeCommand(
+    parseArguments(["validate", "--run", request.runId]),
+    cwd,
+  );
+  const receipt = (validated.envelope.data as Record<string, any>).receipt;
+  assert.equal(validated.exitCode, 0);
+  assert.equal(receipt.moduleResults.hashtag.outcome, "recommended");
+  assert.equal(receipt.moduleResults["search-term"].outcome, "not_applicable");
+  assert.equal(
+    receipt.moduleResults["search-term"].notApplicableReason,
+    "native_phrase_autocomplete_not_available",
+  );
+  assert.deepEqual(receipt.moduleResults["search-term"].evidenceReferences, []);
+});
+
+test("Instagram search-term-only validates not-applicable without opening a browser", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-instagram-only-na-"));
+  const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;
+  request.runId = "run_instagram_only_not_applicable";
+  request.channels = ["instagram"];
+  request.enabledModules = ["search-term"];
+  request.approvedPrefixes = { instagram: { "search-term": ["productivity app"] } };
+  const created = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(request)]),
+    cwd,
+  );
+  assert.equal((created.envelope.data as Record<string, any>).nextAction.kind, "validate");
+
+  const validated = await executeCommand(
+    parseArguments(["validate", "--run", request.runId]),
+    cwd,
+  );
+  const receipt = (validated.envelope.data as Record<string, any>).receipt;
+  assert.equal(validated.exitCode, 0);
+  assert.equal(receipt.moduleResults["search-term"].outcome, "not_applicable");
+  assert.equal(receipt.observationReferences.length, 0);
+  assert.equal(receipt.personalizedSession, false);
+});
+
 test("validate reports incomplete state with exit 3", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "social-metadata-incomplete-"));
   const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, unknown>;

@@ -1,7 +1,7 @@
 [
   {"id":"facebook-search-guided","channel":"facebook","module":"search-term","tier":"autocomplete_only","mode":"guided","scenario":"native_success","prefix":"remote work","candidate":"remote work tips","expected":"recommended"},
   {"id":"facebook-hashtag-auth","channel":"facebook","module":"hashtag","tier":"autocomplete_only","mode":"automatic","scenario":"authentication","prefix":"#remote","candidate":"#RemoteWork","expected":"interrupted"},
-  {"id":"instagram-search-stale","channel":"instagram","module":"search-term","tier":"autocomplete_only","mode":"guided","scenario":"stale","prefix":"team habits","candidate":"team habits at work","expected":"failed"},
+  {"id":"instagram-search-not-applicable","channel":"instagram","module":"search-term","tier":"autocomplete_only","mode":"guided","scenario":"not_applicable","prefix":"team habits","candidate":"team habits at work","expected":"not_applicable"},
   {"id":"instagram-hashtag-results","channel":"instagram","module":"hashtag","tier":"results_sample","mode":"automatic","scenario":"native_success","prefix":"#remotework","candidate":"#RemoteWorkTips","expected":"recommended"},
   {"id":"linkedin-search-locale","channel":"linkedin","module":"search-term","tier":"autocomplete_only","mode":"guided","scenario":"locale_mismatch","prefix":"distributed teams","candidate":"distributed teams","expected":"interrupted"},
   {"id":"linkedin-hashtag-zero","channel":"linkedin","module":"hashtag","tier":"autocomplete_only","mode":"guided","scenario":"native_zero","prefix":"#specificempty","candidate":"#specificemptytips","expected":"zero"},

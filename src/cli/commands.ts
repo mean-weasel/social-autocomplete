@@ -386,7 +386,10 @@ async function validateRun(
   const channelObservations = observations.filter(
     (observation) => observation.channelRunId === channelRun.channelRunId,
   );
-  if (channelObservations.length === 0) {
+  const allModulesNotApplicable = channelRun.enabledModules.every(
+    (moduleName) => !getChannelModulePolicy(channelRun.channel, moduleName).supported,
+  );
+  if (channelObservations.length === 0 && !allModulesNotApplicable) {
     return success("validate", asJsonValue({
       status: "incomplete",
       reason: "no_observations",
@@ -490,9 +493,11 @@ async function validateRun(
       resumable: true,
     }, runId, [], 6);
   }
-  const first = channelObservations[0]!;
-  const last = channelObservations.at(-1)!;
   const validatedAt = new Date().toISOString();
+  const first = channelObservations[0];
+  const last = channelObservations.at(-1);
+  const receiptSource = latestSession?.source ?? last?.source;
+  const selectedBrowser = effectiveBrowserSelection(plan, amendments).browser;
   const moduleReduction = reduceChannelModules(
     plan,
     amendments,
@@ -523,17 +528,21 @@ async function validateRun(
     channel: channelRun.channel,
     enabledModules: channelRun.enabledModules,
     createdAt: plan.createdAt,
-    capturedAt: { first: first.capturedAt, last: last.capturedAt },
+    capturedAt: {
+      first: first?.capturedAt ?? validatedAt,
+      last: last?.capturedAt ?? validatedAt,
+    },
     validatedAt,
     requestedLocale: plan.locale,
     observedLocale: {
-      uiLocale: (latestSession ?? last).source.uiLocale,
-      region: (latestSession ?? last).source.region,
-      timezone: (latestSession ?? last).source.timezone,
+      uiLocale: receiptSource?.uiLocale ?? plan.locale.uiLocale,
+      region: receiptSource?.region ?? plan.locale.region,
+      timezone: receiptSource?.timezone ?? plan.locale.timezone,
     },
-    browser: (latestSession ?? last).source.browser,
-    accessMode: (latestSession ?? last).source.accessMode,
-    personalizedSession: (latestSession ?? last).source.personalizedSession,
+    browser: receiptSource?.browser ?? selectedBrowser,
+    accessMode: receiptSource?.accessMode ??
+      (getPlaybook(channelRun.channel).defaultAccess === "authenticated" ? "authenticated" : "public"),
+    personalizedSession: receiptSource?.personalizedSession ?? false,
     evidenceTier: channelRun.evidenceTier,
     observationReferences: channelObservations.map((item) => item.observationId),
     status: "complete",

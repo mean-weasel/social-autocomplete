@@ -71,6 +71,9 @@ Explicit manual-authentication handoff remains the only unfinished state.
 
 Pause before each channel, select its dedicated skill, and follow the [shared research contract](../_shared/browser-research-contract.md). Use the thin router policy to choose the allowed browser:
 
+- Resolve module applicability through the router before browser use. Record
+  policy-defined `not_applicable` results without native observations, and do
+  not create a channel tab when every enabled module is not applicable.
 - Read `nextAction.browserSelection` and reuse that exact host browser binding.
   Establish it once in the current task, retain it across user turns, and
   verify it is still connected before each channel. If it is unavailable,

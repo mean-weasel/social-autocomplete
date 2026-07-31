@@ -18,13 +18,15 @@ Honor `completedResearchTabs`: `close` omits the agent-created tab from final
 browser cleanup, while `keep_open` finalizes that exact tab as a deliverable so
 it remains visible after browser-session control is released. Never rediscover
 or reuse a retained tab.
-Run the scenario's exact configured prefixes through Instagram's
-native Search surface. Capture only bounded, input-owned autocomplete evidence.
+Return policy-defined `not_applicable` modules without browser interaction.
+Run the scenario's exact supported-module prefixes through Instagram's native
+Search surface. Capture only bounded, input-owned autocomplete evidence.
 If authentication, a challenge, a browser failure, or a UI mismatch blocks the
 run, stop with that explicit status. Never broaden inspection, handle
 credentials, publish, enter a composer, scrape, or substitute headless
 Chromium. Release browser-session control unless it is waiting for the user to sign in.
 Record observations through the CLI, run `social-metadata validate`, and write
 one ignored, sanitized receipt. A pass requires current native autocomplete
-evidence for every configured module and successful CLI validation; a zero is
+evidence for every configured supported module and successful CLI validation;
+an explicit policy-defined `not_applicable` result is valid, while a zero is
 allowed only when its bounded refinement and justification also validate.

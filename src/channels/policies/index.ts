@@ -28,6 +28,13 @@ export function getChannelModulePolicy(
   moduleName: ModuleName,
 ): ChannelModulePolicy {
   if (moduleName === "search-term") {
+    if (channel === "instagram") {
+      return {
+        supported: false,
+        recommendationRange: null,
+        notApplicableReason: "native_phrase_autocomplete_not_available",
+      };
+    }
     return { supported: true, recommendationRange: { ...searchTermRange } };
   }
   const range = hashtagRanges[channel];

@@ -13,7 +13,7 @@ Version one researches two independent metadata modules:
 - `search-term`
 - `hashtag`
 
-The system researches Facebook, Instagram, LinkedIn, X, TikTok, YouTube, and Pinterest. Pinterest supports `search-term` and returns an explicit module-level `not_applicable` result for `hashtag`.
+The system researches Facebook, Instagram, LinkedIn, X, TikTok, YouTube, and Pinterest. Instagram returns an explicit module-level `not_applicable` result for `search-term` because its evidenced desktop autocomplete exposes entities and the typed-text search action rather than native phrase completions. Pinterest supports `search-term` and returns an explicit module-level `not_applicable` result for `hashtag`.
 
 The primary evidence source is channel-native search in a user-controlled browser. Authenticated work uses Chrome. Public surfaces may use the Codex in-app browser where the channel playbook permits it. Claude uses its available browser-control integration while following the same playbook and evidence contract.
 
@@ -137,7 +137,7 @@ Both v1 modules are enabled by default:
 - `search-term`
 - `hashtag`
 
-The user or calling tool may deselect either module. Pinterest runs `search-term` and produces a successful `not_applicable` result for `hashtag`.
+The user or calling tool may deselect either module. Instagram runs `hashtag` and produces a successful `not_applicable` result for `search-term`; Pinterest runs `search-term` and produces a successful `not_applicable` result for `hashtag`.
 
 Search-term findings may seed hashtag planning within the same channel. Findings from an earlier channel may seed later-channel plans, but a candidate must receive independent native evidence on every channel where it is recommended.
 
@@ -566,7 +566,7 @@ Defaults are deliberately conservative and configurable per run:
 | Channel | Search terms | Hashtags |
 |---|---:|---:|
 | Facebook | 3–5 | 1–3 |
-| Instagram | 3–5 | 3–5 |
+| Instagram | Not applicable | 3–5 |
 | LinkedIn | 3–5 | 1–3 |
 | X | 3–5 | 1–2 |
 | TikTok | 3–5 | 3–5 |
@@ -850,7 +850,7 @@ Version one is ready for implementation completion only when:
 1. `plan`, `record-observation`, and `validate` satisfy their versioned JSON contracts.
 2. Codex and Claude packages drive the same shared workflow.
 3. Both modules work on their supported channel matrix.
-4. Pinterest returns a successful search-term result and explicit hashtag `not_applicable`.
+4. Instagram returns explicit search-term `not_applicable`, and Pinterest returns a successful search-term result plus explicit hashtag `not_applicable`.
 5. Both evidence tiers are successful and consumable.
 6. Guided and automatic runs are resumable.
 7. Authentication and UI changes pause visibly and recover as designed.
@@ -866,6 +866,7 @@ Version one is ready for implementation completion only when:
 - Codex and Claude are equal v1 plugin targets.
 - Hosts control browsers; the CLI does not.
 - Both `search-term` and `hashtag` run by default.
+- Instagram supports only `hashtag` autocomplete; typed-text search actions are not native phrase recommendations.
 - Pinterest supports only `search-term`.
 - `autocomplete_only` is the default and is a successful result.
 - `results_sample` inspects every intended recommendation.
