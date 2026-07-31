@@ -1,6 +1,6 @@
 schemaVersion: qa-scenario/v1
-scenarioId: chrome_instagram_hashtag_single_task
-title: Chrome Instagram hashtag single-task smoke
+scenarioId: chrome_instagram_metadata_single_task
+title: Chrome Instagram metadata single-task smoke
 scope: research
 interactionSource: single_task
 browser: chrome
@@ -16,11 +16,14 @@ locale:
   timezone: America/Phoenix
 modules:
   - hashtag
+  - search-term
 evidenceTier: autocomplete_only
 mode: automatic
 queryPrefixes:
   hashtag:
     - "#productivity"
+  search-term:
+    - productivity app
 authentication:
   byChannel:
     instagram:
