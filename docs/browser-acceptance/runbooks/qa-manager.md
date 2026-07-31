@@ -40,6 +40,65 @@ missing, invalid, or no longer resolves to the expected QA workspace, ask the
 user to choose and confirm the absolute QA repository path before continuing.
 The user may amend the saved path at any time.
 
+## Optional fixed ten-child campaign
+
+Use a campaign only for the fixed QA-only existing-visible-Chrome
+Instagram → Facebook → LinkedIn autocomplete replay. It is not available to
+the general interview flow and cannot broaden browser, channels, modules,
+evidence tier, target ownership, or safety permissions.
+
+Create private state under
+`.social-metadata/qa/manager-campaigns/<campaignId>-state.json` with
+`qa-campaign.mjs create`. Pin the exact product commit/tree, QA commit/tree,
+scenario, oracle, protocol, run reducer, campaign reducer, and scenario schema.
+Set expiry no later than seven days after creation. Show the sanitized campaign
+ID, scope hash, exact fixed scope, expiry, and ten-run cap. T040 design approval
+is not live authorization. Activate only when a new user message contains
+exactly:
+
+```text
+APPROVE QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256> FOR 10 RUNS
+```
+
+Before each child, require campaign status `active`, current time before
+expiry, no active child, fewer than ten issued children, a terminal and
+authorization-consumed predecessor, and exact current pins. Prepare a unique
+run ID and deterministic private run-state-path SHA-256. Invoke
+`issue-child-grant`; use stdout only on exit zero. The reducer atomically burns
+the slot before output. Never regenerate, resend, refund, reassign, or recover
+a grant whose delivery is ambiguous. All failure and contention losers must
+have empty stdout.
+
+Keep only campaign ID and scope hash in the private scenario; ordinal, pin, and
+grant hashes remain detached. Hash original scenario/oracle bytes before
+decoding, validate with `--campaign-grant <grant-path> --require-approved`,
+and pass the detached grant as `campaignGrant` to `qa-recovery.mjs create`.
+It must bind the resolved state path before exclusive creation. Populate the campaign placeholders
+in the worker dispatch. The grant replaces only the repeated human release;
+every per-run one-time authorization, ACK/hash, post-ACK binding, action,
+recovery, release, terminal, and privacy gate remains unchanged.
+
+At child terminal, verify the run state has consumed browser authorization and
+the receipt has the exact campaign binding. Run `record-child-terminal --grant <grant-path>` with
+the private run state and receipt. The reducer stores only the receipt hash and
+sanitized terminal facts. Do not issue the successor until reconciliation
+succeeds. Release uncertainty is recorded as `terminal_ambiguity`, never
+invented as a successful release.
+
+Suspend before new issuance on authentication, challenge, host/action or grant
+ambiguity, unsafe input, release uncertainty, pin mismatch, stale claim, or
+user pause. With no active child, exact
+`RESUME QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256>` may resume.
+Exact `REVOKE QA BROWSER CAMPAIGN <campaignId>` revokes monotonically. Expiry
+and revocation allow an already-active child's terminal reconciliation but no
+successor. A stale dead-process claim may be recovered only by its exact nonce;
+recovery suspends the campaign and never rolls state back.
+
+Pins may advance only between terminal children after Judge approval, exact QA
+repin, all declared hash checks, and passing offline/release verification.
+The authorization-machinery hashes and immutable scope must remain identical.
+Otherwise revoke and obtain fresh exact authorization for a new campaign.
+
 ## Phase -1 — interview and scenario authoring
 
 Ask these questions in order. Propose inferred values where the user's context
@@ -138,7 +197,10 @@ Build that task prompt from
 `docs/browser-acceptance/prompts/qa-worker-dispatch.md`. Replace every
 placeholder with the validated run-specific value, verify no placeholder
 remains, and send the completed prompt without adding instructions that weaken
-the worker runbook or protocol.
+the worker runbook or protocol. For an issued bounded-campaign child only,
+append `docs/browser-acceptance/prompts/qa-worker-campaign-dispatch.md` after
+validating and supplying its exact grant; never add campaign placeholders to an
+ordinary worker dispatch.
 
 Record the worker task ID under `.social-metadata/qa/manager-runs/`. Do not
 reuse a task that loaded an older plugin version.

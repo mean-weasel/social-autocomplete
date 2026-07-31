@@ -1,30 +1,89 @@
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
+import {
+  acquireTempRoot,
+  composePrimaryAndClosureFailure,
+  createBoundedChildLifecycle,
+  removeAcquiredTempRoot,
+} from "../browser-acceptance/owned-temp-root.mjs";
 
 const repo = resolve(".");
-const scratch = await mkdtemp(join(tmpdir(), "social-metadata-install-"));
+const tempRoot = await acquireTempRoot({
+  prefix: "social-metadata-install-",
+  borrowedRoot: process.env.SOCIAL_METADATA_RELEASE_ROOT,
+  descendant: "install-smoke",
+});
+const scratch = tempRoot.path;
 const marketplace = join(scratch, "marketplace");
 const pluginRoot = join(marketplace, "plugins", "social-metadata-research");
 const marketplaceName = `social-metadata-smoke-${process.pid}`;
 let marketplaceAdded = false;
 let pluginAdded = false;
+// Marketplace installation can legitimately outlast the ordinary test commands.
+// Keep its own finite epoch deadline below the release watchdog (240 seconds).
+const commandTimeoutMs = boundedInteger("INSTALL_SMOKE_COMMAND_TIMEOUT_MS", "180000", 180_000);
+const childGraceMs = boundedInteger("INSTALL_SMOKE_CHILD_GRACE_MS", "2000", 10_000);
+const lifecycle = createBoundedChildLifecycle({ timeoutMs: commandTimeoutMs, graceMs: childGraceMs });
+let terminatingSignal = null;
+let cleanupPromise = null;
 
-function run(command, args, cwd = repo) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8" });
-  if (result.status !== 0) {
-    throw new Error(`${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`);
+function boundedInteger(name, fallback, maximum) {
+  const milliseconds = Number(process.env[name] ?? fallback);
+  if (!Number.isInteger(milliseconds) || milliseconds < 1 || milliseconds > maximum) {
+    throw new Error(`${name} must be a finite integer from 1 to ${maximum}`);
   }
+  return milliseconds;
+}
+
+async function run(command, args, cwd = repo, env = process.env) {
+  const result = await lifecycle.run(command, args, { cwd, env });
   return result.stdout.trim();
 }
 
+async function cleanup(signal = null) {
+  if (cleanupPromise) return cleanupPromise;
+  cleanupPromise = (async () => {
+    let failure;
+    try {
+      await lifecycle.shutdown(signal === "SIGINT" ? "SIGINT" : "SIGTERM");
+      const codexEnv = { ...process.env, CODEX_HOME: join(scratch, "codex-home") };
+      if (pluginAdded) {
+        try { await run("codex", ["plugin", "remove", `social-metadata-research@${marketplaceName}`, "--json"], repo, codexEnv); } catch (error) { failure ??= error; }
+      }
+      if (marketplaceAdded) {
+        try { await run("codex", ["plugin", "marketplace", "remove", marketplaceName, "--json"], repo, codexEnv); } catch (error) { failure ??= error; }
+      }
+    } finally {
+      await removeAcquiredTempRoot(tempRoot, lifecycle.closureToken());
+    }
+    if (failure) throw failure;
+  })();
+  return cleanupPromise;
+}
+
+async function interrupt(signal) {
+  if (terminatingSignal) return;
+  terminatingSignal = signal;
+  try {
+    await cleanup(signal);
+    process.exit(signal === "SIGINT" ? 130 : 143);
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
+    process.exit(1);
+  }
+}
+
+process.once("SIGINT", () => { void interrupt("SIGINT"); });
+process.once("SIGTERM", () => { void interrupt("SIGTERM"); });
+
+let successOutput;
+let primaryFailure;
 try {
-  const packed = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", scratch]));
+  const packed = JSON.parse(await run("npm", ["pack", "--json", "--pack-destination", scratch]));
   const filename = packed[0]?.filename;
   if (!filename) throw new Error("npm pack did not return a filename");
   await mkdir(pluginRoot, { recursive: true });
-  run("tar", ["-xzf", join(scratch, filename), "--strip-components=1", "-C", pluginRoot]);
+  await run("tar", ["-xzf", join(scratch, filename), "--strip-components=1", "-C", pluginRoot]);
 
   for (const required of [
     ".codex-plugin/plugin.json",
@@ -38,7 +97,7 @@ try {
 
   const cliStateRoot = join(scratch, "cli-state");
   const cliRunId = `run_install_smoke_${process.pid}`;
-  const cliPlan = JSON.parse(run(process.execPath, [
+  const cliPlan = JSON.parse(await run(process.execPath, [
     join(pluginRoot, "bin/social-metadata.js"),
     "plan",
     "--state-root",
@@ -101,11 +160,14 @@ try {
     }, null, 2)}\n`,
   );
 
-  JSON.parse(run("codex", ["plugin", "marketplace", "add", marketplace, "--json"]));
+  const isolatedCodexHome = join(scratch, "codex-home");
+  await mkdir(isolatedCodexHome, { recursive: true });
+  const codexEnv = { ...process.env, CODEX_HOME: isolatedCodexHome };
+  JSON.parse(await run("codex", ["plugin", "marketplace", "add", marketplace, "--json"], repo, codexEnv));
   marketplaceAdded = true;
-  JSON.parse(run("codex", ["plugin", "add", `social-metadata-research@${marketplaceName}`, "--json"]));
+  JSON.parse(await run("codex", ["plugin", "add", `social-metadata-research@${marketplaceName}`, "--json"], repo, codexEnv));
   pluginAdded = true;
-  const freshCatalog = JSON.parse(run("codex", ["plugin", "list", "--marketplace", marketplaceName, "--json"]));
+  const freshCatalog = JSON.parse(await run("codex", ["plugin", "list", "--marketplace", marketplaceName, "--json"], repo, codexEnv));
   const installed = freshCatalog.installed?.filter(
     (entry) => entry.pluginId === `social-metadata-research@${marketplaceName}` && entry.enabled,
   );
@@ -113,10 +175,10 @@ try {
     throw new Error("Fresh Codex process did not report the installed orchestrator plugin");
   }
 
-  run("claude", ["plugin", "validate", "--strict", pluginRoot]);
-  run("claude", ["--plugin-dir", pluginRoot, "--version"]);
+  await run("claude", ["plugin", "validate", "--strict", pluginRoot]);
+  await run("claude", ["--plugin-dir", pluginRoot, "--version"]);
 
-  process.stdout.write(`${JSON.stringify({
+  successOutput = `${JSON.stringify({
     ok: true,
     package: filename,
     codexMarketplaceInstall: "pass",
@@ -126,19 +188,18 @@ try {
     },
     cliSubprocess: "pass",
     claudePluginDirLoad: "pass",
-  })}\n`);
-} finally {
-  if (pluginAdded) {
-    spawnSync("codex", ["plugin", "remove", `social-metadata-research@${marketplaceName}`, "--json"], {
-      cwd: repo,
-      encoding: "utf8",
-    });
-  }
-  if (marketplaceAdded) {
-    spawnSync("codex", ["plugin", "marketplace", "remove", marketplaceName, "--json"], {
-      cwd: repo,
-      encoding: "utf8",
-    });
-  }
-  await rm(scratch, { recursive: true, force: true });
+  })}\n`;
+} catch (error) {
+  primaryFailure = error;
 }
+
+try {
+  await cleanup();
+} catch (closureError) {
+  if (primaryFailure) throw composePrimaryAndClosureFailure(primaryFailure, closureError);
+  throw closureError;
+}
+
+if (primaryFailure) throw primaryFailure;
+
+process.stdout.write(successOutput);

@@ -6,6 +6,7 @@
   "required": [
     "schemaVersion",
     "run",
+    "campaign",
     "authorization",
     "protocol",
     "coordination",
@@ -45,6 +46,31 @@
         }
       },
       "additionalProperties": false
+    },
+    "campaign": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "campaignId",
+            "campaignScopeSha256",
+            "ordinal",
+            "grantSha256",
+            "pinsSha256",
+            "runStatePathSha256"
+          ],
+          "properties": {
+            "campaignId": { "type": "string", "minLength": 1 },
+            "campaignScopeSha256": { "$ref": "#/$defs/sha256" },
+            "ordinal": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "grantSha256": { "$ref": "#/$defs/sha256" },
+            "pinsSha256": { "$ref": "#/$defs/sha256" },
+            "runStatePathSha256": { "$ref": "#/$defs/sha256" }
+          }
+        }
+      ]
     },
     "authorization": {
       "type": "object",

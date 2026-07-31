@@ -388,6 +388,14 @@ test("durable state preserves immutable run identity and one-time authorization"
   assert.equal(state.authorization.browserAccessAuthorized, true);
   assertQaManagerRunState(state);
   assert.throws(
+    () => assertQaManagerRunState({ ...state, privateBrowserOutput: { rawTargetId: "private" } }),
+    /fields mismatch/,
+  );
+  assert.throws(
+    () => assertQaManagerRunState({ ...state, run: { ...state.run, rawTargetId: "private" } }),
+    /fields mismatch/,
+  );
+  assert.throws(
     () =>
       createQaManagerRunState({
         ...spec(),

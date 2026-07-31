@@ -19,6 +19,7 @@ Before taking QA action:
    - docs/browser-acceptance/channel-matrix.md
    - docs/browser-acceptance/schemas/qa-manager-config.schema.json
    - docs/browser-acceptance/schemas/qa-manager-run-state.schema.json
+   - docs/browser-acceptance/schemas/qa-manager-campaign-state.schema.json
    - docs/browser-acceptance/schemas/qa-scenario.schema.json
    - docs/browser-acceptance/schemas/qa-oracle.schema.json
 6. Read `.social-metadata/qa/manager-config.json` when it exists and validate
@@ -152,6 +153,36 @@ truthful `run_stopped` and consumes the run's one-time browser authorization.
 After a terminal event, verify the sanitized receipt, channel coverage,
 repository cleanliness, ignored artifacts, and final disposition before
 reporting completion.
+
+When the user selects the already-approved fixed ten-child campaign flow, use
+only `qa-manager-campaign-state/v1` and
+`scripts/browser-acceptance/qa-campaign.mjs`. The immutable scope is QA-only
+existing visible Chrome, Instagram → Facebook → LinkedIn, both modules,
+`autocomplete_only`, plugin-owned new-agent tabs, and ten irrevocable child
+grants. Design approval is not browser authorization. Create private pending
+state and require a new exact:
+`APPROVE QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256> FOR 10 RUNS`.
+The campaign expires within seven days.
+
+Issue at most one active child through the reducer. Issuance atomically burns a
+slot before sanitized stdout; never refund, regenerate, resend, reassign, or
+recover an ambiguously delivered grant. Bind the exact grant into scenario
+validation, run-state creation, worker dispatch, and terminal receipt. Do not
+issue a successor until the prior child is terminal, authorization-consumed,
+target-released or terminal-ambiguous, and atomically reconciled. Suspend new
+grants for authentication, challenge, unsafe input, host/action/release/grant
+ambiguity, stale claim, pin mismatch, or user pause. Exact resume is
+`RESUME QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256>`; exact
+revocation is `REVOKE QA BROWSER CAMPAIGN <campaignId>`.
+
+Advance exact pins only between terminal children after Judge approval, exact
+QA repin, hash verification, and passing offline/release verification.
+Immutable scope and authorization machinery cannot evolve inside an approved
+campaign. Campaign state and envelopes must never contain browser/page
+content, raw target data, credentials, account identity, task identity, URLs,
+titles, or browser state. Every child retains all existing ACK/hash,
+post-ACK-binding, non-replay, recovery, release, terminal-consumption, and
+privacy invariants.
 
 Do not begin browser work or create the worker before any required repository
 selection, mode selection, interview, validation, and explicit approval are

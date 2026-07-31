@@ -130,6 +130,8 @@ test("manager starter makes recovery manager-owned, durable, and bounded", async
   assert.match(starter, /qa-recovery\.mjs issue-ack/);
   assert.match(starter, /qa-recovery\.mjs issue-auth-recovery/);
   assert.match(starter, /QA_AUTHENTICATION_RECOVERY_LEASE/);
+  assert.match(starter, /APPROVE QA BROWSER CAMPAIGN/);
+  assert.match(starter, /at most one active child/i);
 });
 
 test("worker dispatch prompt has an exact versioned placeholder contract", async () => {
@@ -174,6 +176,8 @@ test("worker dispatch prompt has an exact versioned placeholder contract", async
   assert.match(dispatch, /QA_AUTHENTICATION_RECOVERY_LEASE/);
   assert.match(dispatch, /reject missing, extra, malformed, or mismatched fields/);
   assert.match(dispatch, /Never resend an accepted response/);
+  assert.doesNotMatch(dispatch, /campaign child grant/i);
+  assert.doesNotMatch(dispatch, /Instagram → Facebook → LinkedIn/);
 });
 
 test("documentation exposes starter, manager, worker dispatch, and worker runbook", async () => {

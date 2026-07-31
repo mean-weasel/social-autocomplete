@@ -6,6 +6,7 @@ import { dirname, extname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 import { parse as parseYaml } from "yaml";
+import { assertQaCampaignChildGrant, parseQaStrictJson } from "./qa-campaign.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, "../..");
@@ -26,7 +27,11 @@ function parseArguments(argv) {
       options.requireApproved = true;
       continue;
     }
-    if (value === "--scenario" || value === "--oracle") {
+    if (
+      value === "--scenario" ||
+      value === "--oracle" ||
+      value === "--campaign-grant"
+    ) {
       const next = argv[index + 1];
       if (!next) {
         throw new Error(`${value} requires a path`);
@@ -44,16 +49,29 @@ function parseArguments(argv) {
 }
 
 async function readStructured(path) {
-  const raw = await readFile(path, "utf8");
+  const bytes = await readFile(path);
+  // Pin exact artifact bytes first. Decoding/parsing is deliberately separate:
+  // YAML formatting, comments, BOMs, and line endings are all part of a pin.
+  if (bytes.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf]))) {
+    throw new Error(`${path} must not contain a UTF-8 BOM`);
+  }
+  let raw;
+  try {
+    raw = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error(`${path} must be valid UTF-8`);
+  }
   const extension = extname(path).toLowerCase();
   const value =
     extension === ".yaml" || extension === ".yml"
       ? parseYaml(raw)
-      : JSON.parse(raw);
+      // Configuration artifacts that are JSON, including detached campaign
+      // grants, must reject duplicate decoded member names before validation.
+      : parseQaStrictJson(raw, path);
   return {
     raw,
     value,
-    sha256: createHash("sha256").update(raw).digest("hex"),
+    sha256: createHash("sha256").update(bytes).digest("hex"),
   };
 }
 
@@ -69,7 +87,8 @@ function formatAjvErrors(label, errors) {
 export function checkQaCompatibility(
   scenario,
   oracle,
-  { requireApproved = false, now = Date.now() } = {},
+  { requireApproved = false, now = Date.now(), campaignGrant = null,
+    scenarioSha256 = null, oracleSha256 = null } = {},
 ) {
   const errors = [];
   const push = (path, code, message) =>
@@ -202,6 +221,72 @@ export function checkQaCompatibility(
       "dispatch requires explicit browser access authorization",
     );
   }
+  const campaign = authorization.campaign;
+  if (campaign) {
+    if (authorization.reusable !== false) {
+      push(
+        "/authorization/reusable",
+        "campaign_grant_not_one_time",
+        "campaign child scenarios must remain one-time",
+      );
+    }
+    if (
+      scenario.scope !== "research" ||
+      scenario.browser !== "chrome" ||
+      JSON.stringify(scenario.channels) !==
+        JSON.stringify(["instagram", "facebook", "linkedin"]) ||
+      JSON.stringify(scenario.modules) !==
+        JSON.stringify(["hashtag", "search-term"]) ||
+      scenario.evidenceTier !== "autocomplete_only"
+    ) {
+      push(
+        "/authorization/campaign",
+        "campaign_scope_mismatch",
+        "campaign child scenario changed immutable campaign scope",
+      );
+    }
+    if (requireApproved && !campaignGrant) {
+      push(
+        "/authorization/campaign",
+        "campaign_grant_required",
+        "campaign dispatch requires the exact durable child grant",
+      );
+    }
+    if (campaignGrant) {
+      try {
+        assertQaCampaignChildGrant(campaignGrant);
+        if (
+          campaign.campaignId !== campaignGrant.campaignId ||
+          campaign.campaignScopeSha256 !==
+            campaignGrant.campaignScopeSha256 ||
+          scenario.scenarioId !== campaignGrant.scenarioId ||
+          scenarioSha256 !== campaignGrant.scenarioSha256 ||
+          oracleSha256 !== campaignGrant.oracleSha256 ||
+          scenario.browser !== campaignGrant.browser ||
+          JSON.stringify(scenario.channels) !==
+            JSON.stringify(campaignGrant.channels)
+        ) {
+          push(
+            "/authorization/campaign",
+            "campaign_grant_mismatch",
+            "scenario does not exactly match the campaign child grant",
+          );
+        }
+      } catch {
+        push(
+          "/authorization/campaign",
+          "campaign_grant_invalid",
+          "campaign child grant is malformed",
+        );
+      }
+    }
+  } else if (campaignGrant) {
+    push(
+      "/authorization/campaign",
+      "campaign_binding_missing",
+      "campaign grant was supplied for an unbound scenario",
+    );
+  }
 
   return errors;
 }
@@ -210,13 +295,15 @@ export async function validateQaConfig({
   scenarioPath,
   oraclePath,
   requireApproved = false,
+  campaignGrantPath = null,
 }) {
-  const [scenarioDocument, oracleDocument, scenarioSchema, oracleSchema] =
+  const [scenarioDocument, oracleDocument, scenarioSchema, oracleSchema, campaignGrantDocument] =
     await Promise.all([
       readStructured(scenarioPath),
       readStructured(oraclePath),
       readStructured(scenarioSchemaPath),
       readStructured(oracleSchemaPath),
+      campaignGrantPath ? readStructured(campaignGrantPath) : null,
     ]);
 
   const ajv = new Ajv2020({ allErrors: true, strict: true });
@@ -234,7 +321,12 @@ export async function validateQaConfig({
       ...checkQaCompatibility(
         scenarioDocument.value,
         oracleDocument.value,
-        { requireApproved },
+        {
+          requireApproved,
+          campaignGrant: campaignGrantDocument?.value ?? null,
+          scenarioSha256: scenarioDocument.sha256,
+          oracleSha256: oracleDocument.sha256,
+        },
       ),
     );
   }
@@ -255,6 +347,9 @@ export async function validateQaConfig({
     selectedChannels: Array.isArray(scenarioDocument.value?.channels)
       ? [...scenarioDocument.value.channels]
       : null,
+    campaignId:
+      scenarioDocument.value?.authorization?.campaign?.campaignId ?? null,
+    campaignGrantSha256: campaignGrantDocument?.value?.grantSha256 ?? null,
     errors,
   };
 }
@@ -266,6 +361,7 @@ async function main() {
       scenarioPath: options.scenario,
       oraclePath: options.oracle,
       requireApproved: options.requireApproved,
+      campaignGrantPath: options["campaign-grant"] ?? null,
     });
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     process.exitCode = result.ok ? 0 : 2;

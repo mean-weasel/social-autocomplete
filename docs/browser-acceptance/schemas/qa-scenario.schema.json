@@ -162,7 +162,25 @@
         "reusable": { "type": "boolean" },
         "requireHumanBeforeBrowserAccess": { "type": "boolean" },
         "browserAccessAuthorized": { "type": "boolean" },
-        "credentialsAuthorized": { "const": false }
+        "credentialsAuthorized": { "const": false },
+        "campaign": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "campaignId",
+            "campaignScopeSha256"
+          ],
+          "properties": {
+            "campaignId": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "campaignScopeSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
       }
     }
   },
@@ -177,6 +195,52 @@
           "channels": {
             "type": "array",
             "items": { "enum": ["tiktok", "youtube", "pinterest"] }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authorization": {
+            "type": "object",
+            "properties": { "campaign": {} },
+            "required": ["campaign"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "scope": { "const": "research" },
+          "browser": { "const": "chrome" },
+          "channels": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "prefixItems": [
+              { "const": "instagram" },
+              { "const": "facebook" },
+              { "const": "linkedin" }
+            ],
+            "items": false
+          },
+          "modules": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              { "const": "hashtag" },
+              { "const": "search-term" }
+            ],
+            "items": false
+          },
+          "evidenceTier": { "const": "autocomplete_only" },
+          "authorization": {
+            "type": "object",
+            "properties": {
+              "reusable": { "const": false },
+              "requireHumanBeforeBrowserAccess": { "const": false }
+            }
           }
         }
       }

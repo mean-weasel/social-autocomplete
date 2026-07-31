@@ -4,6 +4,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { link, open, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { assertQaCampaignChildGrant, parseQaStrictJson, qaCampaignPathSha256 } from "./qa-campaign.mjs";
 
 export const QA_RECOVERY_SCHEMA_VERSION = "qa-manager-run-state/v1";
 export const QA_RECOVERY_RETRY_LIMIT = 1;
@@ -248,6 +249,12 @@ function requireTaskId(value, label = "taskId") {
   );
 }
 
+function requireExactKeys(value, keys, label) {
+  invariant(value && typeof value === "object" && !Array.isArray(value) &&
+    Object.keys(value).sort().join(",") === [...keys].sort().join(","),
+  `${label} fields mismatch`);
+}
+
 function authorizationIdForRun(runId) {
   return `${runId}:one-time-browser-access`;
 }
@@ -389,6 +396,35 @@ export function createQaManagerRunState(spec) {
     spec.channels.every((channel) => CHANNELS.has(channel)),
     "channels contain an unsupported value",
   );
+  let campaign = null;
+  if (spec.campaignGrant !== undefined) {
+    assertQaCampaignChildGrant(spec.campaignGrant);
+    invariant(
+      spec.campaignGrant.runId === spec.runId &&
+        spec.campaignGrant.authorizationId === authorizationId &&
+        spec.campaignGrant.scenarioId === spec.scenarioId &&
+        spec.campaignGrant.scenarioSha256 === spec.scenarioSha256 &&
+        spec.campaignGrant.oracleId === spec.oracleId &&
+        spec.campaignGrant.oracleSha256 === spec.oracleSha256 &&
+        spec.campaignGrant.protocolVersion === spec.protocolVersion &&
+        spec.campaignGrant.protocolSha256 === spec.protocolSha256 &&
+        spec.campaignGrant.browser === spec.browser &&
+        JSON.stringify(spec.campaignGrant.channels) ===
+          JSON.stringify(spec.channels) &&
+        (spec.resolvedRunStatePath === undefined ||
+          spec.campaignGrant.runStatePathSha256 ===
+            qaCampaignPathSha256(spec.resolvedRunStatePath)),
+      "campaign child grant does not exactly bind the run spec",
+    );
+    campaign = {
+      campaignId: spec.campaignGrant.campaignId,
+      campaignScopeSha256: spec.campaignGrant.campaignScopeSha256,
+      ordinal: spec.campaignGrant.ordinal,
+      grantSha256: spec.campaignGrant.grantSha256,
+      pinsSha256: spec.campaignGrant.pinsSha256,
+      runStatePathSha256: spec.campaignGrant.runStatePathSha256,
+    };
+  }
 
   return {
     schemaVersion: QA_RECOVERY_SCHEMA_VERSION,
@@ -403,6 +439,7 @@ export function createQaManagerRunState(spec) {
       browser: spec.browser,
       channels: [...spec.channels],
     },
+    campaign,
     authorization: {
       authorizationId,
       oneTime: true,
@@ -1042,6 +1079,18 @@ export function assertQaManagerRunState(state) {
     state?.schemaVersion === QA_RECOVERY_SCHEMA_VERSION,
     "unsupported recovery state schema",
   );
+  requireExactKeys(state, ["schemaVersion", "run", "campaign", "authorization", "protocol", "coordination", "terminal"], "run state");
+  requireExactKeys(state.run, ["runId", "scenarioId", "scenarioSha256", "oracleId", "oracleSha256", "protocolVersion", "protocolSha256", "browser", "channels"], "run state run");
+  requireExactKeys(state.authorization, ["authorizationId", "oneTime", "browserAccessAuthorized", "consumed"], "run state authorization");
+  requireExactKeys(state.protocol, ["nextSequence", "pending", "acceptedResponses", "emittedResults", "completedChannels"], "run state protocol");
+  requireExactKeys(state.coordination, ["activeTask", "taskHistory", "handoff", "continuation", "continuationHistory", "recoveryAttempts", "recoveryRetryLimit"], "run state coordination");
+  invariant(Array.isArray(state.run.channels) && state.run.channels.every((channel) => CHANNELS.has(channel)), "run state channels are invalid");
+  invariant(Number.isInteger(state.protocol.nextSequence) && state.protocol.nextSequence >= 1, "run state nextSequence is invalid");
+  invariant(Array.isArray(state.protocol.acceptedResponses) && Array.isArray(state.protocol.emittedResults), "run state protocol histories are invalid");
+  invariant(Array.isArray(state.protocol.completedChannels), "run state completed channels are invalid");
+  invariant(Array.isArray(state.coordination.taskHistory), "run state task history is invalid");
+  invariant(Array.isArray(state.coordination.continuationHistory), "run state continuation history is invalid");
+  if (state.terminal !== null) requireExactKeys(state.terminal, ["resultId", "reason", "disposition", "blockingProductFinding", "resumeSupported", "emitted", "checkpoint"], "run state terminal");
   invariant(
     state.authorization?.oneTime === true,
     "browser authorization must be one-time",
@@ -1055,6 +1104,35 @@ export function assertQaManagerRunState(state) {
     typeof state.run?.runId === "string" && state.run.runId.length > 0,
     "runId is required",
   );
+  if (state.campaign !== null) {
+    requireExactKeys(state.campaign, ["campaignId", "campaignScopeSha256", "ordinal", "grantSha256", "pinsSha256", "runStatePathSha256"], "run state campaign");
+    requireTaskId(state.campaign?.campaignId, "campaignId");
+    requireHash(state.campaign?.campaignScopeSha256, "campaignScopeSha256");
+    invariant(
+      Number.isInteger(state.campaign?.ordinal) &&
+        state.campaign.ordinal >= 1 &&
+        state.campaign.ordinal <= 10,
+      "campaign child ordinal is invalid",
+    );
+    requireHash(state.campaign?.grantSha256, "grantSha256");
+    requireHash(state.campaign?.pinsSha256, "pinsSha256");
+    requireHash(state.campaign?.runStatePathSha256, "runStatePathSha256");
+  }
+  for (const task of state.coordination.taskHistory) requireExactKeys(task, ["taskId", "purpose", "generation", "status", "reason"], "run state historical task");
+  if (state.coordination.activeTask) requireExactKeys(state.coordination.activeTask, ["taskId", "purpose", "generation", "status"], "run state active task");
+  for (const lease of state.coordination.continuationHistory) requireExactKeys(lease, ["key", "purpose", "state", "taskId", "resumeAt"], "run state continuation");
+  if (state.coordination.continuation) requireExactKeys(state.coordination.continuation, ["key", "purpose", "state", "taskId", "resumeAt"], "run state continuation");
+  if (state.coordination.handoff) requireExactKeys(state.coordination.handoff, ["kind", "sourceTaskId", "nextSequence"], "run state handoff");
+  for (const response of state.protocol.acceptedResponses) requireExactKeys(response, ["sequence", "requestId", "responseHash"], "run state accepted response");
+  for (const result of state.protocol.emittedResults) requireExactKeys(result, ["sequence", "resultId", "channel", "resultHash"], "run state emitted result");
+  if (state.protocol.pending) {
+    const pending = state.protocol.pending;
+    requireExactKeys(pending, ["sequence", "requestId", "channel", "eventHash", "response", "action", "result"], "run state pending");
+    requireExactKeys(pending.response, ["state", "hash"], "run state pending response");
+    requireExactKeys(pending.action, ["state", "bindingHash", "label", "hash", "timeoutMs", "outcomeHash", "acknowledgementState", "target"], "run state pending action");
+    requireExactKeys(pending.action.target, ["ownership", "state", "leaseHash", "recoveryLeaseDeliveryState"], "run state pending target");
+    if (pending.result) requireExactKeys(pending.result, ["state", "sequence", "resultId", "hash"], "run state pending result");
+  }
   for (const [label, value] of [
     ["scenarioSha256", state.run?.scenarioSha256],
     ["oracleSha256", state.run?.oracleSha256],
@@ -1067,7 +1145,9 @@ export function assertQaManagerRunState(state) {
     "recovery retry limit must remain one",
   );
   invariant(
-    state.coordination.recoveryAttempts <= QA_RECOVERY_RETRY_LIMIT,
+    Number.isInteger(state.coordination.recoveryAttempts) &&
+      state.coordination.recoveryAttempts >= 0 &&
+      state.coordination.recoveryAttempts <= QA_RECOVERY_RETRY_LIMIT,
     "recovery retry limit exceeded",
   );
   invariant(
@@ -1346,7 +1426,7 @@ async function mutateSavedState(statePath, command, mutate) {
   const claim = await acquireQaMutationClaim(statePath, command);
   let persistenceStarted = false;
   try {
-    const state = JSON.parse(await readFile(resolve(statePath), "utf8"));
+    const state = parseQaStrictJson(await readFile(resolve(statePath), "utf8"), "run state");
     const mutation = mutate(state);
     persistenceStarted = true;
     await writeJsonAtomic(statePath, mutation.state);
@@ -1377,7 +1457,10 @@ export async function runQaRecoveryCli(argv) {
   invariant(options.state, "--state is required");
   if (command === "create") {
     invariant(options.spec, "--spec is required");
-    const spec = JSON.parse(await readFile(resolve(options.spec), "utf8"));
+    const spec = {
+      ...parseQaStrictJson(await readFile(resolve(options.spec), "utf8"), "run spec"),
+      resolvedRunStatePath: resolve(options.state),
+    };
     const state = createQaManagerRunState(spec);
     assertQaManagerRunState(state);
     await writeJsonExclusive(options.state, state);
@@ -1385,7 +1468,7 @@ export async function runQaRecoveryCli(argv) {
   }
   if (command === "apply") {
     invariant(options.event, "--event is required");
-    const event = JSON.parse(await readFile(resolve(options.event), "utf8"));
+    const event = parseQaStrictJson(await readFile(resolve(options.event), "utf8"), "run event");
     return mutateSavedState(options.state, command, (state) => {
       const next = applyQaRecoveryEvent(state, event);
       assertQaManagerRunState(next);
@@ -1413,7 +1496,7 @@ export async function runQaRecoveryCli(argv) {
     });
   }
   if (command === "check") {
-    const state = JSON.parse(await readFile(resolve(options.state), "utf8"));
+    const state = parseQaStrictJson(await readFile(resolve(options.state), "utf8"), "run state");
     assertQaManagerRunState(state);
     return {
       ok: true,

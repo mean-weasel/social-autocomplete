@@ -377,6 +377,35 @@ selector guess, or broadened read.
 - [ ] Record the manager-owned task and continuation history, recovery count,
   and terminal authorization consumption using sanitized IDs and enums only.
 
+## Campaign-bound child runs
+
+A campaign child is still exactly one ordinary one-time QA run. The scenario
+marker contains only campaign ID and scope hash; ordinal, grant, and pin hashes
+come only from the detached grant. Before any
+browser preflight, require the dispatch, private scenario, sanitized child
+grant, and durable run state to exact-match on campaign ID, campaign scope
+hash, ordinal, grant hash, pin hash, run ID, scenario/oracle/protocol hashes,
+Chrome, and ordered Instagram → Facebook → LinkedIn. Validate the scenario
+with `--campaign-grant <grant-path> --require-approved`. Stop as
+`worker_dispatch_invalid` before browser access on any missing, extra,
+malformed, stale, or mismatched campaign value.
+
+The campaign grant authorizes no credentials, publishing, composer
+interaction, user-tab access, browser switching, channel expansion, repeated
+acknowledgement, action replay, or private browser output. It does not relax
+current-turn binding verification, the exact ACK/action/lease hashes,
+post-ACK binding reacquisition, immediate `tabs.new`, the one recovery limit,
+started-state non-replay, mandatory target release, or terminal authorization
+consumption.
+
+Copy only the campaign ID, scope hash, ordinal, grant hash, and pin hash into
+`automation.campaign` in the sanitized terminal receipt. Never read or mutate
+manager campaign state. Never put its path, mutation claim, user approval
+phrase, browser/page content, raw target data, credentials, account identity,
+task identity, or browser state in worker artifacts. A worker never issues,
+resends, refunds, advances, suspends, resumes, revokes, or reconciles a
+campaign grant; those are atomic manager reducer operations.
+
 ## Disposition rules
 
 Use one overall disposition:

@@ -11,20 +11,22 @@
     "scenarioId": null,
     "scenarioSha256": null,
     "oracleId": null,
-    "answerSource": "direct_user",
+    "oracleSha256": null,
+    "answerSource": "qa_scenario",
     "humanPresentDuringRun": true,
     "preexistingAuthenticationOnly": true,
     "approvedAt": null,
-    "unexpectedRequestObserved": false
+    "unexpectedRequestObserved": false,
+    "campaign": null
   },
   "source": {
-    "path": "replace-me",
-    "commit": "replace-me",
+    "path": "product_source",
+    "commit": "0000000000000000000000000000000000000000",
     "worktreeClean": false,
     "modifiedByQa": false
   },
   "qaRepository": {
-    "path": "replace-me",
+    "path": "qa_repository",
     "branch": "main",
     "privateArtifactsIgnored": true,
     "artifactsCommitted": false
@@ -88,6 +90,6 @@
   "disposition": {
     "status": "blocked",
     "blockingProductFinding": false,
-    "summary": "replace-me"
+    "summary": "blocked"
   }
 }

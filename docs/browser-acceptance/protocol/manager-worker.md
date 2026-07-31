@@ -320,3 +320,79 @@ The receipt must record the transition from unattended to attended and may no
 longer claim that no human was present. This explicit human-action path is
 separate from host recovery and requires fresh browser authorization when the
 prior run already reached a terminal result.
+
+## Private ten-child campaign reducer
+
+`qa-manager-campaign-state/v1` is a manager-only authorization parent around
+otherwise unchanged `qa-manager-run-state/v1` children. Its immutable scope is
+QA-only existing visible Chrome, ordered Instagram → Facebook → LinkedIn,
+`hashtag` plus `search-term`, `autocomplete_only`, and plugin-owned
+`new_agent_tab` acquisition. It expires within seven days. Campaign design
+approval is never browser authorization; activation requires the exact phrase:
+
+```text
+APPROVE QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256> FOR 10 RUNS
+```
+
+All campaign mutations use `qa-campaign.mjs` and one exclusive claim derived
+from the private campaign-state path. The reducer reads state only after
+acquiring that claim and atomically replaces one newer revision. Successful
+child issuance increments `issuedCount` before the single sanitized grant is
+printed. Delivery ambiguity burns the slot: a grant is never regenerated,
+resent, refunded, reassigned, or reused. Losers and negative cases emit empty
+stdout. The durable cap is ten and at most one child is active.
+
+Every lifecycle timestamp is checked against the manager's trusted wall clock
+before mutation. Creation, authorization, activation, suspension, resume,
+issuance, pin advancement, revocation, expiry, receipt capture, terminal
+reconciliation, and completion must be monotonic in their applicable order;
+authorization, issuance, suspension, resume, and pin advancement must also
+precede campaign expiry. A child receipt may be reconciled only when its
+capture and terminal times follow that child's issuance. Terminal receipts use
+only the schema's closed finding, logical-source, repository, and disposition
+allowlists: account-, profile-, or other free-form identifiers are rejected
+before the campaign state is written.
+
+The scenario marker contains exactly campaign ID and scope hash, while its
+scenario and oracle pins cover original artifact bytes before parsing. The
+shared receipt template remains ordinary-flow compatible with
+`answerSource:"qa_scenario"`. Campaign dispatch alone changes it to
+`answerSource:"manager_campaign"` and supplies the required campaign binding.
+The detached child grant binds campaign and scope hashes, ordinal, unique run ID,
+run-state-path hash, deterministic one-time authorization ID, current pin
+hash, exact scenario/oracle/protocol hashes, Chrome, and the ordered three
+channels. `qa-recovery.mjs create` exact-compares that grant with the run spec
+and resolved exclusive run-state path, then stores only its sanitized binding.
+The worker dispatch and receipt carry
+the same campaign ID, ordinal, grant hash, pin hash, and scope hash. Every
+existing per-run sequence, ACK/action hash, post-ACK binding acquisition,
+started-state non-replay, one-recovery limit, target release, terminal
+authorization consumption, and privacy rule remains mandatory.
+
+A successor grant is forbidden until the prior child is terminal, its browser
+authorization is consumed, target release or explicit terminal ambiguity is
+recorded, and the manager atomically records the terminal receipt hash.
+Authentication, challenge, unsafe input, host/action ambiguity, release
+uncertainty, stale mutation ownership, pin mismatch, or user pause suspends
+new grants. Resume requires exact
+`RESUME QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256>`. Revocation
+requires exact `REVOKE QA BROWSER CAMPAIGN <campaignId>` and cannot be undone.
+Expiry and revocation never prevent terminal reconciliation of the one
+already-issued active child: its terminal evidence may still consume that
+child's authorization and release (or explicitly terminally disambiguate) its
+target. They permanently forbid every successor grant, including after that
+closure. Every loaded campaign state rechecks the seven-day creation-to-expiry
+bound and exact authorization-machinery hash binding before any mutation.
+
+Pins may advance only with no active child and after Judge approval, exact QA
+repin, hash verification, and passing offline/release verification. Pin
+history is append-only. Immutable scope and the hashes of the protocol, run
+reducer, campaign reducer, and scenario schema cannot change inside an
+authorized campaign. Such a change requires revocation and a new campaign
+with fresh exact approval.
+
+Campaign state, claims, grants, and receipt bindings persist only sanitized
+IDs, ordinals, enums, timestamps, immutable object IDs, deterministic hashes,
+counts, terminal reasons, and booleans. Browser/page content, raw target
+handles or data, credentials, account identity, task identity, URLs, titles,
+profile data, and browser state are forbidden.

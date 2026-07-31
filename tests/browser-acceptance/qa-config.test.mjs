@@ -1,13 +1,24 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
+import Ajv2020 from "ajv/dist/2020.js";
 import { parse, stringify } from "yaml";
 import {
   checkQaCompatibility,
   validateQaConfig,
 } from "../../scripts/browser-acceptance/validate-qa-config.mjs";
+import {
+  QA_CAMPAIGN_SCOPE,
+  assertQaCampaignChildGrant,
+  authorizeQaCampaign,
+  campaignAuthorizationPhrase,
+  campaignScopeSha256,
+  createQaCampaignState,
+  issueQaCampaignChildGrant,
+} from "../../scripts/browser-acceptance/qa-campaign.mjs";
 
 const scenarioPath = resolve(
   "docs/browser-acceptance/scenarios/examples/chrome-all-channels-autocomplete.yaml",
@@ -62,6 +73,13 @@ async function writeStructuredFixture(value, name) {
   const directory = await mkdtemp(join(tmpdir(), "social-metadata-qa-"));
   const path = join(directory, name);
   await writeFile(path, stringify(value), "utf8");
+  return path;
+}
+
+async function writeJsonFixture(value, name) {
+  const directory = await mkdtemp(join(tmpdir(), "social-metadata-qa-"));
+  const path = join(directory, name);
+  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
   return path;
 }
 
@@ -179,6 +197,155 @@ test("dispatch validation accepts explicit approval without credential authority
   assert.equal(result.ok, true);
   assert.equal(result.approved, true);
   assert.equal(result.browserAccessAuthorized, true);
+});
+
+test("campaign dispatch requires and exact-matches the one-time child grant", async () => {
+  const hash = (character) => character.repeat(64);
+  const base = parse(await readFile(scenarioPath, "utf8"));
+  const scenario = scenarioFor(base, "chrome", ["instagram", "facebook", "linkedin"]);
+  scenario.scenarioId = "chrome_instagram_facebook_linkedin_autocomplete";
+  scenario.authorization = {
+    ...scenario.authorization, status: "approved", approvedAt: "2026-07-30T00:02:00Z",
+    expiresAt: "2026-08-06T00:00:00Z", reusable: false,
+    requireHumanBeforeBrowserAccess: false, browserAccessAuthorized: true,
+    credentialsAuthorized: false,
+    campaign: { campaignId: "campaign_config_01", campaignScopeSha256: campaignScopeSha256() },
+  };
+  const scenarioFixture = await writeStructuredFixture(scenario, "campaign.yaml");
+  const scenarioSha256 = createHash("sha256").update(await readFile(scenarioFixture)).digest("hex");
+  const oracleSha256 = createHash("sha256").update(await readFile(chromeOraclePath)).digest("hex");
+  const campaignSpec = {
+    campaignId: "campaign_config_01",
+    campaignScopeSha256: campaignScopeSha256(),
+    createdAt: "2026-07-30T00:00:00.000Z",
+    expiresAt: "2026-08-06T00:00:00.000Z",
+    immutableScope: structuredClone(QA_CAMPAIGN_SCOPE),
+    pins: {
+      productCommit: "a".repeat(40),
+      productTree: "b".repeat(40),
+      qaCommit: "c".repeat(40),
+      qaTree: "d".repeat(40),
+      scenarioSha256,
+      oracleSha256,
+      protocolSha256: hash("3"),
+      runReducerSha256: hash("4"),
+      campaignReducerSha256: hash("5"),
+      scenarioSchemaSha256: hash("6"),
+    },
+  };
+  const pending = createQaCampaignState(campaignSpec);
+  const campaign = authorizeQaCampaign(pending, {
+    phrase: campaignAuthorizationPhrase(
+      pending.campaign.campaignId,
+      pending.campaign.campaignScopeSha256,
+    ),
+    at: "2026-07-30T00:01:00.000Z",
+  });
+  const { grant } = issueQaCampaignChildGrant(campaign, {
+    campaignId: campaign.campaign.campaignId,
+    campaignScopeSha256: campaign.campaign.campaignScopeSha256,
+    expectedPinsSha256: campaign.pins.currentSha256,
+    runId: "qa_campaign_config_child_1",
+    runStatePathSha256: hash("7"),
+    scenarioId: "chrome_instagram_facebook_linkedin_autocomplete",
+    scenarioSha256: campaign.pins.current.scenarioSha256,
+    oracleId: "chrome_authenticated_research_v2",
+    oracleSha256: campaign.pins.current.oracleSha256,
+    protocolVersion: "qa-manager-worker/v1",
+    protocolSha256: campaign.pins.current.protocolSha256,
+    browser: "chrome",
+    channels: ["instagram", "facebook", "linkedin"],
+    issuedAt: "2026-07-30T00:02:00.000Z",
+  });
+  const grantFixture = await writeJsonFixture(grant, "grant.json");
+  const grantSchema = JSON.parse(await readFile(
+    "docs/browser-acceptance/schemas/qa-campaign-child-grant.schema.json",
+    "utf8",
+  ));
+  const validateGrant = new Ajv2020({ strict: true }).compile(grantSchema);
+  assert.equal(validateGrant(grant), true, JSON.stringify(validateGrant.errors));
+  for (const channels of [
+    [],
+    ["instagram", "facebook"],
+    ["instagram", "facebook", "linkedin", "x"],
+    ["facebook", "instagram", "linkedin"],
+  ]) {
+    const malformed = { ...grant, channels };
+    assert.equal(validateGrant(malformed), false, JSON.stringify(channels));
+    assert.throws(() => assertQaCampaignChildGrant(malformed), /channels mismatch/);
+  }
+  const missingGrant = await validateQaConfig({
+    scenarioPath: scenarioFixture,
+    oraclePath: chromeOraclePath,
+    requireApproved: true,
+  });
+  assert.equal(missingGrant.ok, false);
+  assert.ok(
+    missingGrant.errors.some((error) => error.code === "campaign_grant_required"),
+  );
+  const result = await validateQaConfig({
+    scenarioPath: scenarioFixture,
+    oraclePath: chromeOraclePath,
+    requireApproved: true,
+    campaignGrantPath: grantFixture,
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.errors));
+  assert.equal(result.campaignId, grant.campaignId);
+  assert.equal(result.campaignGrantSha256, grant.grantSha256);
+
+  const escapedDuplicateDirectory = await mkdtemp(
+    join(tmpdir(), "social-metadata-qa-"),
+  );
+  const escapedDuplicateGrant = join(
+    escapedDuplicateDirectory,
+    "escaped-duplicate-grant.json",
+  );
+  await writeFile(
+    escapedDuplicateGrant,
+    JSON.stringify(grant).replace(
+      '"runId":',
+      '"runId":"shadow","run\\u0049d":',
+    ),
+    "utf8",
+  );
+  await assert.rejects(
+    validateQaConfig({
+      scenarioPath: scenarioFixture,
+      oraclePath: chromeOraclePath,
+      requireApproved: true,
+      campaignGrantPath: escapedDuplicateGrant,
+    }),
+    /duplicate fields/,
+  );
+
+  const staleGrant = { ...grant, pinsSha256: hash("9") };
+  const staleFixture = await writeJsonFixture(staleGrant, "stale-grant.json");
+  const rejected = await validateQaConfig({
+    scenarioPath: scenarioFixture,
+    oraclePath: chromeOraclePath,
+    requireApproved: true,
+    campaignGrantPath: staleFixture,
+  });
+  assert.equal(rejected.ok, false);
+  assert.ok(
+    rejected.errors.some((error) => error.code === "campaign_grant_invalid"),
+  );
+});
+
+test("exact artifact validation rejects BOM and byte changes rather than normalizing them", async () => {
+  const source = await readFile(scenarioPath, "utf8");
+  const directory = await mkdtemp(join(tmpdir(), "social-metadata-qa-"));
+  const bomScenario = join(directory, "bom.yaml");
+  await writeFile(bomScenario, `\ufeff${source}`, "utf8");
+  await assert.rejects(
+    validateQaConfig({ scenarioPath: bomScenario, oraclePath: chromeOraclePath }),
+    /BOM/,
+  );
+  const changedScenario = join(directory, "changed.yaml");
+  await writeFile(changedScenario, `${source}\n# exact-byte change\n`, "utf8");
+  const original = await validateQaConfig({ scenarioPath, oraclePath: chromeOraclePath });
+  const changed = await validateQaConfig({ scenarioPath: changedScenario, oraclePath: chromeOraclePath });
+  assert.notEqual(changed.scenarioSha256, original.scenarioSha256);
 });
 
 test("scenario authentication coverage must exactly equal selected channels", async () => {

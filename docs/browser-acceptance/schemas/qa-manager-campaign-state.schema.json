@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/qa-manager-campaign-state.schema.json",
+  "title": "Private QA manager campaign state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "revision",
+    "campaign",
+    "immutableScope",
+    "authorization",
+    "pins",
+    "budget"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "qa-manager-campaign-state/v1" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "campaign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "campaignId",
+        "campaignScopeSha256",
+        "status",
+        "createdAt",
+        "activatedAt",
+        "expiresAt",
+        "suspendedAt",
+        "suspensionReason",
+        "resumedAt",
+        "revokedAt",
+        "completedAt"
+      ],
+      "properties": {
+        "campaignId": { "$ref": "#/$defs/stableId" },
+        "campaignScopeSha256": { "$ref": "#/$defs/sha256" },
+        "status": {
+          "enum": [
+            "pending",
+            "active",
+            "suspended",
+            "revoked",
+            "expired",
+            "completed"
+          ]
+        },
+        "createdAt": { "$ref": "#/$defs/timestamp" },
+        "activatedAt": { "$ref": "#/$defs/nullableTimestamp" },
+        "expiresAt": {
+          "$ref": "#/$defs/timestamp",
+          "description": "Runtime validation requires this to be after createdAt and no more than seven days later."
+        },
+        "suspendedAt": { "$ref": "#/$defs/nullableTimestamp" },
+        "suspensionReason": {
+          "oneOf": [{ "$ref": "#/$defs/stableId" }, { "type": "null" }]
+        },
+        "resumedAt": { "$ref": "#/$defs/nullableTimestamp" },
+        "revokedAt": { "$ref": "#/$defs/nullableTimestamp" },
+        "completedAt": { "$ref": "#/$defs/nullableTimestamp" }
+      }
+    },
+    "immutableScope": { "$ref": "#/$defs/immutableScope" },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exactPhraseSha256", "approved", "approvedAt"],
+      "properties": {
+        "exactPhraseSha256": { "$ref": "#/$defs/sha256" },
+        "approved": { "type": "boolean" },
+        "approvedAt": { "$ref": "#/$defs/nullableTimestamp" }
+      }
+    },
+    "pins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current",
+        "currentSha256",
+        "authorizationMachinerySha256",
+        "history"
+      ],
+      "properties": {
+        "current": { "$ref": "#/$defs/pins" },
+        "currentSha256": { "$ref": "#/$defs/sha256" },
+        "authorizationMachinerySha256": {
+          "$ref": "#/$defs/sha256",
+          "description": "Runtime validation requires the exact hash of protocolSha256, runReducerSha256, campaignReducerSha256, and scenarioSchemaSha256 in current."
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pinsSha256", "supersededAt"],
+            "properties": {
+              "pinsSha256": { "$ref": "#/$defs/sha256" },
+              "supersededAt": { "$ref": "#/$defs/timestamp" }
+            }
+          }
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limit", "issuedCount", "activeChild", "children"],
+      "properties": {
+        "limit": { "const": 10 },
+        "issuedCount": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "activeChild": {
+          "oneOf": [{ "$ref": "#/$defs/child" }, { "type": "null" }]
+        },
+        "children": {
+          "type": "array",
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/child" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "gitObject": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40,64}$"
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$"
+    },
+    "nullableTimestamp": {
+      "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }]
+    },
+    "immutableScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "browser",
+        "browserSurface",
+        "orderedChannels",
+        "modules",
+        "evidenceTier",
+        "targetAcquisition",
+        "targetOwnership",
+        "childLimit"
+      ],
+      "properties": {
+        "purpose": { "const": "qa_only" },
+        "browser": { "const": "chrome" },
+        "browserSurface": { "const": "existing_visible_chrome" },
+        "orderedChannels": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [
+            { "const": "instagram" },
+            { "const": "facebook" },
+            { "const": "linkedin" }
+          ],
+          "items": false
+        },
+        "modules": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            { "const": "hashtag" },
+            { "const": "search-term" }
+          ],
+          "items": false
+        },
+        "evidenceTier": { "const": "autocomplete_only" },
+        "targetAcquisition": { "const": "new_agent_tab" },
+        "targetOwnership": { "const": "plugin_owned" },
+        "childLimit": { "const": 10 }
+      }
+    },
+    "pins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "productCommit",
+        "productTree",
+        "qaCommit",
+        "qaTree",
+        "scenarioSha256",
+        "oracleSha256",
+        "protocolSha256",
+        "runReducerSha256",
+        "campaignReducerSha256",
+        "scenarioSchemaSha256"
+      ],
+      "properties": {
+        "productCommit": { "$ref": "#/$defs/gitObject" },
+        "productTree": { "$ref": "#/$defs/gitObject" },
+        "qaCommit": { "$ref": "#/$defs/gitObject" },
+        "qaTree": { "$ref": "#/$defs/gitObject" },
+        "scenarioSha256": { "$ref": "#/$defs/sha256" },
+        "oracleSha256": { "$ref": "#/$defs/sha256" },
+        "protocolSha256": { "$ref": "#/$defs/sha256" },
+        "runReducerSha256": { "$ref": "#/$defs/sha256" },
+        "campaignReducerSha256": { "$ref": "#/$defs/sha256" },
+        "scenarioSchemaSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ordinal",
+        "runId",
+        "runStatePathSha256",
+        "grantSha256",
+        "pinsSha256",
+        "status",
+        "issuedAt",
+        "terminalAt",
+        "terminalResultId",
+        "disposition",
+        "authorizationConsumed",
+        "targetDisposition",
+        "receiptSha256"
+      ],
+      "properties": {
+        "ordinal": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "runId": { "$ref": "#/$defs/stableId" },
+        "runStatePathSha256": { "$ref": "#/$defs/sha256" },
+        "grantSha256": { "$ref": "#/$defs/sha256" },
+        "pinsSha256": { "$ref": "#/$defs/sha256" },
+        "status": { "enum": ["active", "terminal"] },
+        "issuedAt": { "$ref": "#/$defs/timestamp" },
+        "terminalAt": { "$ref": "#/$defs/nullableTimestamp" },
+        "terminalResultId": {
+          "oneOf": [
+            { "enum": ["run_complete", "run_stopped"] },
+            { "type": "null" }
+          ]
+        },
+        "disposition": {
+          "oneOf": [
+            { "enum": ["pass", "pass_with_findings", "blocked", "fail"] },
+            { "type": "null" }
+          ]
+        },
+        "authorizationConsumed": { "type": "boolean" },
+        "targetDisposition": {
+          "oneOf": [
+            { "enum": ["released", "terminal_ambiguity"] },
+            { "type": "null" }
+          ]
+        },
+        "receiptSha256": {
+          "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        }
+      }
+    }
+  }
+}

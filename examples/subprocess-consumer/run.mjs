@@ -1,17 +1,37 @@
-import { execFile } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { promisify } from "node:util";
+import { writeFile } from "node:fs/promises";
+import {
+  acquireTempRoot,
+  composePrimaryAndClosureFailure,
+  createBoundedChildLifecycle,
+  removeAcquiredTempRoot,
+} from "../../scripts/browser-acceptance/owned-temp-root.mjs";
 
-const execFileAsync = promisify(execFile);
 const cli = resolve("bin/social-metadata.js");
-const stateRoot = await mkdtemp(join(tmpdir(), "social-metadata-consumer-"));
+const tempRoot = await acquireTempRoot({
+  prefix: "social-metadata-consumer-",
+  borrowedRoot: process.env.SOCIAL_METADATA_RELEASE_ROOT,
+  descendant: "subprocess-consumer",
+});
+const stateRoot = join(tempRoot.path, "state");
 const runId = `run_subprocess_${process.pid}`;
 const capturedAt = new Date().toISOString();
+const commandTimeoutMs = boundedInteger("SUBPROCESS_CONSUMER_COMMAND_TIMEOUT_MS", "90000", 90_000);
+const childGraceMs = boundedInteger("SUBPROCESS_CONSUMER_CHILD_GRACE_MS", "2000", 10_000);
+const lifecycle = createBoundedChildLifecycle({ timeoutMs: commandTimeoutMs, graceMs: childGraceMs });
+let terminatingSignal = null;
+let cleanupPromise = null;
+
+function boundedInteger(name, fallback, maximum) {
+  const milliseconds = Number(process.env[name] ?? fallback);
+  if (!Number.isInteger(milliseconds) || milliseconds < 1 || milliseconds > maximum) {
+    throw new Error(`${name} must be a finite integer from 1 to ${maximum}`);
+  }
+  return milliseconds;
+}
 
 async function invoke(args) {
-  const { stdout, stderr } = await execFileAsync(process.execPath, [cli, ...args], {
+  const { stdout, stderr } = await lifecycle.run(process.execPath, [cli, ...args], {
     cwd: process.cwd(),
   });
   const lines = stdout.trim().split("\n");
@@ -19,6 +39,38 @@ async function invoke(args) {
   const envelope = JSON.parse(lines[0]);
   if (!envelope.ok) throw new Error(`CLI failed: ${JSON.stringify(envelope.errors)}`);
   return envelope;
+}
+
+async function cleanup(signal = null) {
+  if (cleanupPromise) return cleanupPromise;
+  cleanupPromise = (async () => {
+    await lifecycle.shutdown(signal === "SIGINT" ? "SIGINT" : "SIGTERM");
+    await removeAcquiredTempRoot(tempRoot, lifecycle.closureToken());
+  })();
+  return cleanupPromise;
+}
+
+async function interrupt(signal) {
+  if (terminatingSignal) return;
+  terminatingSignal = signal;
+  try {
+    await cleanup(signal);
+    process.exit(signal === "SIGINT" ? 130 : 143);
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
+    process.exit(1);
+  }
+}
+
+process.once("SIGINT", () => { void interrupt("SIGINT"); });
+process.once("SIGTERM", () => { void interrupt("SIGTERM"); });
+
+const startupDelayMs = boundedInteger("SUBPROCESS_CONSUMER_START_DELAY_MS", "1", 10_000);
+if (process.env.SUBPROCESS_CONSUMER_READY_FILE) {
+  await writeFile(process.env.SUBPROCESS_CONSUMER_READY_FILE, "ready\n");
+}
+if (startupDelayMs > 1) {
+  await new Promise((resolveDelay) => setTimeout(resolveDelay, startupDelayMs));
 }
 
 function observation(channelRunId, id, kind, payload, typedText) {
@@ -46,6 +98,8 @@ function observation(channelRunId, id, kind, payload, typedText) {
   };
 }
 
+let successOutput;
+let primaryFailure;
 try {
   const plan = await invoke([
     "plan",
@@ -103,7 +157,7 @@ try {
     ]);
   }
   const validated = await invoke(["validate", "--run", runId, "--state-root", stateRoot]);
-  process.stdout.write(`${JSON.stringify({
+  successOutput = `${JSON.stringify({
     ok: true,
     contractVersion: validated.contractVersion,
     runId,
@@ -111,7 +165,18 @@ try {
     channel: validated.data.receipt.channel,
     recommendation: validated.data.receipt.moduleResults["search-term"].researchedRecommendations[0].displayedValue,
     consumedFrom: "stdout_json_only",
-  })}\n`);
-} finally {
-  await rm(stateRoot, { recursive: true, force: true });
+  })}\n`;
+} catch (error) {
+  primaryFailure = error;
 }
+
+try {
+  await cleanup();
+} catch (closureError) {
+  if (primaryFailure) throw composePrimaryAndClosureFailure(primaryFailure, closureError);
+  throw closureError;
+}
+
+if (primaryFailure) throw primaryFailure;
+
+if (!terminatingSignal) process.stdout.write(successOutput);

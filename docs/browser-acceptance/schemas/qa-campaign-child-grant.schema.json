@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://social-metadata.local/schemas/qa-campaign-child-grant.schema.json",
+  "title": "Detached QA campaign child grant",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "campaignId", "campaignScopeSha256", "ordinal", "runId", "runStatePathSha256", "authorizationId", "scenarioId", "scenarioSha256", "oracleId", "oracleSha256", "protocolVersion", "protocolSha256", "pinsSha256", "browser", "channels", "issuedAt", "grantSha256"],
+  "properties": {
+    "protocol": { "const": "qa-campaign-child-grant/v1" },
+    "campaignId": { "$ref": "#/$defs/id" },
+    "campaignScopeSha256": { "$ref": "#/$defs/hash" },
+    "ordinal": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "runId": { "$ref": "#/$defs/id" },
+    "runStatePathSha256": { "$ref": "#/$defs/hash" },
+    "authorizationId": { "$ref": "#/$defs/id" },
+    "scenarioId": { "$ref": "#/$defs/id" },
+    "scenarioSha256": { "$ref": "#/$defs/hash" },
+    "oracleId": { "$ref": "#/$defs/id" },
+    "oracleSha256": { "$ref": "#/$defs/hash" },
+    "protocolVersion": { "const": "qa-manager-worker/v1" },
+    "protocolSha256": { "$ref": "#/$defs/hash" },
+    "pinsSha256": { "$ref": "#/$defs/hash" },
+    "browser": { "const": "chrome" },
+    "channels": { "type": "array", "minItems": 3, "maxItems": 3, "prefixItems": [{"const":"instagram"},{"const":"facebook"},{"const":"linkedin"}], "items": false },
+    "issuedAt": { "$ref": "#/$defs/timestamp" },
+    "grantSha256": { "$ref": "#/$defs/hash" }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$" }
+  }
+}

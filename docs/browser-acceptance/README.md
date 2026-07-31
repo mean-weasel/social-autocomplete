@@ -159,6 +159,8 @@ Use these version-controlled materials for repeatable local Codex QA:
   point for a fresh product-repository manager task.
 - [Worker dispatch prompt](prompts/qa-worker-dispatch.md) — versioned
   manager-to-worker handoff populated with run-specific paths and checksums.
+- [Campaign dispatch addendum](prompts/qa-worker-campaign-dispatch.md) — used
+  only for an issued bounded-campaign child; ordinary dispatches omit it.
 - [Manager/worker protocol](protocol/manager-worker.md) — stable request,
   response, result, and stop envelopes for scenario-driven QA.
 - [Channel matrix](channel-matrix.md) — channel/module checkpoints and allowed
@@ -171,6 +173,11 @@ Use these version-controlled materials for repeatable local Codex QA:
 - [QA manager run-state schema](schemas/qa-manager-run-state.schema.json) —
   durable sequence, action, result, continuation, retry, and one-time
   authorization checkpoints used by host recovery.
+- [QA manager campaign-state schema](schemas/qa-manager-campaign-state.schema.json)
+  — private atomic state for a fixed, revocable campaign of at most ten
+  one-time child runs.
+- [Detached child-grant schema](schemas/qa-campaign-child-grant.schema.json)
+  — exact downstream authorization, never embedded in a scenario.
 - [Scenario schema](schemas/qa-scenario.schema.json) and
   [oracle schema](schemas/qa-oracle.schema.json) — machine-readable contracts
   for interview output and independent browser-capability expectations.
@@ -206,6 +213,47 @@ Approved private scenarios live under
 `.social-metadata/qa/scenarios/` in this repository and are ignored by Git.
 Worker run notes, receipts, screenshots, and browser run state live in the QA
 repository and remain ignored by Git.
+
+## Bounded QA browser campaigns
+
+A campaign is an optional manager-only authorization layer; it never changes a
+worker's browser contract. Its immutable scope is QA-only existing visible
+Chrome, exactly Instagram → Facebook → LinkedIn, both modules,
+`autocomplete_only`, and plugin-owned `new_agent_tab` targets. Private state
+lives at
+`.social-metadata/qa/manager-campaigns/<campaignId>-state.json` and is mutated
+only with `scripts/browser-acceptance/qa-campaign.mjs`.
+
+Activation requires the exact phrase
+`APPROVE QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256> FOR 10 RUNS`.
+Design approval is not activation. Each successful `issue-child-grant`
+atomically and irrevocably burns one of ten slots before its sanitized grant
+is written to stdout. Only one child may be active, and no later grant exists
+until the prior run is terminal, its one-time browser authorization is
+consumed, target release or terminal ambiguity is recorded, and the terminal
+receipt hash is reconciled. There are no refunds, reissues, resends, or grant
+recovery after ambiguous delivery.
+
+Authentication, challenge, user pause, unsafe input, host/action ambiguity,
+release uncertainty, stale mutation ownership, or pin mismatch suspends new
+grants. Resume requires
+`RESUME QA BROWSER CAMPAIGN <campaignId> <campaignScopeSha256>`. Revocation
+requires `REVOKE QA BROWSER CAMPAIGN <campaignId>` and is monotonic. Campaigns
+expire no later than seven days after creation. Exact pins may advance only
+between terminal children after Judge approval, exact QA repin, hash checks,
+and offline/release verification; authorization machinery and immutable scope
+cannot change.
+
+The scenario marker contains exactly campaign ID and scope hash. Scenario and
+oracle pins hash the original bytes before UTF-8 decoding or parsing; the
+detached grant is exact-field and self-hashed (omitting only its own hash),
+then must equal the durable active child and current pins. Its run-state-path
+hash is rechecked at creation and terminal reconciliation.
+
+Campaign state and grant envelopes contain only sanitized IDs, ordinals,
+enums, timestamps, immutable object IDs, deterministic hashes, counts, and
+booleans. They never contain browser/page content, raw target data,
+credentials, account identity, task identity, URLs, titles, or browser state.
 
 Open a fresh Codex task rooted in this repository and say:
 
