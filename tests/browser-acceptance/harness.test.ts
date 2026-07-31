@@ -319,15 +319,14 @@ test("authenticated preflight contract prohibits broad reads and limits its proj
   assert.match(sharedContract, /Never return or persist the relationship value/i);
   assert.match(sharedContract, /inspect page-global candidate roles/i);
   assert.match(sharedContract, /absent, multiple, conflicting, or still-empty ownership as native empty/i);
-  assert.match(sharedContract, /same post-acknowledgement Codex turn/i);
-  assert.match(sharedContract, /no commentary, protocol event, manager\/worker message, or other output/i);
-  assert.match(sharedContract, /between\s+`tabs\.new`\s+and\s+release/i);
-  assert.match(sharedContract, /atomic\s+manager finalization/i);
-  assert.match(sharedContract, /terminal\s+ambiguity/i);
-  assert.match(sharedContract, /rediscover or replay/i);
-  for (const contract of [readme, sharedContract, researchSkill]) {
-    assertPostAcknowledgementAcquisitionContract(contract);
+  for (const contract of [sharedContract, researchSkill]) {
+    assert.match(contract, /retain(?:ed)?[\s\S]{0,120}(?:browser )?binding/i);
+    assert.match(contract, /new user turn does not[\s\S]{0,80}invalidate/i);
+    assert.match(contract, /browser_binding_unavailable/i);
+    assert.doesNotMatch(contract, /QA_CHECKPOINT_ACK/i);
+    assert.doesNotMatch(contract, /manager-supplied lease hash/i);
   }
+  assertPostAcknowledgementAcquisitionContract(readme);
 });
 
 test("private input fields are visibly rejected", async () => {

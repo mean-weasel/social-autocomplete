@@ -10,6 +10,11 @@ node scripts/browser-acceptance/run.mjs \
   --output docs/browser-acceptance/receipts/youtube-public.json
 ```
 
+For the recommended live smoke, use the
+[single-task runbook](runbooks/qa-single-task.md), its saved
+[starter](prompts/qa-single-task-starter.md), and the
+[Chrome/Instagram example](scenarios/examples/chrome-instagram-single-task-autocomplete.yaml).
+
 Before opening the first channel, ask the user to choose Chrome or the Codex
 in-app Browser and record that confirmed choice in the run plan. Reuse the same
 host browser binding while the choice remains effective. Before every channel,

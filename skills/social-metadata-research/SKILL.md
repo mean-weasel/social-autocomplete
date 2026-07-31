@@ -15,12 +15,13 @@ Research attention-relevant metadata without publishing or changing the user's c
 2. Record the confirmed choice in `browserSelection` with `confirmedByUser: true`. Establish that host browser binding once and reuse it for every channel while the choice remains effective.
 3. Ask explicitly: **"Which channels should I research, and in what order?"** Present all supported choices: Facebook, Instagram, LinkedIn, X, TikTok, YouTube, and Pinterest. The user may accept an agent-proposed list, but a proposal is never a default or a substitute for this explicit choice.
 4. Record the user's confirmed ordered list as `channels` in the new plan. On every new run, ask again and create a new `runId`; never inherit channels from a previous run. When explicitly resuming an existing `runId`, reuse its recorded channels without asking again.
-5. Understand the supplied caption, image, app, or messaging context.
-6. Infer topic, locale, modules, evidence tier, and orchestration mode. By default select both `hashtag` and `search-term`, use fresh research, and use `autocomplete_only`.
-7. Present those inferred values, the confirmed ordered channels, the browser choice, and any compatibility limits, then ask for confirmation before any channel research. Always offer:
+5. Ask: **"Should completed research tabs stay open? The default is no."** Record `completedResearchTabs` as `close` or `keep_open`. A fresh run asks again; an explicit resume reuses the recorded choice.
+6. Understand the supplied caption, image, app, or messaging context.
+7. Infer topic, locale, modules, evidence tier, and orchestration mode. By default select both `hashtag` and `search-term`, use fresh research, and use `autocomplete_only`.
+8. Present those inferred values, the confirmed ordered channels, the browser choice, the completed-tab choice, and any compatibility limits, then ask for confirmation before any channel research. Always offer:
    - `guided`: two approvals per channel, first for initial query prefixes and then for the single refinement round if needed.
    - `automatic`: the agent chooses prefixes and candidates after the initial confirmation; ask again only for an interruption or material plan amendment.
-8. Call the bundled CLI as a subprocess and consume its JSON stdout directly:
+9. Call the bundled CLI as a subprocess and consume its JSON stdout directly:
 
    ```sh
    social-metadata plan --json @plan-input.json
@@ -39,16 +40,14 @@ Channel selection is immutable within a run. To research a different channel lis
 Use only a user-visible browser session owned by the host:
 
 - For authenticated research, attach to the user's existing Chrome profile. The user may already be signed in to the requested channels.
-- Treat the pre-acknowledgement selected-browser binding check only as an
-  availability probe; do not retain or rely on that runtime object for target
-  creation. After exact-comparing the acknowledged action and manager-supplied
-  lease hash, resolve the exact selected host binding again in the same worker
-  continuation and, without intermediate worker output, immediately call
-  `tabs.new` to create a new plugin-owned agent tab. Perform its bounded
-  lifecycle through release and navigate only to the selected playbook's typed
-  official root. Never list, claim, inspect, or reuse user tabs. A
-  post-acknowledgement acquisition failure remains non-replayable `started` /
-  `ambiguous_browser_action`.
+- Establish the selected host browser binding once in the active task and
+  reuse it across that task's selected channels. A new user turn does not
+  invalidate the binding. Create a new plugin-owned agent tab for each channel
+  directly from that retained binding, perform its bounded lifecycle through
+  release, and navigate only to the selected playbook's typed official root.
+  Never list, claim, inspect, or reuse user tabs. If binding or tab creation
+  fails before a target exists, record `browser_binding_unavailable` and leave
+  the channel unstarted.
 - Before authenticated research, follow the canonical [sanitized authentication preflight](../../docs/browser-acceptance/README.md#sanitized-authentication-preflight) inside that exact plugin-created target and return only structural booleans, sanitized lifecycle/status values, a deterministic lease hash, and short expected/observed semantic landmarks. Raw tab handles remain in the host runtime only.
 - If a channel is signed out, record `authentication_required` and `authentication_handoff`, pause the same run, and ask the user to sign in manually in that dedicated target. Resume the live handle only in the same task. Across a task/process boundary discard it and create a new dedicated target from the typed official root; never rediscover an old tab.
 - For permitted public research, Codex may use its host-managed in-app Browser.
@@ -61,28 +60,26 @@ Never list or return a complete open-tab list or any target collection. Never
 return or retain full authenticated DOM snapshots, raw HTML, `body` text, feed
 content, tab titles or URLs, raw target identifiers, or account identifiers. A
 failed structural check must return a sanitized interruption; it must not
-trigger a broader tab or DOM read. Release the plugin-created target before a
-normal channel result; explicit manual-authentication handoff is the only
-unreleased state.
+trigger a broader tab or DOM read. Before a normal channel result, always
+release browser-session control of the plugin-created target. With `close`,
+omit the tab from finalization so the agent-created tab closes. With
+`keep_open`, finalize that exact tab as a deliverable so it remains visible to
+the user but is no longer plugin-controlled. Never rediscover or reuse it.
+Explicit manual-authentication handoff remains the only unfinished state.
 
 ## Research channels
 
 Pause before each channel, select its dedicated skill, and follow the [shared research contract](../_shared/browser-research-contract.md). Use the thin router policy to choose the allowed browser:
 
 - Read `nextAction.browserSelection` and reuse that exact host browser binding.
-  Before every channel, establish and verify that binding in the current task
-  turn before considering the browser action started. This is an availability
-  probe, not the runtime binding used after acknowledgement. Never assume a
-  Chrome or in-app Browser runtime object survives a Codex turn, task, process,
-  or acknowledgement boundary. If this pre-acknowledgement probe fails, pause visibly as
-  `browser_binding_unavailable` while the channel action remains unstarted.
-- Create exactly one task-scoped target lease per channel only after the
-  canonical action acknowledgement and exact lease-hash comparison. Re-resolve
-  the exact selected host binding in that same continuation, emit nothing
-  between resolution and the immediate `tabs.new` call, and continue the
-  bounded lifecycle through mandatory release. Both supported Codex browser
-  choices use host agent-tab creation; neither path enumerates or claims user
-  tabs.
+  Establish it once in the current task, retain it across user turns, and
+  verify it is still connected before each channel. If it is unavailable,
+  pause visibly as `browser_binding_unavailable` while the channel remains
+  unstarted.
+- Create exactly one task-scoped plugin-owned target per channel directly from
+  that retained binding and continue the bounded lifecycle through mandatory
+  release of browser-session control. Both supported Codex browser choices use host agent-tab creation;
+  neither path enumerates or claims user tabs.
 - Codex: Chrome for authenticated sessions; in-app Browser only for public TikTok or YouTube research, or Pinterest search-term research.
 - Claude: Claude in Chrome. If unavailable, return a visible capability interruption.
 

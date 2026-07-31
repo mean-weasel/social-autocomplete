@@ -20,6 +20,7 @@
     "browser": "chrome",
     "confirmedByUser": true
   },
+  "completedResearchTabs": "close",
   "approvedPrefixes": {
     "youtube": {
       "search-term": ["remote work"]

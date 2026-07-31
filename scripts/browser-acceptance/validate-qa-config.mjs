@@ -111,6 +111,34 @@ export function checkQaCompatibility(
     );
   }
 
+  if (scenario.interactionSource === "single_task") {
+    const prefixes = scenario.queryPrefixes ?? {};
+    const prefixModules = Object.keys(prefixes);
+    const enabledModules = scenario.modules ?? [];
+    if (
+      prefixModules.length !== enabledModules.length ||
+      enabledModules.some((moduleName) => !prefixModules.includes(moduleName))
+    ) {
+      push(
+        "/queryPrefixes",
+        "query_prefix_module_coverage",
+        "single-task queryPrefixes must contain exactly the enabled modules",
+      );
+    }
+    for (const [moduleName, values] of Object.entries(prefixes)) {
+      if (
+        Array.isArray(values) &&
+        values.length > (scenario.bounds?.maxPrefixesPerModule ?? 0)
+      ) {
+        push(
+          `/queryPrefixes/${moduleName}`,
+          "query_prefix_bound_exceeded",
+          "query prefix count exceeds maxPrefixesPerModule",
+        );
+      }
+    }
+  }
+
   const applicability = oracle.applicability ?? {};
   const availableChannels = applicability.availableChannels ?? [];
   const oracleChannels = Object.keys(oracle.channelOutcomes ?? {});
@@ -350,8 +378,9 @@ export async function validateQaConfig({
 
   return {
     ok: errors.length === 0,
-    protocolVersion: oracleDocument.value?.protocolVersion ?? null,
+    protocolVersion: scenarioDocument.value?.interactionSource === "single_task" ? "qa-single-task/v1" : oracleDocument.value?.protocolVersion ?? null,
     scenarioId: scenarioDocument.value?.scenarioId ?? null,
+    interactionSource: scenarioDocument.value?.interactionSource ?? null,
     scenarioSha256: scenarioDocument.sha256,
     oracleId: oracleDocument.value?.oracleId ?? null,
     oracleSha256: oracleDocument.sha256,
@@ -364,6 +393,8 @@ export async function validateQaConfig({
     requireHumanBeforeBrowserAccess:
       scenarioDocument.value?.authorization?.requireHumanBeforeBrowserAccess ??
       null,
+    completedResearchTabs:
+      scenarioDocument.value?.completedResearchTabs ?? "close",
     selectedChannels: Array.isArray(scenarioDocument.value?.channels)
       ? [...scenarioDocument.value.channels]
       : null,

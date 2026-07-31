@@ -30,8 +30,12 @@
     },
     "title": { "type": "string", "minLength": 1, "maxLength": 120 },
     "scope": { "enum": ["setup", "preflight", "research"] },
-    "interactionSource": { "const": "synthetic_manager" },
+    "interactionSource": { "enum": ["synthetic_manager", "single_task"] },
     "browser": { "enum": ["chrome", "in_app"] },
+    "completedResearchTabs": {
+      "enum": ["close", "keep_open"],
+      "default": "close"
+    },
     "channels": {
       "type": "array",
       "minItems": 1,
@@ -80,6 +84,36 @@
       "enum": ["autocomplete_only", "results_sample"]
     },
     "mode": { "enum": ["guided", "automatic"] },
+    "queryPrefixes": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "hashtag": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^#[^\\s#]+$",
+            "maxLength": 80
+          }
+        },
+        "search-term": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "not": { "pattern": "^#" }
+          }
+        }
+      }
+    },
     "authentication": {
       "type": "object",
       "additionalProperties": false,
@@ -185,6 +219,25 @@
     }
   },
   "allOf": [
+    {
+      "if": {
+        "properties": { "interactionSource": { "const": "single_task" } },
+        "required": ["interactionSource"]
+      },
+      "then": {
+        "required": ["queryPrefixes"],
+        "properties": {
+          "queryPrefixes": {},
+          "authorization": {
+            "type": "object",
+            "not": {
+              "properties": { "campaign": {} },
+              "required": ["campaign"]
+            }
+          }
+        }
+      }
+    },
     {
       "if": {
         "properties": { "browser": { "const": "in_app" } },

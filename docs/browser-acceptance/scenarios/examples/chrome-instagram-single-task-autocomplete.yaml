@@ -1,20 +1,14 @@
 schemaVersion: qa-scenario/v1
-scenarioId: chrome_all_channels_autocomplete
-title: Chrome all-channel autocomplete research
+scenarioId: chrome_instagram_hashtag_single_task
+title: Chrome Instagram hashtag single-task smoke
 scope: research
-interactionSource: synthetic_manager
+interactionSource: single_task
 browser: chrome
 completedResearchTabs: close
 channels:
-  - facebook
   - instagram
-  - linkedin
-  - x
-  - tiktok
-  - youtube
-  - pinterest
 creativeBrief:
-  summary: A fictional local-first note-taking app launching collaborative project spaces.
+  summary: A fictional productivity app launching collaborative project notes.
   synthetic: true
 locale:
   uiLocale: en-US
@@ -22,24 +16,14 @@ locale:
   timezone: America/Phoenix
 modules:
   - hashtag
-  - search-term
 evidenceTier: autocomplete_only
 mode: automatic
+queryPrefixes:
+  hashtag:
+    - "#productivity"
 authentication:
   byChannel:
-    facebook:
-      expectedState: already_signed_in
     instagram:
-      expectedState: already_signed_in
-    linkedin:
-      expectedState: already_signed_in
-    x:
-      expectedState: already_signed_in
-    tiktok:
-      expectedState: already_signed_in
-    youtube:
-      expectedState: already_signed_in
-    pinterest:
       expectedState: already_signed_in
   ifRequired: stop
   ifChallenge: stop
@@ -48,11 +32,11 @@ interruptionPolicy:
   authenticationRequired: stop
   challenge: stop
   localeMismatch: stop
-  uiChange: record_and_continue
+  uiChange: stop
 bounds:
-  maxPrefixesPerModule: 3
-  maxSuggestionsPerPrefix: 10
-  maxResultsPerCandidate: 3
+  maxPrefixesPerModule: 1
+  maxSuggestionsPerPrefix: 5
+  maxResultsPerCandidate: 1
   maxRefinementRounds: 1
 authorization:
   status: unapproved

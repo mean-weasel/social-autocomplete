@@ -469,6 +469,7 @@ test("next actions preserve the browser choice and request an amendment for an i
   const data = created.envelope.data as Record<string, any>;
   assert.deepEqual(data.effectiveBrowserSelection, request.browserSelection);
   assert.deepEqual(data.nextAction.browserSelection, request.browserSelection);
+  assert.equal(data.nextAction.completedResearchTabs, "close");
   assert.equal(data.nextAction.kind, "record_observation");
   await new StateStore(cwd).writeReceipt(
     "run_browser_next",
@@ -483,6 +484,27 @@ test("next actions preserve the browser choice and request an amendment for an i
   assert.equal(nextAction.kind, "amend_browser_selection");
   assert.equal(nextAction.channel, "facebook");
   assert.deepEqual(nextAction.allowedBrowsers, ["chrome"]);
+});
+
+test("completed research tabs default closed and preserve an explicit keep-open choice", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "social-metadata-tabs-"));
+  const request = JSON.parse(await readFile(join(fixtureRoot, "plan-request.json"), "utf8")) as Record<string, any>;
+  request.runId = "run_tabs_keep_open";
+  request.completedResearchTabs = "keep_open";
+  const created = await executeCommand(
+    parseArguments(["plan", "--json", JSON.stringify(request)]), cwd,
+  );
+  const data = created.envelope.data as Record<string, any>;
+  assert.equal(data.plan.completedResearchTabs, "keep_open");
+  assert.equal(data.nextAction.completedResearchTabs, "keep_open");
+
+  request.runId = "run_tabs_invalid";
+  request.completedResearchTabs = "reuse_later";
+  await assert.rejects(
+    executeCommand(parseArguments(["plan", "--json", JSON.stringify(request)]), cwd),
+    (error: any) => error.issues.some((issue: any) =>
+      issue.path === "$.completedResearchTabs" && issue.code === "invalid_enum"),
+  );
 });
 
 test("browser selection can be amended before evidence and is enforced for observations", async () => {
