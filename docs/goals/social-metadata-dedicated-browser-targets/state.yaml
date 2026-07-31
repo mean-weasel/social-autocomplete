@@ -5,7 +5,7 @@ goal:
   slug: "social-metadata-dedicated-browser-targets"
   kind: specific
   tranche: "Implement and prove privacy-preserving dedicated browser targets for authenticated channel-native research."
-  status: blocked
+  status: active
   oracle:
     signal: "Fresh sanitized Chrome evidence proves plugin-created dedicated targets reach native search and produce bounded autocomplete evidence on Instagram, Facebook, and LinkedIn."
     cadence: "after the implementation package and at final live audit"
@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/social-metadata-dedicated-browser-targets/"
     command: "node /Users/neonwatty/.codex/plugins/cache/goalbuddy/goalbuddy/0.4.1/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/social-metadata-dedicated-browser-targets"
 
-active_task: null
+active_task: T125
 
 tasks:
   - id: T001
@@ -2096,6 +2096,8 @@ tasks:
           detail: "approved=false; browserAccessAuthorized=false"
       summary: "Committed the exact Judge-approved package, refreshed the QA worker artifact and source pin, created a clean detached ignored checkout at the exact product commit, and verified both tracked worktrees clean. Private scenario, state, notes, receipts, and source checkout remain ignored and uncommitted. No browser was operated."
       deviations: []
+      infrastructure_findings:
+        - "The GoalBuddy state checker still reports pre-existing historical-board errors in T097/T101/T102/T104/T106/T107/T109/T111/T112; no T118 or T119 validation error remains. This does not affect product or QA pins and should be repaired as separate board hygiene."
       remaining_blockers:
         - "A new exact one-time APPROVE QA BROWSER RUN authorization."
       verification_attempts: 2
@@ -5430,7 +5432,7 @@ tasks:
   - id: T094
     type: pm
     assignee: PM
-    status: blocked
+    status: done
     reasoning_hint: medium
     objective: "Wait for the exact human campaign authorization, then authorize the pending campaign and begin the first bounded browser child."
     inputs:
@@ -5444,10 +5446,1709 @@ tasks:
       - "Authorized campaign state"
       - "First bounded child run"
     receipt:
+      result: done
+      summary: "Consumed the exact campaign authorization, activated campaign_20260730T20260731001731, and irrevocably issued child 1. Mandatory pre-browser validation failed closed because the pinned campaign-marked scenario remains unapproved while validate-qa-config still requires ordinary per-run approval fields even with an exact detached campaign grant. No worker was dispatched and no Chrome target was created. Child 1 was terminated as worker_dispatch_invalid, its one-time authorization was consumed, and its sanitized blocked receipt was reconciled; the campaign remains active with 1/10 children issued and no active child."
+      evidence:
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-campaigns/campaign_20260730T20260731001731-state.json"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-runs/qa_campaign_001_20260731T011525Z-state.json"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_campaign_001_20260731T011525Z.json"
+      remaining_blockers:
+        - "Campaign validation must treat an exact durable child grant as the effective browser approval while preserving the pinned scenario bytes and ordinary-run behavior."
+  - id: T095
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Make exact campaign-child validation use the detached grant as effective approval without mutating pinned scenario bytes or weakening ordinary one-time approval."
+    inputs:
+      - "T094 child-1 fail-closed validation receipt"
+      - "scripts/browser-acceptance/validate-qa-config.mjs"
+      - "tests/browser-acceptance/qa-config.test.mjs"
+    constraints:
+      - "Do not operate a browser, issue another child, change campaign scope, or alter authorization machinery."
+      - "Only an exact valid grant bound to the campaign marker, scenario bytes, oracle bytes, browser, and ordered channels may replace ordinary scenario approval fields."
+      - "Missing, malformed, stale, or mismatched grants must still fail closed."
+      - "Ordinary non-campaign scenarios must still require explicit approved status and browserAccessAuthorized=true."
+      - "Do not mutate the pinned private scenario to create a second unpinned artifact."
+    expected_output:
+      - "Campaign-grant validation reports effective approval only after exact grant matching."
+      - "Ordinary approval behavior remains unchanged."
+      - "Regression coverage for unapproved campaign marker plus valid, missing, malformed, and mismatched grants."
+      - "Focused and offline verification passes."
+    allowed_files:
+      - scripts/browser-acceptance/validate-qa-config.mjs
+      - tests/browser-acceptance/qa-config.test.mjs
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - docs/browser-acceptance/protocol/manager-worker.md
+    verify:
+      - "npm run test:qa-config"
+      - "npm run test:qa-campaign"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "A campaign grant can authorize a scenario before all exact bindings pass."
+      - "Ordinary one-time authorization becomes reusable or implicit."
+      - "The fix requires changing protocol, reducer, campaign schema, or immutable campaign scope."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/validate-qa-config.mjs
+        - tests/browser-acceptance/qa-config.test.mjs
+        - docs/browser-acceptance/runbooks/qa-manager.md
+      commands:
+        - command: "npm run test:qa-config"
+          status: pass
+        - command: "npm run test:qa-campaign"
+          status: pass
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "An exact detached campaign child grant now supplies effective dispatch approval for an otherwise immutable unapproved campaign-marked scenario. Missing, malformed, stale, and mismatched grants remain fail-closed; ordinary scenarios still require explicit approval and browser authority. Regression coverage now exercises the intended unapproved campaign scenario directly."
+      remaining_blockers: []
+  - id: T096
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the child-1 validation correction and decide whether the exact diff may be committed, QA-repinned, and advanced inside the already-authorized campaign."
+    inputs:
+      - "T094 fail-closed child-1 receipt"
+      - "T095 implementation diff and verification"
+      - "Campaign pin-advancement invariants"
+    constraints:
+      - "Read-only; do not edit, commit, repin, issue a child, or operate Chrome."
+      - "Reject if effective authorization can precede exact grant matching or if ordinary approval is weakened."
+      - "Reject if protocol, run reducer, campaign reducer, scenario schema, or immutable scope changes."
+    expected_output:
+      - "approved | changes_required"
+      - "Requirement-to-test mapping"
+      - "Exact commit/repin/pin-advance package if approved"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Effective campaign approval becomes true only after strict detached-grant validation and exact binding to the campaign marker, scenario bytes, oracle bytes, browser, and ordered channels. Missing, malformed, stale, and mismatched grants remain rejected; ordinary unapproved scenarios remain rejected. The protocol, run reducer, campaign reducer, scenario schema, and immutable campaign scope hashes are unchanged, so an exact product/QA repin and verified campaign pin advance may proceed between terminal children."
+      evidence:
+        - "Exact child-1 scenario now validates with approved=true and browserAccessAuthorized=true only when the matching grant is supplied."
+        - "npm run test:qa-config passed 26/26."
+        - "npm run test:qa-campaign passed 22/22."
+        - "npm run verify:offline passed."
+        - "Authorization machinery hashes remain 725bc0..., cd31b9..., 3ce9e8..., and 306ad6...."
+      worker_package:
+        objective: "Commit the exact approved validator correction, repin the QA repository, advance campaign pins atomically, and prepare child 2."
+        allowed_files:
+          - scripts/browser-acceptance/validate-qa-config.mjs
+          - tests/browser-acceptance/qa-config.test.mjs
+          - docs/browser-acceptance/runbooks/qa-manager.md
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/templates/qa-receipt.v1.json
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-campaigns/
+        verify:
+          - "Commit only the three approved product files and record commit/tree."
+          - "Repin QA tracked source manifest and detached checkout to the exact product commit."
+          - "Advance campaign pins with Judge approval and unchanged authorization machinery."
+          - "Revalidate scenario/oracle and campaign state before child 2."
+        stop_if:
+          - "Any unreviewed product content enters the commit."
+          - "QA pin or authorization-machinery hash is ambiguous."
+  - id: T097
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Commit the exact approved validator correction, repin the QA repository, advance campaign pins atomically, and prepare child 2."
+    inputs:
+      - "T096 approval"
+      - "Current active campaign with child 1 terminal and no active child"
+    constraints:
+      - "Do not operate a browser or issue child 2 until pin advancement completes."
+      - "Commit only the exact three approved product files; keep GoalBuddy bookkeeping out of the product commit."
+      - "Preserve the unchanged scenario/oracle/protocol/reducer/schema hashes."
+      - "Campaign pin advancement requires Judge approval, exact QA repin, hash verification, and green offline verification."
+    expected_output:
+      - "Immutable corrected product commit/tree"
+      - "Exact QA commit/tree and clean detached product checkout"
+      - "Campaign current pins advanced with append-only history"
+      - "Validated readiness for child 2"
+    allowed_files:
+      - scripts/browser-acceptance/validate-qa-config.mjs
+      - tests/browser-acceptance/qa-config.test.mjs
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/templates/qa-receipt.v1.json
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-campaigns/
+    verify:
+      - "git diff --check"
+      - "npm run test:qa-config"
+      - "npm run test:qa-campaign"
+      - "npm run verify:offline"
+      - "Verify product and QA Git objects and all pinned hashes."
+      - "Check campaign state after atomic pin advancement."
+    stop_if:
+      - "An unreviewed file would be committed or a required hash differs."
+      - "Authorization machinery or immutable scope changes."
+      - "Campaign has an active child or verification fails."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/validate-qa-config.mjs
+        - tests/browser-acceptance/qa-config.test.mjs
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-c1a8a78/"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-campaigns/campaign_20260730T20260731001731-state.json"
+      commands:
+        - command: "Commit exact approved product diff"
+          status: pass
+          detail: "c1a8a7826b739056d18bab56e341a95c682c1fa1, tree fe709d68c2f1da8ca366132e3418fa181c512642"
+        - command: "Repin QA source manifest and clean detached checkout"
+          status: pass
+          detail: "6f707fc8baef1373cf7aa5e828f3d33fe79260e6, tree b862338cfc0fd1c47b8b54703edcc7391a1d774c"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+        - command: "Advance campaign pins"
+          status: pass
+          detail: "Current pin SHA-256 5fe758b3e96d0c48a7571e1b4d729926eb4924bdb9d1188253afa7382ffbcba6; authorization machinery unchanged"
+      summary: "Committed the exact validator correction, repinned the QA repository and clean detached product source, and atomically advanced the active campaign pins between children. Child 1 remains terminal and consumed; campaign is active with no active child and 9 grants remaining."
+      remaining_blockers: []
+  - id: T098
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: high
+    objective: "Issue and supervise campaign child 2 through the pinned fresh-task QA protocol and visible headed Chrome research."
+    inputs:
+      - "T097 current campaign pin SHA-256 5fe758b3e96d0c48a7571e1b4d729926eb4924bdb9d1188253afa7382ffbcba6"
+      - "Authorized campaign with 1/10 children issued and no active child"
+      - "Dedicated QA project /Users/neonwatty/Desktop/social-autocomplete-qa"
+    constraints:
+      - "Use the exact detached child grant and durable run state."
+      - "Create a genuinely fresh Codex task rooted in the saved QA project; the worker may not create tasks."
+      - "Use existing visible Chrome, plugin-owned new tabs only, and the fixed Instagram-Facebook-LinkedIn order."
+      - "Do not enumerate user tabs, inspect private browser data, handle credentials, publish, or interact with composers."
+      - "Persist every manager response, ACK, action, target-release, terminal, and receipt transition before continuing."
+    expected_output:
+      - "Visible plugin-owned Chrome target for each reached channel"
+      - "Sanitized current autocomplete evidence or truthful interruption"
+      - "Terminal reconciled child receipt with consumed one-time authorization"
+    receipt:
+      result: done
+      run_id: qa_campaign_002_20260731T012443Z
+      disposition: pass_with_findings
+      blocking_product_finding: false
+      authorization_consumed: true
+      summary: "Campaign child 2 completed the full pinned fresh-task protocol. Three plugin-owned headed Chrome tabs were created from typed official roots and released; no existing tabs were enumerated and no private browser content, credentials, screenshots, composer actions, or publishing were used. Instagram, Facebook, and LinkedIn each reached an authenticated shell/feed but failed the exact native Search landmark projection, so all three truthfully returned ui_change and no autocomplete evidence or recommendations were fabricated."
+      evidence:
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_campaign_002_20260731T012443Z.json"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_campaign_002_20260731T012443Z.md"
+        - "/Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-runs/qa_campaign_002_20260731T012443Z-state.json"
+      privacy:
+        dedicated_targets_created: 3
+        dedicated_targets_released: 3
+        existing_targets_enumerated: false
+        private_browser_content_persisted: false
+        credentials_accessed: false
+      findings:
+        - "Instagram: Search navigation activated once; exact-name Search entry still absent."
+        - "Facebook: authenticated navigation present; exact-name Search entry/control absent."
+        - "LinkedIn: authenticated feed navigation present; exact-name Search entry/control absent."
+        - "QA infrastructure: clean detached validator checkout requires temporary dependency hydration and cleanup in both bootstrap and fresh execution tasks."
+      remaining_blockers:
+        - "Channel-specific finite accessible-name fallbacks are needed before autocomplete research can begin."
+  - id: T099
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit child-2 Search landmark evidence and define the smallest privacy-preserving finite adapter correction for Instagram, Facebook, and LinkedIn."
+    inputs:
+      - "T098 sanitized receipt and note"
+      - "Current channel playbooks, shared contract, QA worker runbook, and host tests"
+    constraints:
+      - "Read-only; do not edit, commit, repin, issue child 3, or operate a browser."
+      - "Do not broaden to generic control enumeration, page text, raw DOM, guessed selectors, or unbounded discovery."
+      - "Use only channel-specific exact accessible-name allowlists and existing finite roles/one-activation bound."
+      - "Preserve target isolation, authentication, privacy, action ACK, release, and ui_change fail-closed behavior."
+    expected_output:
+      - "approved correction strategy or changes-required decision"
+      - "Exact channel-specific name/role allowlist"
+      - "Bounded Worker allowed_files and verification"
+      - "Child-3 acceptance criteria"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The live failures all occur at the same over-narrow exact-name boundary, while target identity, authentication classification, privacy, action gating, and release succeeded. The smallest safe correction is a closed per-channel allowlist of exact accessible names over the existing finite roles, with at most one evidenced navigation activation and no selector/page-text discovery."
+      channel_allowlist:
+        instagram:
+          entry_names:
+            - Search
+            - Search input
+          navigation_names:
+            - Search
+        facebook:
+          entry_names:
+            - Search Facebook
+          navigation_names:
+            - Search
+            - Search Facebook
+        linkedin:
+          entry_names:
+            - Search
+            - Search by title, skill, or company
+          navigation_names:
+            - Search
+            - Click to start a search
+      constraints:
+        - "Each role/name pair is queried directly and separately; never enumerate generic controls or page text."
+        - "Proceed only when exactly one visible allowed entry exists, or exactly one allowed navigation control exists for the single recovery activation."
+        - "Zero, multiple, conflicting, or still-missing matches remain ui_change."
+      worker_package:
+        objective: "Implement and test channel-specific finite Search accessible-name allowlists for Instagram, Facebook, and LinkedIn."
+        allowed_files:
+          - skills/_shared/browser-research-contract.md
+          - skills/instagram-metadata-research/SKILL.md
+          - skills/facebook-metadata-research/SKILL.md
+          - skills/linkedin-metadata-research/SKILL.md
+          - docs/browser-acceptance/channel-matrix.md
+          - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+          - docs/browser-acceptance/runbooks/qa-worker.md
+          - tests/channels/playbooks.test.ts
+          - tests/browser-acceptance/harness.test.ts
+          - tests/browser-acceptance/qa-manager-prompt.test.mjs
+          - tests/hosts/manifests.test.ts
+        verify:
+          - "npm run test:channels"
+          - "npm run test:hosts"
+          - "npm run test:qa-config"
+          - "npm run verify:offline"
+          - "git diff --check"
+        stop_if:
+          - "The implementation needs generic DOM/control enumeration, page text, guessed CSS/XPath selectors, or more than one recovery activation."
+          - "A match can proceed when zero or multiple allowed controls are visible."
+  - id: T100
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: "Implement and test channel-specific finite Search accessible-name allowlists for Instagram, Facebook, and LinkedIn."
+    inputs:
+      - "T099 approved correction strategy"
+      - "T098 live ui_change evidence"
+    constraints:
+      - "Do not operate a browser, commit, repin QA, or issue child 3."
+      - "Keep exact finite role/name queries, one evidenced navigation activation, and fail-closed cardinality."
+      - "Do not add generic selectors, DOM enumeration, page text, fuzzy/regex names, or URL guessing."
+      - "Preserve all campaign and browser safety invariants."
+    expected_output:
+      - "Closed per-channel accessible-name allowlists in playbooks and worker contract"
+      - "Tests proving exact names, finite roles, one activation, and prohibited discovery"
+      - "Green offline verification"
+    allowed_files:
+      - skills/_shared/browser-research-contract.md
+      - skills/instagram-metadata-research/SKILL.md
+      - skills/facebook-metadata-research/SKILL.md
+      - skills/linkedin-metadata-research/SKILL.md
+      - docs/browser-acceptance/channel-matrix.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - tests/channels/playbooks.test.ts
+      - tests/browser-acceptance/harness.test.ts
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      - tests/hosts/manifests.test.ts
+    verify:
+      - "npm run test:channels"
+      - "npm run test:hosts"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "The correction requires a file outside allowed_files or broadens inspection."
+      - "More than one navigation activation or non-exact matching is required."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
       result: blocked
-      waiting_for_user_approval: true
-      required_reply: "APPROVE QA BROWSER CAMPAIGN campaign_20260730T20260731001731 161aff40fa00e83dbb3c259cc8419c2a1edab2e89384f30c0d971ca1ec503234 FOR 10 RUNS"
-      summary: "All safe local packaging work is complete. Campaign remains pending with zero issued children and no browser authority."
+      blocked_reason: "The canonical channel playbook entry instructions are implemented in src/channels/playbooks/{instagram,facebook,linkedin}.ts, which were not included in T100 allowed_files. The task stopped before edits rather than widening scope mid-flight."
+      changed_files: []
+      commands: []
+      summary: "Read-only mapping found the missing canonical source files required to keep runtime playbook metadata consistent with packaged skill/runbook instructions."
+      spawned_tasks:
+        - T101
+  - id: T101
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Implement and test channel-specific finite Search accessible-name allowlists across canonical playbooks and packaged QA instructions."
+    inputs:
+      - "T099 approved correction strategy"
+      - "T100 scope-boundary receipt"
+    constraints:
+      - "Do not operate a browser, commit, repin QA, or issue child 3."
+      - "Keep exact finite role/name queries, one evidenced navigation activation, and fail-closed cardinality."
+      - "Do not add generic selectors, DOM enumeration, page text, fuzzy/regex names, or URL guessing."
+      - "Preserve all campaign and browser safety invariants."
+    expected_output:
+      - "Closed per-channel accessible-name allowlists in canonical playbooks, packaged skills, and worker contract"
+      - "Tests proving exact names, finite roles, one activation, and prohibited discovery"
+      - "Green offline verification"
+    allowed_files:
+      - src/channels/playbooks/instagram.ts
+      - src/channels/playbooks/facebook.ts
+      - src/channels/playbooks/linkedin.ts
+      - skills/_shared/browser-research-contract.md
+      - skills/instagram-metadata-research/SKILL.md
+      - skills/facebook-metadata-research/SKILL.md
+      - skills/linkedin-metadata-research/SKILL.md
+      - docs/browser-acceptance/channel-matrix.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - tests/channels/playbooks.test.ts
+      - tests/browser-acceptance/harness.test.ts
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      - tests/hosts/manifests.test.ts
+    verify:
+      - "npm run test:channels"
+      - "npm run test:hosts"
+      - "npm run test:qa-config"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "The correction requires a file outside allowed_files or broadens inspection."
+      - "More than one navigation activation or non-exact matching is required."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - src/channels/playbooks/instagram.ts
+        - src/channels/playbooks/facebook.ts
+        - src/channels/playbooks/linkedin.ts
+        - skills/_shared/browser-research-contract.md
+        - skills/instagram-metadata-research/SKILL.md
+        - skills/facebook-metadata-research/SKILL.md
+        - skills/linkedin-metadata-research/SKILL.md
+        - docs/browser-acceptance/channel-matrix.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - tests/channels/playbooks.test.ts
+        - tests/browser-acceptance/harness.test.ts
+        - tests/hosts/manifests.test.ts
+      commands:
+        - "npm run test:channels"
+        - "npm run test:hosts"
+        - "npm run test:qa-config"
+        - "npm run verify:offline"
+        - "git diff --check"
+      summary: "Implemented the approved finite per-channel exact accessible-name allowlists, one evidenced navigation activation and identical repeat, fail-closed cardinality, and matching packaged QA guidance. All focused and offline verification passed. The build materialized three tracked runtime files; ownership of those generated artifacts is isolated in T102."
+      spawned_tasks:
+        - T102
+  - id: T102
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Materialize and verify the three generated runtime playbooks for the approved Search landmark correction."
+    inputs:
+      - "T101 canonical playbook changes and green offline verification"
+    constraints:
+      - "Do not change canonical source, packaged skills, QA docs, tests, campaign reducers, or browser authorization machinery."
+      - "Generated runtime must be a mechanical build output of the T101 source only."
+      - "Do not operate a browser, commit, repin QA, or issue child 3."
+    expected_output:
+      - "Three runtime playbook artifacts exactly matching the canonical source build"
+      - "Green focused tests and clean diff check"
+    allowed_files:
+      - bin/runtime/channels/playbooks/instagram.js
+      - bin/runtime/channels/playbooks/facebook.js
+      - bin/runtime/channels/playbooks/linkedin.js
+    verify:
+      - "npm run build"
+      - "npm run test:channels"
+      - "git diff --check"
+    stop_if:
+      - "Build changes any additional tracked runtime file."
+      - "Generated content differs semantically from the T101 source allowlists."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - bin/runtime/channels/playbooks/instagram.js
+        - bin/runtime/channels/playbooks/facebook.js
+        - bin/runtime/channels/playbooks/linkedin.js
+      commands:
+        - "npm run build"
+        - "npm run test:channels"
+        - "git diff --check"
+      summary: "The build changed exactly the three declared runtime playbooks. Their generated entry instructions mechanically match the canonical T101 allowlists and focused channel tests pass."
+      spawned_tasks:
+        - T103
+  - id: T103
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the complete finite Search-landmark correction and decide whether it is safe to commit, QA-repin, advance the campaign pin, and issue child 3."
+    inputs:
+      - "T099 approved exact allowlists"
+      - "T101 source, skill, QA documentation, and test receipt"
+      - "T102 generated runtime receipt"
+      - "Current full diff and offline verification"
+    constraints:
+      - "Read-only."
+      - "Reject any generic selector, DOM/control enumeration, page-text inspection, fuzzy/regex name, URL guessing, more than one navigation activation, or weakened fail-closed cardinality."
+      - "Reject any campaign reducer, protocol, scenario, oracle, authorization, or unrelated runtime change."
+      - "Do not operate a browser, commit, repin QA, advance pins, or issue child 3."
+    expected_output:
+      - "approved | rejected"
+      - "Requirement-to-diff mapping"
+      - "Exact commit/repin worker package if approved"
+    verify:
+      - "git diff --check"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+    receipt:
+      result: done
+      decision: rejected
+      rationale: "The source/runtime/docs correction preserves the approved finite allowlists and the campaign machinery hashes are unchanged, but the focused browser-harness suite fails because one assertion still expects superseded shared-contract wording. verify:offline does not currently include test:browser-harness, which allowed the stale assertion to escape the green gate."
+      evidence:
+        - "npm run test:browser-harness: 15 passed, 1 failed at the obsolete 'finite accessibility query set' wording assertion"
+        - "Campaign protocol, run reducer, campaign reducer, and scenario-schema SHA-256 pins remain unchanged."
+      spawned_tasks:
+        - T104
+  - id: T104
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Align the focused browser-harness assertion with the closed per-channel allowlist contract and prove that focused suite passes."
+    inputs:
+      - "T103 rejection receipt"
+      - "Current T101 shared contract"
+    constraints:
+      - "Change only the stale assertion; do not weaken any safety invariant or alter production instructions."
+      - "Do not operate a browser, commit, repin QA, advance pins, or issue child 3."
+    expected_output:
+      - "Browser-harness assertion checks the finite closed projection wording now present in the shared contract"
+      - "Green browser-harness and offline verification"
+    allowed_files:
+      - tests/browser-acceptance/harness.test.ts
+    verify:
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "A production contract change is required."
+      - "The test would stop checking finite exact role/name projection or fail-closed behavior."
+    receipt:
+      result: done
+      changed_files:
+        - tests/browser-acceptance/harness.test.ts
+      commands:
+        - "npm run test:browser-harness"
+        - "npm run verify:offline"
+        - "git diff --check"
+      summary: "Replaced only the obsolete wording assertion with a check for the finite projection retained by the closed allowlist contract. The focused browser-harness suite and full offline suite pass."
+      spawned_tasks:
+        - T105
+  - id: T105
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Re-audit the corrected finite Search-landmark package and decide whether commit, QA repin, campaign pin advance, and child 3 are authorized."
+    inputs:
+      - "T103 rejection receipt"
+      - "T104 focused test correction and green verification"
+      - "Current full diff"
+    constraints:
+      - "Read-only."
+      - "Apply every T103 safety rejection criterion and verify campaign machinery hashes remain unchanged."
+      - "Do not operate a browser, commit, repin QA, advance pins, or issue child 3."
+    expected_output:
+      - "approved | rejected"
+      - "Exact commit/repin worker package when approved"
+    verify:
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+    receipt:
+      result: done
+      decision: approved
+      rationale: "The final package implements only the closed per-channel exact accessible-name allowlists, direct role/name projection, fail-closed cardinality, and one evidenced activation/repeat. Canonical and generated runtime playbooks match; focused browser-harness, offline, and release gates pass. No campaign reducer, protocol, scenario schema, authorization contract, selector, URL, private-read, or unrelated runtime change is present."
+      evidence:
+        - "npm run test:browser-harness: pass"
+        - "npm run verify:offline: pass"
+        - "npm run verify:release -- --allow-missing-live-receipts: pass"
+        - "git diff --check: pass"
+        - "Protocol/reducer/schema hashes unchanged from the authorized campaign pins"
+      spawned_tasks:
+        - T106
+  - id: T106
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Commit the approved Search-landmark correction, repin the dedicated QA repository to the exact product commit, advance the active campaign pin, and prepare child 3 issuance."
+    inputs:
+      - "T105 Judge approval"
+      - "Active campaign campaign_20260730T20260731001731 with no active child"
+      - "Child 2 terminal reconciliation"
+    constraints:
+      - "Exclude the GoalBuddy board from the product commit."
+      - "QA repin must contain only tracked public runbook/source-pin material; private scenarios, campaign state, notes, and receipts remain ignored and uncommitted."
+      - "Do not alter campaign reducers, protocol, scenario, oracle, authorization scope, channel order, modules, evidence tier, or browser."
+      - "Do not issue child 3 until product commit, QA repin, clean detached install source, offline/release verification, and atomic pin advance all succeed."
+      - "Do not operate a browser in this task."
+    expected_output:
+      - "Exact product commit for the approved correction"
+      - "Exact QA repin commit/tree and clean detached product source"
+      - "Campaign pin advanced without changing authorization machinery"
+      - "Ready-to-issue child 3 state"
+    allowed_files:
+      - bin/runtime/channels/playbooks/facebook.js
+      - bin/runtime/channels/playbooks/instagram.js
+      - bin/runtime/channels/playbooks/linkedin.js
+      - docs/browser-acceptance/channel-matrix.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - skills/_shared/browser-research-contract.md
+      - skills/facebook-metadata-research/SKILL.md
+      - skills/instagram-metadata-research/SKILL.md
+      - skills/linkedin-metadata-research/SKILL.md
+      - src/channels/playbooks/facebook.ts
+      - src/channels/playbooks/instagram.ts
+      - src/channels/playbooks/linkedin.ts
+      - tests/browser-acceptance/harness.test.ts
+      - tests/channels/playbooks.test.ts
+      - tests/hosts/manifests.test.ts
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/channel-matrix.md
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+    verify:
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "git diff --check"
+      - "QA tracked worktree clean after repin commit"
+      - "Campaign status active with issuedRuns=2 and activeChild=null before advance/issue"
+    stop_if:
+      - "Any required pin or authorization hash differs unexpectedly."
+      - "Either repository has unexpected tracked changes."
+      - "Campaign does not have child 2 terminal and no active child."
+      - "Repin or atomic campaign pin advance fails."
+    receipt:
+      result: done
+      product_commit: bffaa4268649bcc27b0addd4b9030141d2387485
+      product_tree: 995b2e30b7780c558a3dc96ab48d229f6e31601e
+      qa_commit: 9d07ca079d9fba446ca7b270aa6f2da31b5444b9
+      qa_tree: d161604fc7e733f56a43e919b0fa06ba5d6dd83e
+      campaign_pins_sha256: 75a5cc865987f477504d37a24b60740bd79cf7c683bfe31a9e7ba2c484b0ecdf
+      detached_source: /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-bffaa42
+      commands:
+        - "npm run verify:offline"
+        - "npm run verify:release -- --allow-missing-live-receipts"
+        - "qa-campaign advance-pin"
+      summary: "Committed the approved correction, created and verified a clean detached exact source, repinned the QA runbooks and source manifest, and atomically advanced the active campaign pin. Authorization machinery hashes are unchanged; campaign remains active at 2/10 with no active child. Temporary dependency hydration in the detached source was removed after verification."
+      spawned_tasks:
+        - T107
+  - id: T107
+    type: worker
+    assignee: CampaignManager
+    status: done
+    reasoning_hint: high
+    objective: "Issue and supervise campaign child 3 against the exact bffaa42/9d07ca0 pin through terminal reconciliation."
+    inputs:
+      - "Active authorized campaign campaign_20260730T20260731001731"
+      - "Campaign pin 75a5cc865987f477504d37a24b60740bd79cf7c683bfe31a9e7ba2c484b0ecdf"
+      - "Exact QA source commit bffaa4268649bcc27b0addd4b9030141d2387485"
+    constraints:
+      - "Issue exactly one child and create only manager-owned bootstrap/fresh/recovery tasks required by the protocol."
+      - "Use Chrome and exact Instagram, Facebook, LinkedIn order with hashtag and search-term autocomplete_only."
+      - "Use only plugin-owned new tabs; never enumerate user tabs or emit private browser content."
+      - "Honor every binding, ACK, lease, one-time authorization, release, and terminal reconciliation gate."
+      - "Suspend the campaign on authentication, challenge, host/action/release ambiguity, or contradictory durable state."
+      - "Record infrastructure findings without broadening browser reads or campaign scope."
+    expected_output:
+      - "Child 3 terminal run state and sanitized receipt"
+      - "Fresh per-channel Search and autocomplete outcomes or explicit bounded failure diagnostics"
+      - "Campaign terminal reconciliation with no active child"
+    verify:
+      - "Exact installed source and QA pins"
+      - "Every target created and released or campaign suspended"
+      - "Authorization consumed exactly once"
+      - "Terminal receipt hash reconciled"
+    stop_if:
+      - "Any pin, grant, scenario, oracle, protocol, or state hash mismatches."
+      - "A required browser action cannot be made unambiguously in the acknowledged continuation."
+      - "Private browser output or unsafe inspection would be required."
+    receipt:
+      result: done
+      run_id: qa_campaign_003_20260731T023312Z
+      disposition: pass_with_findings
+      product_commit: bffaa4268649bcc27b0addd4b9030141d2387485
+      qa_commit: 9d07ca079d9fba446ca7b270aa6f2da31b5444b9
+      receipt: /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_campaign_003_20260731T023312Z.json
+      receipt_sha256: 515c548f434c481bde3dc6befe4155bb02867964bd84d7a288e12404e3deee9a
+      note: /Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_campaign_003_20260731T023312Z.md
+      campaign_status: "active; issuedRuns=3; activeChild=null"
+      outcomes:
+        instagram: "targetMatched=true; native search entry reached after one evidenced navigation activation; bounded hashtag attempt produced no accepted autocomplete/results landmark; ui_change; target released"
+        facebook: "targetMatched=true; native search entry reached directly; bounded hashtag attempt produced no accepted autocomplete/results landmark; ui_change; target released"
+        linkedin: "targetMatched=true; authenticated feed navigation; no allowed entry or navigation control; ui_change; target released"
+      infrastructure_findings:
+        - "Clean detached bootstrap and fresh execution both require temporary dependency hydration, followed by generated-artifact cleanup."
+        - "Campaign terminal receipt validation occurs after the worker emits run_complete; an all-playbooks receipt field required a post-terminal ignored-artifact correction before reconciliation."
+        - "The manager durable state must activate the bootstrap task before worker_handoff; child 3 exposed that task activation is currently manual and easy to omit."
+      summary: "Child 3 completed safely with three headed plugin-owned Chrome tabs created and released and no private browser output. The exact entry allowlist correction advanced Instagram and Facebook to native search entry. Remaining product boundaries are downstream autocomplete/results landmark recognition for those two and LinkedIn entry recognition. Authorization was consumed once and the child reconciled terminally."
+      spawned_tasks:
+        - T108
+  - id: T108
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit child 3 live evidence and define the largest safe next adapter correction before campaign child 4."
+    inputs:
+      - "T107 child 3 receipt and sanitized per-channel outcomes"
+      - "Current channel playbooks, shared browser contract, and packaged QA instructions"
+      - "Active campaign at 3/10 with no active child"
+    constraints:
+      - "Read-only."
+      - "Do not infer accessible names, suggestion structures, or LinkedIn controls that were not observed through the bounded live projection."
+      - "Do not broaden to DOM scans, page text, generic collections, private output, URL guessing, or additional browser reads."
+      - "Separate product adapter corrections from QA infrastructure corrections; prioritize the product slice needed for child 4."
+      - "Do not operate a browser, commit, repin QA, advance pins, or issue child 4."
+    expected_output:
+      - "approved next correction or evidence-insufficient"
+      - "Requirement-to-live-evidence mapping"
+      - "Atomic Worker package with exact allowed files and verification"
+      - "Deferred QA infrastructure findings"
+    receipt:
+      result: done
+      decision: approved
+      rationale: "Child 3 is sufficient to keep the entry allowlists for Instagram and Facebook and insufficient to invent any new LinkedIn accessible name. The next largest safe slice is an entry-anchored accessibility-ownership projection for autocomplete on Instagram and Facebook: inspect only aria-controls/aria-owns on the already exact-matched entry, keep the relationship identifier runtime-private, require exactly one visible owned popup, and query only a finite bounded role set inside it. This directly addresses the live listbox/option-only miss without global role enumeration or page reads. LinkedIn remains fail-closed and is deferred until exact native evidence exists."
+      evidence:
+        - "Instagram and Facebook each had targetMatched=true and exactly one native search entry, then listboxCount=0 and optionCount=0 after one synthetic hashtag prefix."
+        - "LinkedIn's complete closed entry/navigation projection returned zero allowed matches; no alternate name was observed."
+        - "All three targets were released and child 3 authorization was consumed and reconciled."
+      deferred_infrastructure:
+        - "Provide a prehydrated read-only QA validation runtime."
+        - "Validate campaign receipt compatibility before terminal emission."
+        - "Make bootstrap task activation part of one atomic manager dispatch operation."
+      worker_package:
+        objective: "Add a private, entry-anchored owned-popup autocomplete projection for Instagram and Facebook without weakening search-entry or privacy boundaries."
+        allowed_files:
+          - src/channels/playbooks/instagram.ts
+          - src/channels/playbooks/facebook.ts
+          - bin/runtime/channels/playbooks/instagram.js
+          - bin/runtime/channels/playbooks/facebook.js
+          - skills/_shared/browser-research-contract.md
+          - skills/instagram-metadata-research/SKILL.md
+          - skills/facebook-metadata-research/SKILL.md
+          - docs/browser-acceptance/channel-matrix.md
+          - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+          - docs/browser-acceptance/runbooks/qa-worker.md
+          - tests/channels/playbooks.test.ts
+          - tests/browser-acceptance/harness.test.ts
+          - tests/hosts/manifests.test.ts
+        verify:
+          - "npm run build"
+          - "npm run test:channels"
+          - "npm run test:hosts"
+          - "npm run test:browser-harness"
+          - "npm run verify:offline"
+          - "git diff --check"
+        stop_if:
+          - "The solution needs global list/link/button enumeration, page text, a raw relationship ID outside the browser runtime, more than one popup, more than ten suggestions, or any guessed selector/name."
+          - "An absent or ambiguous ownership relationship could be interpreted as native empty or zero."
+          - "The change invents a LinkedIn landmark without new evidence."
+  - id: T109
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a private, entry-anchored owned-popup autocomplete projection for Instagram and Facebook without weakening search-entry or privacy boundaries."
+    inputs:
+      - "T108 approved worker package"
+      - "T107 live child 3 evidence"
+    constraints:
+      - "Apply the exact T108 closed projection and leave LinkedIn unchanged."
+      - "Do not operate a browser, commit, repin QA, advance pins, or issue child 4."
+      - "Preserve all campaign, dedicated-target, authentication, and one-time acknowledgement invariants."
+    expected_output:
+      - "Canonical/runtime playbook and packaged worker instructions for the owned-popup projection"
+      - "Tests proving private anchoring, finite roles, ten-item cap, and fail-closed absence/ambiguity"
+      - "Green focused and offline verification"
+    allowed_files:
+      - src/channels/playbooks/instagram.ts
+      - src/channels/playbooks/facebook.ts
+      - bin/runtime/channels/playbooks/instagram.js
+      - bin/runtime/channels/playbooks/facebook.js
+      - skills/_shared/browser-research-contract.md
+      - skills/instagram-metadata-research/SKILL.md
+      - skills/facebook-metadata-research/SKILL.md
+      - docs/browser-acceptance/channel-matrix.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - tests/channels/playbooks.test.ts
+      - tests/browser-acceptance/harness.test.ts
+      - tests/hosts/manifests.test.ts
+    verify:
+      - "npm run build"
+      - "npm run test:channels"
+      - "npm run test:hosts"
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "Any T108 stop condition occurs."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      summary: "Added an Instagram/Facebook-only autocomplete projection anchored to the already exact-matched search entry. The relationship identifier remains runtime-private; exactly one visible related popup is required; candidate roles are finite and popup-scoped; capture is capped at ten; missing, multiple, conflicting, or empty ownership fails as ui_change. LinkedIn and campaign machinery are unchanged."
+      files_changed:
+        - src/channels/playbooks/instagram.ts
+        - src/channels/playbooks/facebook.ts
+        - bin/runtime/channels/playbooks/instagram.js
+        - bin/runtime/channels/playbooks/facebook.js
+        - skills/_shared/browser-research-contract.md
+        - skills/instagram-metadata-research/SKILL.md
+        - skills/facebook-metadata-research/SKILL.md
+        - docs/browser-acceptance/channel-matrix.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - tests/channels/playbooks.test.ts
+        - tests/browser-acceptance/harness.test.ts
+        - tests/hosts/manifests.test.ts
+      verification:
+        - "npm run build: pass"
+        - "npm run test:channels: pass (12/12)"
+        - "npm run test:hosts: pass (5/5)"
+        - "npm run test:browser-harness: pass (16/16)"
+        - "npm run verify:offline: pass"
+        - "git diff --check: pass"
+      infrastructure_findings:
+        - "Running independently rebuilding npm test scripts concurrently can race on bin/runtime generation; test:hosts transiently observed a missing generated main.js while another build replaced the runtime. Sequential required verification passed. Defer build-output isolation or single-build orchestration until after live campaign progress."
+      spawned_tasks:
+        - T110
+  - id: T110
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the T109 owned-popup correction for privacy, finite scope, truthful empty-state semantics, and readiness to commit and repin before campaign child 4."
+    inputs:
+      - "T108 approved worker package"
+      - "T109 exact diff and verification receipt"
+      - "Active campaign at 3/10 with no active child"
+    constraints:
+      - "Read-only."
+      - "Reject any relationship identifier leaving the browser runtime, page-global candidate enumeration, ambiguous ownership becoming zero, or LinkedIn expansion without evidence."
+      - "Do not operate a browser, commit, repin QA, advance pins, or issue child 4."
+      - "Keep the parallel generated-runtime test race as a deferred infrastructure finding."
+    expected_output:
+      - "approved | changes_required"
+      - "Requirement-to-diff mapping"
+      - "Exact commit/QA-repin package if approved"
+    verify:
+      - "git diff --check"
+      - "Review only T109 allowed files, excluding the GoalBuddy board"
+      - "Confirm generated runtime matches canonical playbooks"
+    stop_if:
+      - "Any T108 safety boundary is weakened."
+      - "Unexpected product files are dirty."
+    receipt:
+      result: done
+      decision: approved
+      rationale: "The exact-matched entry is the sole source of the runtime-private aria-controls/aria-owns relationship; exactly one visible owned popup is required; only option, listitem, link, and button candidates inside it are allowed; capture is capped at ten; missing, multiple, conflicting, and still-empty ownership remain ui_change. Canonical/runtime parity passed, LinkedIn is unchanged, and no campaign machinery changed."
+      verification:
+        - "git diff --check: pass"
+        - "Canonical/runtime entryInstruction parity: pass for Instagram and Facebook"
+        - "LinkedIn ownership projection absent: pass"
+      deferred_infrastructure:
+        - "Generated runtime test scripts are not safe to run concurrently; retain sequential verification until build-output isolation is implemented."
+      spawned_tasks:
+        - T111
+  - id: T111
+    type: worker
+    assignee: ReleaseWorker
+    status: done
+    reasoning_hint: medium
+    objective: "Commit the T110-approved product correction, create an exact clean detached source, repin the QA repository, verify both pins, and atomically advance the active campaign before child 4."
+    inputs:
+      - "T110 approved exact product diff"
+      - "Active campaign campaign_20260730T20260731001731 at 3/10 with no active child"
+      - "Current QA pin 75a5cc865987f477504d37a24b60740bd79cf7c683bfe31a9e7ba2c484b0ecdf"
+    constraints:
+      - "Exclude the GoalBuddy state file from the product commit."
+      - "Preserve manager-only QA adaptations and update only source-bound QA runbooks/manifest fields."
+      - "Do not change authorization machinery, scenario, oracle, or campaign scope hashes."
+      - "Use temporary dependency hydration only when required and remove it after detached verification."
+      - "Do not operate a browser or issue child 4."
+    expected_output:
+      - "Product commit and tree"
+      - "Clean detached source path"
+      - "QA repin commit and tree"
+      - "Atomically advanced campaign pin with activeChild=null and issuedRuns=3"
+    verify:
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts"
+      - "QA tracked worktree clean after repin commit"
+      - "Campaign authorization machinery hashes unchanged"
+    stop_if:
+      - "Either repository contains unexpected tracked edits."
+      - "Campaign has an active child or issuedRuns is not 3."
+      - "Any exact hash or pin verification fails."
+    receipt:
+      result: done
+      product_commit: c5d05bedd4ae0bb8f028fab7b6fd8796825d781d
+      product_tree: 80e629ee24e92d050ac8c4b2d868a6172291d85a
+      qa_commit: 9f7afb09092265b9603fd382b68ef571206a1cd2
+      qa_tree: 9631641ee1a33629aaf0ec9687a7adb4d7de2a45
+      campaign_pins_sha256: 13b6db3d392b3763e89dab67ef9ff72db9c29218a7f3907ffbe6119b10eacd37
+      detached_source: /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-c5d05be
+      verification:
+        - "Exact detached npm run verify:offline: pass"
+        - "Exact detached npm run verify:release -- --allow-missing-live-receipts: pass"
+        - "QA source-manifest hashes: pass for 15 pinned files"
+        - "Product detached and QA tracked worktrees: clean"
+        - "Temporary detached node_modules symlink removed"
+      summary: "Committed the approved owned-popup correction, repinned QA while preserving its local adaptations, verified the exact clean detached source, and atomically advanced the campaign pin. Authorization machinery and campaign scope hashes are unchanged; the campaign remains active at 3/10 with no active child."
+      spawned_tasks:
+        - T112
+  - id: T112
+    type: worker
+    assignee: CampaignManager
+    status: done
+    reasoning_hint: high
+    objective: "Issue and supervise campaign child 4 against exact c5d05be/9f7afb0 pins through terminal reconciliation."
+    inputs:
+      - "Active authorized campaign campaign_20260730T20260731001731"
+      - "Campaign pin 13b6db3d392b3763e89dab67ef9ff72db9c29218a7f3907ffbe6119b10eacd37"
+      - "Exact QA source commit c5d05bedd4ae0bb8f028fab7b6fd8796825d781d"
+    constraints:
+      - "Issue exactly one child and create only manager-owned bootstrap/fresh/recovery tasks required by the protocol."
+      - "Use Chrome and exact Instagram, Facebook, LinkedIn order with hashtag and search-term autocomplete_only."
+      - "Use only plugin-owned new tabs; never enumerate user tabs or emit private browser content."
+      - "Honor every binding, ACK, lease, one-time authorization, release, and terminal reconciliation gate."
+      - "Activate each created task durably before processing any worker handoff."
+      - "Validate the selected-channel-only terminal receipt before run_complete is emitted."
+      - "Suspend the campaign on authentication, challenge, host/action/release ambiguity, or contradictory durable state."
+      - "Record infrastructure findings without broadening browser reads or campaign scope."
+    expected_output:
+      - "Child 4 terminal run state and sanitized receipt"
+      - "Fresh per-channel owned-popup autocomplete outcomes or explicit bounded failure diagnostics"
+      - "Campaign terminal reconciliation with no active child"
+    verify:
+      - "Exact installed source and QA pins"
+      - "Every target created and released or campaign suspended"
+      - "Authorization consumed exactly once"
+      - "Terminal receipt validates before run_complete and reconciles exactly"
+    stop_if:
+      - "Any pin, grant, scenario, oracle, protocol, or state hash mismatches."
+      - "A required browser action cannot be made unambiguously in the acknowledged continuation."
+      - "Private browser output or unsafe inspection would be required."
+    receipt:
+      result: done
+      run_id: qa_campaign_004_20260731T033042Z
+      disposition: blocked
+      product_commit: c5d05bedd4ae0bb8f028fab7b6fd8796825d781d
+      qa_commit: 9f7afb09092265b9603fd382b68ef571206a1cd2
+      receipt: /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/qa_campaign_004_20260731T033042Z.json
+      receipt_sha256: 4ab8d5b0a2f1e89cf91141c06c9af404dec0a02b92d86719ac747422340f3cf9
+      note: /Users/neonwatty/Desktop/social-autocomplete-qa/notes/qa_campaign_004_20260731T033042Z.md
+      campaign_status: "suspended; issuedRuns=4; activeChild=null"
+      target_disposition: terminal_ambiguity
+      outcomes:
+        instagram: "plugin-owned target created; bounded projection failed before content inspection because the browser runtime handle did not survive the manager coordination turn; exact retained-target release also failed; no channel result"
+        facebook: "not started"
+        linkedin: "not started"
+      infrastructure_findings:
+        - "The current worker protocol emits target_created before research, ending the Codex turn and losing the task-local node_repl target handle. The following projection failed because instagramTarget was unavailable."
+        - "Release through the same lost runtime handle also failed; discovery or substitution was correctly prohibited, so terminal target ambiguity was recorded."
+        - "Manager handoff transition order is worker_handoff -> task_terminal -> reserve_continuation -> begin_continuation_create; an attempted reserve before task_terminal failed closed without mutation."
+      safety_evidence:
+        - "Existing user targets were never enumerated, claimed, inspected, or reused."
+        - "No page content, titles, URLs, raw handles, identities, credentials, screenshots, or relationship identifiers were returned or persisted."
+        - "No publishing, composer interaction, scraping, or action replay occurred."
+        - "One-time authorization was consumed and the child reconciled terminally before suspension."
+      summary: "Child 4 proved the owned-popup product correction could not yet be exercised because QA coordination split the browser lifecycle across Codex turns. The run failed closed after one plugin-owned target became terminally ambiguous. The campaign is suspended at 4/10 with no active child; exact user resume authorization is required before child 5."
+      spawned_tasks:
+        - T113
+  - id: T113
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Design the smallest safe QA protocol correction that preserves the entire acknowledged create-inspect-release browser lifecycle within one Codex turn while retaining durable fail-closed checkpoints."
+    inputs:
+      - "T112 child 4 terminal receipt and sanitized worker tool evidence"
+      - "Current qa-manager-worker/v1 reducer, protocol, worker dispatch, and runbook"
+      - "Suspended campaign at 4/10 with no active child"
+    constraints:
+      - "Read-only."
+      - "Do not operate Chrome, resume the campaign, issue a child, or invent product UI landmarks."
+      - "Preserve exact ACK issuance, one-time authorization, plugin-owned tabs, mandatory release, no user-tab enumeration, and terminal ambiguity on partial failure."
+      - "The raw binding and target handle must never cross a Codex turn or enter durable state."
+      - "Prefer ordered post-lifecycle checkpoint reporting over any runtime-handle persistence or target rediscovery."
+    expected_output:
+      - "approved correction or evidence-insufficient"
+      - "State-transition design for successful and failed atomic browser lifecycles"
+      - "Atomic Worker package with exact files and tests"
+      - "Explicit resume gate for campaign child 5"
+    verify:
+      - "Map T112 failure to the proposed transition sequence"
+      - "Confirm terminal ambiguity remains truthful if failure occurs after tabs.new and before release"
+      - "Confirm manager can apply post-lifecycle created/released/completed events in order"
+    stop_if:
+      - "The design requires a raw target handle outside the browser runtime, page-global inspection, rediscovery of a target, action replay, or weaker ACK semantics."
+    receipt:
+      result: done
+      decision: approved
+      rationale: "Child 4 proves that emitting target_created before research is unsafe because the browser runtime handle is task-turn-local. The smallest safe correction is a single post-lifecycle finalization checkpoint: after the existing exact ACK, the worker must create, inspect, and release the plugin-owned target in one uninterrupted browser-runtime turn with no commentary or protocol output. Only after release may it emit a sanitized browser_action_completed envelope containing the existing lease/root/action/outcome hashes. The manager reducer validates those fields and atomically advances not_created -> released plus started -> completed. If the turn fails at any point before that finalization event, conservative started/not_created state still terminates as target terminal_ambiguity; no replay or rediscovery is permitted."
+      success_transition:
+        - "Manager: action started and exact ACK issued"
+        - "Worker same turn: resolve binding -> tabs.new -> typed official root -> finite inspection -> close exact target -> persist sanitized outcome"
+        - "Worker after release: emit one browser_action_completed envelope with lease/root/action/outcome hashes and released lifecycle"
+        - "Manager: apply one finalize_browser_action event atomically, then continue result persistence/emission"
+      failure_transition:
+        - "Any failure before finalization leaves manager state started with target not released."
+        - "Manager stops run as ambiguous_browser_action; campaign terminal evidence records terminal_ambiguity."
+        - "No acknowledgement resend, action replay, target enumeration, or handle rediscovery is allowed."
+      worker_package:
+        objective: "Make normal authenticated browser research atomic within one post-ACK Codex turn and add a single sanitized post-release reducer checkpoint."
+        allowed_files:
+          - scripts/browser-acceptance/qa-recovery.mjs
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+          - docs/browser-acceptance/runbooks/qa-worker.md
+          - docs/browser-acceptance/runbooks/qa-manager.md
+          - skills/_shared/browser-research-contract.md
+          - tests/browser-acceptance/qa-recovery.test.mjs
+          - tests/browser-acceptance/qa-manager-prompt.test.mjs
+          - tests/browser-acceptance/harness.test.ts
+        verify:
+          - "npm run test:qa-recovery"
+          - "npm run test:qa-config"
+          - "npm run test:browser-harness"
+          - "npm run verify:offline"
+          - "git diff --check"
+        stop_if:
+          - "The change persists or transports a raw target handle, permits a browser event between create and release, weakens ACK issuance, or makes partial failure replayable."
+          - "The reducer could mark a target released without exact lease/root/action/outcome verification."
+          - "Authentication recovery behavior is broadened beyond its existing distinct lease path."
+      resume_gate: "Do not resume or issue campaign child 5 without exact RESUME QA BROWSER CAMPAIGN campaign_20260730T20260731001731 161aff40fa00e83dbb3c259cc8419c2a1edab2e89384f30c0d971ca1ec503234 after the correction is committed, repinned, and verified."
+      spawned_tasks:
+        - T114
+  - id: T114
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Make normal authenticated browser research atomic within one post-ACK Codex turn and add a single sanitized post-release reducer checkpoint."
+    inputs:
+      - "T113 approved worker package"
+      - "T112 child 4 exact failure evidence"
+    constraints:
+      - "Do not operate Chrome, resume the campaign, repin QA, or issue another child."
+      - "Retain all existing ACK, one-time authorization, task-scoped lease, and terminal ambiguity semantics."
+      - "Keep raw browser bindings and target handles runtime-local and absent from all events/state/receipts."
+      - "Keep authentication recovery on its existing separate path."
+    expected_output:
+      - "Atomic reducer finalization event and same-turn worker/manager instructions"
+      - "Tests for success, partial failure ambiguity, wrong lease/root/hash rejection, and no intermediate output"
+      - "Green focused and offline verification"
+    allowed_files:
+      - scripts/browser-acceptance/qa-recovery.mjs
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - skills/_shared/browser-research-contract.md
+      - tests/browser-acceptance/qa-recovery.test.mjs
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      - tests/browser-acceptance/harness.test.ts
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "Any T113 stop condition occurs."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - skills/_shared/browser-research-contract.md
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+        - tests/browser-acceptance/harness.test.ts
+      commands:
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "40/40"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "26/26"
+        - command: "npm run test:browser-harness"
+          status: pass
+          detail: "16/16"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Normal post-ACK browser work now keeps binding resolution, tabs.new, typed-root navigation, bounded inspection, sanitized outcome persistence, and exact-target release in one uninterrupted Codex turn. Only after release does the worker emit one sanitized completion. The manager atomically finalizes not_created -> released and started -> completed after exact root, ownership, lifecycle, lease, action, timeout, and outcome validation. Partial failure remains non-replayable terminal ambiguity; authentication recovery retains its separate granular path."
+      deviations: []
+      remaining_blockers:
+        - "Read-only Judge approval, product commit, exact QA repin, and fresh user resume authorization are required before campaign child 5."
+      verification_attempts: 6
+      stopped_because: null
+      spawned_tasks:
+        - T115
+  - id: T115
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the atomic same-turn normal browser lifecycle correction before commit and QA repin."
+    inputs:
+      - "T112 child 4 handle-loss evidence"
+      - "T113 approved transition design"
+      - "T114 complete diff and verification receipt"
+    constraints:
+      - "Read-only; do not edit files, operate Chrome, resume the campaign, repin QA, or issue a child."
+      - "Reject any raw browser binding or target handle transported or persisted outside the host runtime."
+      - "Reject any commentary, protocol event, manager message, or worker yield between tabs.new and exact-target release."
+      - "Reject release finalization without exact root, ownership, lifecycle, lease, action, timeout, and outcome validation."
+      - "Reject replay or rediscovery authority after any partial failure."
+      - "Reject any weakening or accidental merger of the distinct authentication-recovery path."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Requirement-to-code-and-test evidence"
+      - "Exact correction package if changes are required"
+      - "Commit, QA repin, and resume prerequisites if approved"
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run test:browser-harness"
+      - "Inspect reducer and documentation diff for lifecycle consistency"
+    stop_if:
+      - "Any browser interaction or state mutation would be required to judge the offline correction."
+    receipt:
+      result: done
+      decision: changes_required
+      full_outcome_complete: false
+      rationale: "The same-turn lifecycle, atomic transition, fail-closed partial failure, exact ACK behavior, and distinct authentication recovery are sound, but finalize_browser_action accepts unknown event fields. A completion carrying a raw target ID, handle, or binding could therefore advance state instead of failing closed. Tests also omit wrong action-label and extra-field rejection, and one worker-runbook sentence incorrectly describes the sanitized manager-issued lease hash as runtime-only."
+      evidence:
+        - "The reducer exact-checks official root, ownership, released lifecycle, lease, action label/hash, timeout, and outcome before atomic advancement."
+        - "The branch does not call requireExactKeys, so arbitrary extra transport fields are ignored."
+        - "Focused success, mismatch, ambiguity, ACK, and authentication-recovery tests pass; extra-field and wrong action-label coverage is missing."
+        - "All T114 focused and offline verification passed."
+      missing_evidence:
+        - "Exact-key rejection for finalize_browser_action, including raw handle/target-ID/binding fields."
+        - "Wrong action-label rejection coverage."
+        - "Correct wording that raw binding/handle stay runtime-local while the sanitized lease hash is transported."
+      spawned_tasks:
+        - T116
+  - id: T116
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Make finalize_browser_action an exact sanitized event and correct the lease-hash wording."
+    inputs:
+      - "T115 rejected audit"
+      - "T114 atomic lifecycle implementation"
+    constraints:
+      - "Do not operate Chrome, resume the campaign, repin QA, or issue a child."
+      - "Reject missing, extra, or mismatched finalization fields before any state mutation."
+      - "Keep ACK issuance and authentication recovery unchanged."
+      - "Keep partial failure non-replayable and terminally ambiguous."
+    expected_output:
+      - "Exact-key validation for every finalize_browser_action field"
+      - "Explicit wrong action-label and extra raw-target-field tests"
+      - "Worker wording distinguishes runtime-local raw handles from the transported sanitized lease hash"
+      - "Green focused and offline verification"
+    allowed_files:
+      - scripts/browser-acceptance/qa-recovery.mjs
+      - tests/browser-acceptance/qa-recovery.test.mjs
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run test:browser-harness"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "Any raw handle, ID, or binding can be accepted or transported as a valid completion field."
+      - "ACK or authentication-recovery semantics change."
+      - "Partial failure can advance or replay."
+      - "Verification fails twice for a task-introduced reason."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      commands:
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "41/41 after one corrected test assertion"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "26/26"
+        - command: "npm run test:browser-harness"
+          status: pass
+          detail: "16/16"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+      summary: "Added pre-mutation exact-key validation for finalize_browser_action, exhaustive missing-field and mismatched-value coverage, and rejection tests for wrong action labels plus raw target ID, handle, and binding fields. Corrected the worker runbook so only raw binding/handle remain runtime-local while the sanitized manager-issued lease hash is intentionally transported and persisted. ACK, authentication recovery, and partial-failure ambiguity remain intact."
+      deviations: []
+      remaining_blockers:
+        - "Read-only re-audit is required before commit and QA repin."
+      verification_attempts: 2
+      stopped_because: null
+      spawned_tasks:
+        - T117
+  - id: T117
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Re-audit the complete atomic lifecycle package after exact finalization-envelope hardening."
+    inputs:
+      - "T115 rejection criteria"
+      - "T116 correction receipt"
+      - "Complete T114+T116 diff"
+    constraints:
+      - "Read-only; do not edit files, operate Chrome, resume the campaign, repin QA, or issue a child."
+      - "Reproduce extra-field and missing-field rejection rather than relying only on the test names."
+      - "Reject raw handle transport, event yields between create/release, incomplete exact validation, replay, ACK regression, or authentication-path regression."
+    expected_output:
+      - "approved | changes_required"
+      - "full_outcome_complete=false"
+      - "Requirement-to-code-and-test evidence"
+      - "Commit, QA repin, and exact resume prerequisites when approved"
+    verify:
+      - "npm run test:qa-recovery"
+      - "npm run test:qa-config"
+      - "npm run test:browser-harness"
+      - "Inspect the complete reducer/documentation/test diff"
+    stop_if:
+      - "Any browser access or write would be required to judge the correction."
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The complete T114+T116 package is approved for commit and exact QA repin. Finalization exact-key rejects missing, extra, raw-target, and mismatched fields before mutation; valid evidence atomically advances started/not_created to completed/released. Contracts keep raw handles runtime-local and require an uninterrupted tabs.new-to-release turn. Partial failure remains terminal ambiguity without replay. ACK issuance and authentication recovery are unchanged."
+      evidence:
+        - "The reducer exact-key validates type, actor, channel, browser, official root, ownership, lifecycle, lease, action label/hash, timeout, and outcome hash."
+        - "Tests delete every required field, inject raw targetId/targetHandle/binding, and prove state remains started/not_created on rejection."
+        - "qa-recovery 41/41, qa-config 26/26, browser-harness 16/16, verify:offline, and diff checks pass."
+        - "Worker wording correctly distinguishes runtime-only raw handles from the sanitized transported lease hash."
+      missing_evidence:
+        - "Immutable product commit and exact QA repin."
+        - "Exact campaign resume authorization and fresh child-5 live evidence."
+      spawned_tasks:
+        - T118
+  - id: T118
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Commit the approved atomic-lifecycle package, create a clean detached source, and repin the isolated QA repository without browser access."
+    inputs:
+      - "T117 approved complete diff"
+      - "Current suspended campaign at 4/10 with activeChild=null"
+      - "Current QA source manifest and copied worker runbook"
+    constraints:
+      - "Exclude docs/goals/social-metadata-dedicated-browser-targets/state.yaml from the product commit."
+      - "Do not alter approved implementation content during packaging."
+      - "Do not operate Chrome, resume the campaign, issue a child, or change campaign scope/authorization machinery."
+      - "Preserve manager-only QA adaptations while refreshing source-bound hashes."
+      - "Private scenarios, receipts, notes, campaign state, and ignored detached-source contents must not enter a commit."
+    expected_output:
+      - "Immutable product commit and tree"
+      - "Clean detached ignored QA source at that exact commit"
+      - "Committed QA repin with exact source and QA hashes"
+      - "Green exact-detached offline and release verification"
+      - "Campaign remains suspended, activeChild=null, issuedCount=4"
+    allowed_files:
+      - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - docs/browser-acceptance/runbooks/qa-worker.md
+      - scripts/browser-acceptance/qa-recovery.mjs
+      - skills/_shared/browser-research-contract.md
+      - tests/browser-acceptance/harness.test.ts
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      - tests/browser-acceptance/qa-recovery.test.mjs
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/
+    verify:
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts against the exact detached source"
+      - "Verify all declared product-source and QA hashes"
+      - "Verify the product tracked worktree contains only the GoalBuddy board edit"
+      - "Verify the QA tracked worktree is clean"
+      - "Verify the detached source is clean at the exact product commit"
+      - "Verify the campaign remains suspended with issuedCount=4 and activeChild=null"
+    stop_if:
+      - "The approved diff changes beyond PM-owned board bookkeeping."
+      - "Any unexpected tracked file would be committed."
+      - "Any pin/hash mismatch remains."
+      - "Campaign scope, authorization machinery, status, issued count, or active child would change."
+      - "Browser access or new user authority would be required."
+    receipt:
+      result: done
+      changed_files:
+        - docs/browser-acceptance/prompts/qa-worker-dispatch.md
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+        - docs/browser-acceptance/runbooks/qa-worker.md
+        - scripts/browser-acceptance/qa-recovery.mjs
+        - skills/_shared/browser-research-contract.md
+        - tests/browser-acceptance/harness.test.ts
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+        - tests/browser-acceptance/qa-recovery.test.mjs
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+        - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+      commands:
+        - command: "npm run test:browser-harness"
+          status: pass
+          detail: "16/16"
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "41/41"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "26/26"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "npm run verify:release -- --allow-missing-live-receipts"
+          status: pass
+          detail: "exact detached source"
+        - command: "git diff --check"
+          status: pass
+        - command: "verify all 15 manifest hash records"
+          status: pass
+        - command: "verify detached source and QA tracked cleanliness"
+          status: pass
+      summary: "Committed the approved package as product commit 2aecc6c328369a6f9484ce1c3b75015cce81659b (tree f80426baee3b49688ff221693794abade0811695). Repinned QA as baaac2f777a22ed2da0a129b84c5ad384f220218 (tree f248c8267665ae79ba6bd0e87639a27109159997). The clean detached source is product-source-2aecc6c. Worker source/QA hashes are 714a174b8aae2c75cb7cfddc0214212f91dfbfcaf93beb244485e68f17e74172 and 908df36a038f8f3742fdee0a62ac59aeb468ba2048adbf9f9ee93845c7c0499d. The campaign remains suspended at 4/10 with no active child."
+      deviations: []
+      remaining_blockers:
+        - "Exact user resume authorization is required before advancing campaign pins and issuing child 5."
+      verification_attempts: 1
+      stopped_because: null
+      spawned_tasks:
+        - T119
+  - id: T119
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: "After exact user resume authorization, resume the campaign, atomically advance verified pins, and issue/supervise campaign child 5."
+    inputs:
+      - "Product commit 2aecc6c328369a6f9484ce1c3b75015cce81659b"
+      - "QA commit baaac2f777a22ed2da0a129b84c5ad384f220218"
+      - "Suspended campaign campaign_20260730T20260731001731 at 4/10"
+    constraints:
+      - "Do not act until a new user message exactly matches the required resume phrase."
+      - "After resume and before child issuance, atomically advance only the verified product/QA pin fields; preserve immutable scope and authorization-machinery hashes."
+      - "Keep the fixed Chrome Instagram -> Facebook -> LinkedIn autocomplete-only campaign scope."
+      - "Continue recording sanitized infrastructure findings and stop/suspend on any protocol safety condition."
+    expected_output:
+      - "Active campaign with exact advanced pins"
+      - "One newly issued and terminally reconciled child run"
+      - "Sanitized browser evidence or an explicit truthful interruption"
+    allowed_files:
+      - docs/goals/social-metadata-dedicated-browser-targets/state.yaml
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-campaigns/campaign_20260730T20260731001731-state.json
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-runs/**
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-campaigns/*child*.json
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/receipts/**
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/notes/**
+    verify:
+      - "Exact resume phrase received in a new user message"
+      - "Campaign active with no child before pin advancement"
+      - "All declared product, QA, protocol, reducer, scenario, and oracle hashes match"
+      - "Child receipt reconciles and consumes one-time authorization"
+    stop_if:
+      - "Resume wording is missing or inexact."
+      - "Any immutable scope or authorization-machinery hash changes."
+      - "Pin advancement, grant issuance, browser binding, target lifecycle, or terminal reconciliation is ambiguous."
+    blocked_reason: "The repaired build changes immutable protocol and run-reducer authorization-machinery hashes, so the old campaign cannot advance pins."
+    receipt:
+      result: blocked
+      blocked_reason: "The exact resume phrase was received, but pre-mutation verification proved the repaired product changes immutable authorization-machinery hashes. Existing campaign pin evolution must reject that build, so the campaign was not resumed and no child was issued."
+      changed_files:
+        - docs/goals/social-metadata-dedicated-browser-targets/state.yaml
+      commands:
+        - command: "qa-campaign check"
+          status: pass
+          detail: "suspended; issuedCount=4; activeChild=null"
+        - command: "hash exact detached scenario, oracle, protocol, run reducer, campaign reducer, and scenario schema"
+          status: pass
+        - command: "verify authorization-machinery compatibility with current campaign"
+          status: fail
+          detail: "protocol changed 725bc016... -> 9a19b311... and run reducer changed cd31b947... -> 2e785589..."
+      summary: "Failed closed before resume. The old campaign remains suspended and unmodified, with no browser access. Running child 5 would otherwise test stale code; advancing it to the repaired code violates the campaign's immutable authorization machinery."
+      infrastructure_findings:
+        - "A bounded campaign cannot be safely continued after a correction changes protocolSha256 or runReducerSha256. The current workflow must create a replacement pending campaign and obtain fresh exact approval."
+      spawned_tasks:
+        - T120
+  - id: T120
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the authorization-machinery mismatch and define the smallest safe transition to a replacement campaign pinned to the repaired build."
+    inputs:
+      - "T119 pre-mutation compatibility failure"
+      - "Suspended old campaign at 4/10"
+      - "Product 2aecc6c328369a6f9484ce1c3b75015cce81659b and QA baaac2f777a22ed2da0a129b84c5ad384f220218"
+    constraints:
+      - "Read-only; do not resume, revoke, mutate campaign state, issue a child, or operate Chrome."
+      - "Preserve the user's fixed QA scope and ten-run cap semantics."
+      - "Do not treat the old approval as authority for changed authorization machinery."
+      - "Prefer a new pending unauthorized campaign over weakening pin-evolution invariants."
+    expected_output:
+      - "approved replacement-campaign transition | alternative safe transition"
+      - "Exact immutable pins and scope inputs"
+      - "Bounded Worker package for pending state creation and validation"
+      - "Exact fresh approval prerequisite before browser access"
+    verify:
+      - "Recompute both old and repaired authorization-machinery hashes"
+      - "Confirm old campaign remains suspended and unmodified"
+      - "Confirm no safe advance-pin transition exists"
+    stop_if:
+      - "The proposed transition would reuse old approval, broaden scope, exceed the original ten-run cap semantics, or access the browser."
+    receipt:
+      result: done
+      decision: needs_user_choice
+      full_outcome_complete: false
+      rationale: "The old campaign cannot advance because repaired protocol and run-reducer hashes are immutable authorization machinery. A replacement campaign requires fresh approval. Preserving the user's original cap requires carrying four consumed runs and allowing six remaining, which current fixed-ten machinery cannot represent; creating a fresh ten-run campaign would instead authorize up to fourteen total runs. That budget choice is material and cannot be inferred."
+      evidence:
+        - "Old campaign remains suspended at issuedCount=4 with activeChild=null."
+        - "No resume, pin advance, grant issuance, campaign mutation, or Chrome action occurred."
+        - "Current schema and reducer require childLimit=10 and initialize issuedCount=0."
+        - "Exact pin advancement rejects changes to protocolSha256 or runReducerSha256."
+        - "The delegated Judge exceeded one bounded wait and was interrupted; PM performed the same read-only fallback audit."
+      missing_evidence:
+        - "User choice between a six-remaining replacement budget and a fresh ten-run budget."
+      spawned_tasks:
+        - T121
+  - id: T121
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: high
+    objective: "Record the user's replacement-campaign budget choice and activate the corresponding safe implementation package."
+    inputs:
+      - "T120 authorization-machinery audit"
+      - "Original ten-run campaign with four consumed slots"
+    constraints:
+      - "Do not create, authorize, resume, revoke, or mutate a campaign before the user chooses the replacement budget."
+      - "Do not operate Chrome."
+    expected_output:
+      - "Confirmed six-remaining total cap or fresh ten-run cap"
+      - "One active Worker task for the selected replacement campaign"
+    receipt:
+      result: done
+      summary: "The user selected the remaining six-run budget. The replacement must preserve the original ten-run series cap by treating the four historical runs as consumed and exposing exactly six additional usable runs."
+      evidence:
+        - "User reply: Use the remaining 6-run budget"
+        - "Old campaign remains suspended at issuedCount=4 with activeChild=null."
+      spawned_tasks:
+        - T122
+  - id: T122
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Design the smallest safe replacement-campaign mechanism that preserves four consumed predecessor slots and enforces exactly six remaining runs under fresh authorization."
+    inputs:
+      - "T119 authorization-machinery incompatibility receipt"
+      - "T120 replacement-transition audit"
+      - "T121 user choice: remaining six-run budget"
+      - "Suspended predecessor campaign campaign_20260730T20260731001731 at issuedCount=4, activeChild=null"
+      - "Repaired product commit 2aecc6c328369a6f9484ce1c3b75015cce81659b and QA commit baaac2f777a22ed2da0a129b84c5ad384f220218"
+    constraints:
+      - "Read-only; do not edit files, mutate either campaign, issue grants, or operate Chrome."
+      - "The predecessor remains suspended and immutable."
+      - "The replacement requires a fresh exact approval tied to the repaired authorization machinery."
+      - "Enforce a ten-run series cap with four already consumed and exactly six additional usable runs; do not rely on manager-prompt convention."
+      - "Preserve the fixed Chrome Instagram -> Facebook -> LinkedIn, hashtag plus search-term, autocomplete_only scope."
+      - "Reject budget reset, replacement stacking, forged predecessor counts, or reuse of the old approval."
+    expected_output:
+      - "approved architecture and invariants"
+      - "Exact schema, reducer, CLI, prompt, documentation, and test seams"
+      - "One coherent bounded Worker package with allowed_files, verify, and stop_if"
+      - "Exact fresh six-run approval prerequisite before browser access"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Use one backward-compatible replacement lineage in campaign state. Derive four consumed slots from the validated suspended predecessor, bind that lineage into the replacement scope hash, give the replacement a local limit of six, and continue series ordinals at five through ten. Fresh approval must say FOR 6 RUNS. Original ten-run campaigns remain valid. Replacement-of-replacement is rejected, so the mechanism cannot reset the budget through chaining."
+      evidence:
+        - "Current campaign state fixes budget.limit and immutableScope.childLimit at ten and initializes issuedCount to zero."
+        - "Current issuance derives ordinal from local issuedCount, so a replacement needs an explicit consumed-before offset to preserve series ordinals five through ten."
+        - "The campaign scope hash and exact approval phrase are the existing authorization bindings; both must include or express the six-run replacement budget."
+        - "The predecessor is valid, suspended, approved, has activeChild=null, and records four terminal consumed children."
+        - "The delegated Judge exceeded one bounded wait and was interrupted; PM completed the same read-only audit without campaign or browser mutation."
+      worker_package:
+        objective: "Add a fail-closed replacement-campaign path that derives four consumed slots from the suspended original campaign, binds lineage into the scope hash, grants exactly six fresh-authorized runs with series ordinals five through ten, and preserves existing ten-run campaigns."
+        allowed_files:
+          - scripts/browser-acceptance/qa-campaign.mjs
+          - docs/browser-acceptance/schemas/qa-manager-campaign-state.schema.json
+          - tests/browser-acceptance/qa-campaign.test.mjs
+          - tests/browser-acceptance/qa-manager-prompt.test.mjs
+          - docs/browser-acceptance/README.md
+          - docs/browser-acceptance/prompts/qa-manager-starter.md
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/runbooks/qa-manager.md
+        verify:
+          - "npm run test:qa-campaign"
+          - "npm run test:qa-config"
+          - "npm run test:qa-recovery"
+          - "npm run verify:offline"
+          - "git diff --check"
+        stop_if:
+          - "A replacement can be created from an unvalidated, active-child, zero-child, fully consumed, or prior replacement campaign."
+          - "The replacement can issue more than six local grants or a series ordinal outside five through ten."
+          - "The fresh approval phrase, scope hash, or persisted state fails to bind predecessor identity, predecessor state hash, consumed-before count, and six-run limit."
+          - "Existing ordinary ten-run campaign behavior or state compatibility regresses."
+          - "Any browser access, campaign-state mutation, QA repin, or new user authority would be required."
+      missing_evidence:
+        - "Implementation and verification of the replacement path."
+        - "Immutable product/QA repin and a pending unauthorized replacement state."
+        - "Fresh exact six-run approval before any browser action."
+      spawned_tasks:
+        - T123
+  - id: T123
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a fail-closed replacement-campaign path that derives four consumed slots from the suspended original campaign, binds lineage into the scope hash, grants exactly six fresh-authorized runs with series ordinals five through ten, and preserves existing ten-run campaigns."
+    inputs:
+      - "T122 approved architecture"
+      - "Existing campaign reducer, schema, CLI, documentation, and tests"
+      - "User-selected remaining six-run budget"
+    constraints:
+      - "Do not mutate private campaign state, operate Chrome, repin QA, or authorize browser access."
+      - "Preserve ordinary ten-run campaign compatibility."
+      - "Derive predecessor facts from a fully validated suspended original state; do not accept a caller-supplied consumed count."
+      - "Bind replacement lineage into the campaign scope hash and the local limit into the exact approval phrase."
+      - "Reject replacement-of-replacement and every predecessor with an active child or invalid terminal history."
+    expected_output:
+      - "Replacement creation API and CLI command"
+      - "Closed schema and reducer invariants"
+      - "Positive six-run/ordinal tests and adversarial lineage/budget tests"
+      - "Updated manager-facing approval and recovery documentation"
+    allowed_files:
+      - scripts/browser-acceptance/qa-campaign.mjs
+      - docs/browser-acceptance/schemas/qa-manager-campaign-state.schema.json
+      - tests/browser-acceptance/qa-campaign.test.mjs
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      - docs/browser-acceptance/README.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+    verify:
+      - "npm run test:qa-campaign"
+      - "npm run test:qa-config"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "git diff --check"
+    stop_if:
+      - "A replacement can be created from an unvalidated, active-child, zero-child, fully consumed, or prior replacement campaign."
+      - "The replacement can issue more than six local grants or a series ordinal outside five through ten."
+      - "The fresh approval phrase, scope hash, or persisted state fails to bind predecessor identity, predecessor state hash, consumed-before count, and six-run limit."
+      - "Existing ordinary ten-run campaign behavior or state compatibility regresses."
+      - "Any browser access, campaign-state mutation, QA repin, or new user authority would be required."
+    receipt:
+      result: done
+      changed_files:
+        - scripts/browser-acceptance/qa-campaign.mjs
+        - docs/browser-acceptance/schemas/qa-manager-campaign-state.schema.json
+        - tests/browser-acceptance/qa-campaign.test.mjs
+        - tests/browser-acceptance/qa-manager-prompt.test.mjs
+        - docs/browser-acceptance/README.md
+        - docs/browser-acceptance/prompts/qa-manager-starter.md
+        - docs/browser-acceptance/protocol/manager-worker.md
+        - docs/browser-acceptance/runbooks/qa-manager.md
+      commands:
+        - command: "npm run test:qa-campaign"
+          status: pass
+          detail: "25/25"
+        - command: "npm run test:qa-config"
+          status: pass
+          detail: "27/27"
+        - command: "npm run test:qa-recovery"
+          status: pass
+          detail: "41/41 through verify:offline"
+        - command: "npm run verify:offline"
+          status: pass
+        - command: "git diff --check"
+          status: pass
+        - command: "qa-campaign check on suspended predecessor"
+          status: pass
+          detail: "status=suspended, issuedCount=4, runLimit=10, activeOrdinal=null"
+      summary: "Implemented a backward-compatible replacement campaign. It derives consumedBefore from a validated suspended original predecessor, rejects unsafe or chained predecessors, binds lineage into the replacement scope hash, requires a fresh local-limit approval phrase, and issues exactly six local grants as series ordinals five through ten. Existing ten-run state remains readable and green. The delegated Worker timed out without edits; PM completed the bounded fallback. No private campaign state or browser was mutated."
+      infrastructure_findings:
+        - "The dedicated T123 GoalBuddy Worker made no allowed-file changes within one bounded wait and was interrupted; PM fallback completed the task."
+      remaining_blockers:
+        - "High-risk Judge review, immutable commit/QA repin, pending replacement creation, and fresh exact six-run approval remain required."
+      verification_attempts: 2
+      stopped_because: null
+      spawned_tasks:
+        - T124
+  - id: T124
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the complete remaining-budget replacement implementation for authorization integrity, compatibility, and readiness to commit and create a pending six-run campaign."
+    inputs:
+      - "T122 approved architecture"
+      - "T123 implementation receipt and complete diff"
+      - "Suspended original campaign at four consumed slots"
+      - "Green focused and full offline verification"
+    constraints:
+      - "Read-only; do not edit files, commit, repin QA, create or authorize a replacement campaign, or operate Chrome."
+      - "Reject approval if predecessor facts can be caller-forged, the old approval can authorize the replacement, a replacement can chain, ordinary ten-run state breaks, or more than six additional runs can issue."
+      - "Treat agent timeouts as infrastructure findings, not product evidence."
+    expected_output:
+      - "approved | rejected"
+      - "Requirement-to-code-and-test mapping"
+      - "Any missing adversarial evidence"
+      - "Exact bounded commit/repin/pending-state Worker package if approved"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Approved for immutable commit and pending replacement creation. Reload validation binds exact lineage fields into the scope hash, binds the six-run limit into the approval hash, enforces local budget/ordinal/completion relations, and keeps original states compatible. Creation derives all predecessor facts from validated suspended state, rejects unsafe and chained predecessors, and writes exclusively. Focused adversarial tests cover active, empty, exhausted, forged-count, forged-limit, forged-phrase, chronology, and chaining failures."
+      evidence:
+        - "Replacement state schema is closed; runtime additionally enforces lineage-to-budget, scope-hash, approval-hash, ordinal-offset, and completion invariants."
+        - "create-replacement reads the predecessor state, validates it before derivation, and never accepts caller-supplied consumedBefore."
+        - "CLI output exposes predecessor campaign ID and canonical state hash for exact manager comparison."
+        - "Six successful grants are ordinals 5-10; the campaign completes locally at issuedCount=6 and cannot issue a seventh."
+        - "The actual predecessor still checks as suspended with issuedCount=4, runLimit=10, and activeOrdinal=null."
+        - "test:qa-campaign 25/25, test:qa-config 27/27, verify:offline including qa-recovery 41/41, and git diff --check passed."
+        - "The delegated Judge exceeded one bounded wait and was interrupted; PM completed the same read-only fallback audit."
+      missing_evidence:
+        - "Immutable product commit and exact QA repin."
+        - "One private pending unauthorized replacement state derived from the exact old campaign."
+        - "Fresh exact six-run approval and live browser evidence."
+      worker_package:
+        objective: "Commit the approved remaining-budget implementation, create a clean detached source, repin the isolated QA repository, and create one private pending unauthorized six-run replacement state derived from the exact suspended predecessor."
+        allowed_files:
+          - docs/browser-acceptance/README.md
+          - docs/browser-acceptance/prompts/qa-manager-starter.md
+          - docs/browser-acceptance/protocol/manager-worker.md
+          - docs/browser-acceptance/runbooks/qa-manager.md
+          - docs/browser-acceptance/schemas/qa-manager-campaign-state.schema.json
+          - scripts/browser-acceptance/qa-campaign.mjs
+          - tests/browser-acceptance/qa-campaign.test.mjs
+          - tests/browser-acceptance/qa-manager-prompt.test.mjs
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/
+          - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-campaigns/*replacement*.json
+        verify:
+          - "npm run test:qa-campaign"
+          - "npm run test:qa-config"
+          - "npm run test:qa-recovery"
+          - "npm run verify:offline"
+          - "npm run verify:release -- --allow-missing-live-receipts against the exact detached source"
+          - "Verify all declared product-source and QA hashes"
+          - "Verify product implementation commit, detached source, and QA tracked worktrees are clean except PM-owned board state"
+          - "Verify old campaign remains suspended and unchanged at four consumed slots"
+          - "Verify replacement is pending, unauthorized, local limit six, issuedCount zero, activeChild null, and lineage matches the exact predecessor"
+        stop_if:
+          - "The reviewed implementation diff changes beyond PM-owned board bookkeeping."
+          - "Any unexpected tracked file would be committed."
+          - "Any pin/hash, detached-source, release, lineage, or budget invariant fails."
+          - "The old campaign would be mutated, resumed, revoked, or authorized."
+          - "The replacement would be anything other than pending and unauthorized."
+          - "Browser access or credentials would be required."
+      infrastructure_findings:
+        - "The dedicated T124 GoalBuddy Judge timed out within one bounded wait and was interrupted; PM fallback performed the security audit."
+      spawned_tasks:
+        - T125
+  - id: T125
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: "Commit the approved remaining-budget implementation, create a clean detached source, repin the isolated QA repository, and create one private pending unauthorized six-run replacement state derived from the exact suspended predecessor."
+    inputs:
+      - "T124 approved implementation and security audit"
+      - "Product baseline 2aecc6c328369a6f9484ce1c3b75015cce81659b"
+      - "QA baseline baaac2f777a22ed2da0a129b84c5ad384f220218"
+      - "Suspended predecessor campaign_20260730T20260731001731 at four consumed slots"
+    constraints:
+      - "Exclude docs/goals/social-metadata-dedicated-browser-targets/state.yaml from the product implementation commit."
+      - "Do not alter approved implementation content during packaging."
+      - "Do not operate Chrome, authorize the replacement, issue a child, or mutate the predecessor."
+      - "Private replacement spec/state and detached source remain ignored and uncommitted."
+      - "Create the replacement only after immutable product and QA pins are exact."
+    expected_output:
+      - "Immutable product commit/tree and clean detached source"
+      - "Committed exact QA repin with verified hashes"
+      - "One pending unauthorized six-run replacement state with exact lineage"
+      - "Exact fresh approval phrase returned but not executed"
+    allowed_files:
+      - docs/browser-acceptance/README.md
+      - docs/browser-acceptance/prompts/qa-manager-starter.md
+      - docs/browser-acceptance/protocol/manager-worker.md
+      - docs/browser-acceptance/runbooks/qa-manager.md
+      - docs/browser-acceptance/schemas/qa-manager-campaign-state.schema.json
+      - scripts/browser-acceptance/qa-campaign.mjs
+      - tests/browser-acceptance/qa-campaign.test.mjs
+      - tests/browser-acceptance/qa-manager-prompt.test.mjs
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/source.json
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/runbooks/qa-worker.md
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/product-source-*/
+      - /Users/neonwatty/Desktop/social-autocomplete-qa/.social-metadata/qa/manager-campaigns/*replacement*.json
+    verify:
+      - "npm run test:qa-campaign"
+      - "npm run test:qa-config"
+      - "npm run test:qa-recovery"
+      - "npm run verify:offline"
+      - "npm run verify:release -- --allow-missing-live-receipts against the exact detached source"
+      - "Verify all declared product-source and QA hashes"
+      - "Verify product implementation commit, detached source, and QA tracked worktrees are clean except PM-owned board state"
+      - "Verify old campaign remains suspended and unchanged at four consumed slots"
+      - "Verify replacement is pending, unauthorized, local limit six, issuedCount zero, activeChild null, and lineage matches the exact predecessor"
+    stop_if:
+      - "The reviewed implementation diff changes beyond PM-owned board bookkeeping."
+      - "Any unexpected tracked file would be committed."
+      - "Any pin/hash, detached-source, release, lineage, or budget invariant fails."
+      - "The old campaign would be mutated, resumed, revoked, or authorized."
+      - "The replacement would be anything other than pending and unauthorized."
+      - "Browser access or credentials would be required."
+    receipt: null
   - id: T999
     type: judge
     assignee: Judge
