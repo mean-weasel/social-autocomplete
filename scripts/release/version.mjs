@@ -10,6 +10,8 @@ export const VERSION_FILES = [
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
 ];
+export const MARKETPLACE_FILE = ".agents/plugins/marketplace.json";
+const RELEASE_SOURCE_URL = "https://github.com/mean-weasel/social-autocomplete.git";
 
 function assertVersion(version) {
   if (!SEMVER.test(version)) {
@@ -36,6 +38,7 @@ export async function readReleaseVersions(root = ".") {
 
 export async function checkReleaseVersion(root = ".", expected) {
   const versions = await readReleaseVersions(root);
+  const marketplace = await readJson(root, MARKETPLACE_FILE);
   const canonical = versions["package.json"];
   assertVersion(canonical);
   if (expected !== undefined) {
@@ -50,12 +53,20 @@ export async function checkReleaseVersion(root = ".", expected) {
   if (mismatches.length > 0) {
     throw new Error(`Release versions are not synchronized: ${mismatches.join(", ")}`);
   }
-  return { ok: true, version: canonical, files: Object.keys(versions) };
+  const entry = marketplace.plugins?.find((plugin) => plugin.name === "social-metadata-research");
+  if (entry?.source?.source !== "url" || entry.source.url !== RELEASE_SOURCE_URL) {
+    throw new Error("Marketplace must install from the clean Git-backed release source");
+  }
+  if (entry.source.ref !== `v${canonical}`) {
+    throw new Error(`Marketplace ref ${entry.source.ref} does not match v${canonical}`);
+  }
+  return { ok: true, version: canonical, files: [...Object.keys(versions), MARKETPLACE_FILE] };
 }
 
 export async function setReleaseVersion(root = ".", version) {
   assertVersion(version);
-  const documents = await Promise.all(VERSION_FILES.map((file) => readJson(root, file)));
+  const files = [...VERSION_FILES, MARKETPLACE_FILE];
+  const documents = await Promise.all(files.map((file) => readJson(root, file)));
   documents[0].version = version;
   documents[1].version = version;
   if (!documents[1].packages?.[""]) {
@@ -64,8 +75,13 @@ export async function setReleaseVersion(root = ".", version) {
   documents[1].packages[""].version = version;
   documents[2].version = version;
   documents[3].version = version;
+  const entry = documents[4].plugins?.find((plugin) => plugin.name === "social-metadata-research");
+  if (entry?.source?.source !== "url" || entry.source.url !== RELEASE_SOURCE_URL) {
+    throw new Error("Marketplace must install from the clean Git-backed release source");
+  }
+  entry.source.ref = `v${version}`;
   await Promise.all(documents.map((document, index) =>
-    writeFile(resolve(root, VERSION_FILES[index]), `${JSON.stringify(document, null, 2)}\n`)));
+    writeFile(resolve(root, files[index]), `${JSON.stringify(document, null, 2)}\n`)));
   return checkReleaseVersion(root, version);
 }
 

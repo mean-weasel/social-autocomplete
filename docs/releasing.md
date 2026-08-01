@@ -1,8 +1,9 @@
 # Releasing the plugin
 
 `package.json` owns the release version. The package lock plus the Codex and
-Claude manifests must contain that exact version. Codex cachebuster suffixes
-are for local installation only and must not be committed.
+Claude manifests must contain that exact version, and the marketplace's
+Git-backed source must reference the matching `v<version>` tag. Codex
+cachebuster suffixes are for local installation only and must not be committed.
 
 ## Prepare the release
 
@@ -26,6 +27,11 @@ are for local installation only and must not be committed.
    credentials, authenticated page content, or private execution state.
 5. Commit the synchronized version files, merge the green pull request, and
    confirm the merge commit is on the default branch.
+
+Never release a marketplace entry that points at the mutable checkout root.
+Local installs copy their source into the Codex cache and could otherwise copy
+ignored `.social-metadata` state. The release source is Git-backed so only
+tracked files from the matching tag are installed.
 
 ## Publish
 
