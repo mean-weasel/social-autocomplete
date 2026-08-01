@@ -41,6 +41,7 @@ jobs:
             docs/browser-acceptance/**/*.md
             docs/integration/**/*.md
             docs/feature-task-template.md
+            docs/releasing.md
 
   offline:
     name: Offline test suite

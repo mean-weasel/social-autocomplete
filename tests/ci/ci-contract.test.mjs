@@ -23,3 +23,15 @@ test("package validation rejects private state even when required files exist", 
     /prohibited path/u,
   );
 });
+
+test("release tags require synchronized versions and publish a checksummed package", async () => {
+  const workflow = await readFile(".github/workflows/release.yml", "utf8");
+  assert.match(workflow, /tags: \["v\*"\]/u);
+  assert.match(workflow, /permissions:\s+contents: write/u);
+  assert.match(workflow, /npm run version:check/u);
+  assert.match(workflow, /npm run verify:ci/u);
+  assert.match(workflow, /npm pack --pack-destination dist-release/u);
+  assert.match(workflow, /sha256sum .*SHA256SUMS/u);
+  assert.match(workflow, /gh release create/u);
+  assert.match(workflow, /--verify-tag --generate-notes/u);
+});

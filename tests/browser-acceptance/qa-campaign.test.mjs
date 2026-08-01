@@ -889,8 +889,9 @@ test("operation-time expiry rejects caller-backdated authorization, issuance, re
 test("trusted chronology rejects future, backdated, and out-of-order lifecycle timestamps before mutation", () => {
   const pending = createQaCampaignState(spec("campaign_trusted_chronology"));
   const phrase = campaignAuthorizationPhrase(pending.campaign.campaignId, pending.campaign.campaignScopeSha256);
+  const futureAt = new Date(Date.now() + 86_400_000).toISOString();
   assert.throws(
-    () => authorizeQaCampaign(pending, { phrase, at: "2026-08-01T00:00:00.000Z" }),
+    () => authorizeQaCampaign(pending, { phrase, at: futureAt }),
     /future/,
   );
   const active = activeState("campaign_ordered_chronology");

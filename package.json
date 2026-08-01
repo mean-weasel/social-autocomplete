@@ -43,8 +43,11 @@
     "test:qa-recovery": "node --test tests/browser-acceptance/qa-recovery.test.mjs",
     "test:ci-contract": "node --test tests/ci/ci-contract.test.mjs",
     "test:package": "npm run build --silent && node scripts/ci/package-smoke.mjs",
-    "validate:repo": "node scripts/ci/validate-repository.mjs",
-    "verify:ci": "npm run validate:repo && npm run verify:offline && npm run test:diagnostics && npm run test:browser-harness && npm run test:subprocess-consumer && npm run test:ci-contract && npm run test:package",
+    "test:release": "node --test tests/release/*.test.mjs",
+    "version:check": "node scripts/release/version.mjs check",
+    "version:set": "node scripts/release/version.mjs set",
+    "validate:repo": "node scripts/ci/validate-repository.mjs && npm run version:check --silent",
+    "verify:ci": "npm run validate:repo && npm run verify:offline && npm run test:diagnostics && npm run test:browser-harness && npm run test:subprocess-consumer && npm run test:ci-contract && npm run test:release && npm run test:package",
     "qa:scenario:validate": "node scripts/browser-acceptance/validate-qa-config.mjs",
     "verify:release": "node scripts/browser-acceptance/verify-release.mjs"
   },
