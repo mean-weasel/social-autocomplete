@@ -91,6 +91,25 @@ Pinterest. Independent top-level channel invocation is not part of the v1
 contract. This avoids depending on catalog size or ordering while preserving
 every channel procedure. Claude package files remain included.
 
+### Install in Codex
+
+Install a tagged release through its Git-backed marketplace snapshot:
+
+```sh
+codex plugin marketplace add mean-weasel/social-autocomplete --ref v0.1.1
+codex plugin add social-metadata-research@social-metadata-local --json
+```
+
+Restart Codex or begin a new task after installation, then ask it to use
+`social-metadata-research`. The plugin will ask for the browser and ordered
+channels before creating a new research plan. Authenticated research uses the
+existing visible Chrome profile; the plugin never asks for or stores login
+credentials.
+
+The marketplace entry is pinned to the matching Git tag. It must not point at
+the mutable local repository root because ignored `.social-metadata` working
+state is private and must never be copied into an installed plugin cache.
+
 ```sh
 npm run verify:offline
 npm run example:subprocess
