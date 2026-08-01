@@ -100,3 +100,7 @@ The offline suite replays all channels, both modules and evidence tiers,
 guided/automatic modes, interruption/resume paths, stale and locale failures,
 zero outcomes, and Pinterest hashtag `not_applicable`. See
 `docs/integration/json-contract.md` for subprocess consumption.
+
+Release versions are synchronized across the package, Codex, and Claude
+manifests. See `docs/releasing.md` for the version bump, headed-browser
+preflight, tag, artifact, and GitHub Release workflow.
